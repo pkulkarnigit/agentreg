@@ -38,6 +38,31 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # Opt-in: an S3-compatible target for trying the s3blob backend locally
+  # (`APREG_BLOB_DRIVER=s3`), instead of the local-disk blobs volume above.
+  # Not started by a plain `docker compose up` — bring it up explicitly
+  # with `docker compose --profile s3 up -d minio`, then point apreg-server
+  # at it (see README).
+  minio:
+    image: minio/minio
+    profiles: ["s3"]
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - apreg-miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+    restart: unless-stopped
+
 volumes:
   apreg-pgdata:
   apreg-blobs:
+  apreg-miniodata:

@@ -23,6 +23,7 @@ import (
 	"github.com/pkulkarni/apreg/internal/store"
 	"github.com/pkulkarni/apreg/internal/store/fsblob"
 	"github.com/pkulkarni/apreg/internal/store/postgres"
+	"github.com/pkulkarni/apreg/internal/store/s3blob"
 	"github.com/pkulkarni/apreg/internal/store/sqlite"
 	"github.com/pkulkarni/apreg/internal/web"
 )
@@ -55,9 +56,10 @@ func main() {
 	}
 	defer meta.Close()
 
-	blob, err := fsblob.Open(filepath.Join(dataDir, "blobs"))
+	blobDriver := envOr("APREG_BLOB_DRIVER", "fs")
+	blob, err := openBlobStore(blobDriver, dataDir)
 	if err != nil {
-		log.Fatalf("open blob store: %v", err)
+		log.Fatal(err)
 	}
 
 	reg := registry.New(meta, blob)
@@ -86,7 +88,7 @@ func main() {
 
 	serverErr := make(chan error, 1)
 	go func() {
-		log.Printf("apreg-server listening on %s (driver: %s, data dir: %s)", addr, driver, dataDir)
+		log.Printf("apreg-server listening on %s (db driver: %s, blob driver: %s, data dir: %s)", addr, driver, blobDriver, dataDir)
 		serverErr <- srv.ListenAndServe()
 	}()
 
@@ -143,6 +145,33 @@ func openMetadataStore(driver, dsn, dataDir, backupPath string) (store.MetadataS
 
 	default:
 		return nil, errors.New("unknown APREG_DB_DRIVER " + driver + " (want \"sqlite\" or \"postgres\")")
+	}
+}
+
+// openBlobStore opens the configured blob backend. "fs" (default) stores
+// tarballs under dataDir/blobs on local disk, tying the server to one
+// machine. "s3" stores them in an S3-compatible bucket instead — the swap
+// that makes apreg-server safe to run as multiple replicas, since every
+// instance can see every blob.
+func openBlobStore(driver, dataDir string) (store.BlobStore, error) {
+	switch driver {
+	case "fs":
+		return fsblob.Open(filepath.Join(dataDir, "blobs"))
+
+	case "s3":
+		bucket := os.Getenv("APREG_S3_BUCKET")
+		if bucket == "" {
+			return nil, errors.New("APREG_S3_BUCKET is required when APREG_BLOB_DRIVER=s3")
+		}
+		return s3blob.Open(context.Background(), s3blob.Config{
+			Bucket:         bucket,
+			Region:         os.Getenv("APREG_S3_REGION"),
+			Endpoint:       os.Getenv("APREG_S3_ENDPOINT"),
+			ForcePathStyle: os.Getenv("APREG_S3_FORCE_PATH_STYLE") == "true",
+		})
+
+	default:
+		return nil, errors.New("unknown APREG_BLOB_DRIVER " + driver + " (want \"fs\" or \"s3\")")
 	}
 }
 

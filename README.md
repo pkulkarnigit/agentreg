@@ -30,7 +30,8 @@ go build -o bin/apreg ./cmd/apreg
 
 Env vars if you need them: `APREG_DATA_DIR` (default `./data`), `APREG_ADDR`
 (default `:8080`), `APREG_DB_DRIVER` (`sqlite` or `postgres`),
-`APREG_DB_DSN` (a file path, or a `postgres://` URL).
+`APREG_DB_DSN` (a file path, or a `postgres://` URL), `APREG_BLOB_DRIVER`
+(`fs` or `s3` — see "Production hardening" below).
 
 ## Using the CLI
 
@@ -77,6 +78,36 @@ interface as SQLite and runs the identical test suite against it — same
 behavior, different database underneath. It's what `docker-compose.yml`
 uses by default.
 
+Blob storage has the same swap available: `internal/store/s3blob`
+implements the same `store.BlobStore` interface as the default local-disk
+`fsblob`, and runs the identical conformance suite (`internal/store/blobtest`)
+against a real S3-compatible endpoint. This is the piece that actually
+unblocks horizontal scaling — local disk ties `apreg-server` to one
+machine, since a second replica can't see what the first one wrote to
+disk. Once blobs are in S3 (and metadata's already on Postgres), the
+server is fully stateless and safe to run as N replicas behind a load
+balancer.
+
+```bash
+APREG_BLOB_DRIVER=s3
+APREG_S3_BUCKET=your-bucket
+APREG_S3_REGION=us-east-1
+# Only needed for non-AWS S3-compatible stores (MinIO, R2, Spaces, ...):
+APREG_S3_ENDPOINT=http://localhost:9000
+APREG_S3_FORCE_PATH_STYLE=true
+```
+
+Credentials come from the standard AWS chain (env vars, `~/.aws/credentials`,
+an instance role) — nothing apreg-specific to configure there. To try it
+locally against MinIO instead of real S3:
+
+```bash
+docker compose --profile s3 up -d minio
+APREG_BLOB_DRIVER=s3 APREG_S3_BUCKET=apreg APREG_S3_ENDPOINT=http://localhost:9000 \
+  APREG_S3_FORCE_PATH_STYLE=true AWS_ACCESS_KEY_ID=minioadmin AWS_SECRET_ACCESS_KEY=minioadmin \
+  ./bin/apreg-server
+```
+
 Beyond that: rate limiting on signup/login/publish, an account lockout that
 kicks in after repeated failed logins no matter which IP they came from,
 structured request logging, graceful shutdown on SIGINT/SIGTERM, SQLite
@@ -100,8 +131,10 @@ internal/pack             tar.gz pack/unpack
 internal/store             storage interfaces
 internal/store/sqlite       SQLite implementation (default, zero deps)
 internal/store/postgres     Postgres implementation (docker-compose default)
-internal/store/fsblob       local-filesystem blob storage
-internal/store/storetest     shared conformance suite both backends run
+internal/store/fsblob       local-filesystem blob storage (default)
+internal/store/s3blob        S3-compatible blob storage (opt-in)
+internal/store/storetest     shared conformance suite both metadata backends run
+internal/store/blobtest       shared conformance suite both blob backends run
 internal/registry         business logic — the only caller of internal/store
 internal/notify            pluggable account-recovery message delivery
 internal/api               REST handlers (HTTP only, calls internal/registry)
@@ -184,6 +217,14 @@ APREG_TEST_POSTGRES_DSN="postgres://postgres:test@localhost:55432/apreg?sslmode=
 
 CI does this on every push, against a real Postgres service container, not
 a mock.
+
+The S3 blob tests skip themselves cleanly with no S3-compatible store
+reachable. To actually run them:
+
+```bash
+docker run -d --rm -p 9000:9000 -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin minio/minio server /data
+APREG_TEST_S3_ENDPOINT="http://localhost:9000" AWS_ACCESS_KEY_ID=minioadmin AWS_SECRET_ACCESS_KEY=minioadmin go test ./...
+```
 
 ## License
 
