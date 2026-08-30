@@ -29,7 +29,7 @@ func newTestServer(t *testing.T) (*httptest.Server, *registry.Registry) {
 		t.Fatalf("fsblob.Open: %v", err)
 	}
 	reg := registry.New(meta, blob)
-	return httptest.NewServer(NewHandler(reg)), reg
+	return httptest.NewServer(NewHandler(reg, "")), reg
 }
 
 func publishSample(t *testing.T, reg *registry.Registry) {
@@ -158,6 +158,72 @@ func TestPluginPage_NotFound(t *testing.T) {
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusNotFound {
 		t.Fatalf("expected 404, got %d", resp.StatusCode)
+	}
+}
+
+func TestCatalogPage_NotConfigured(t *testing.T) {
+	meta, err := sqlite.Open(filepath.Join(t.TempDir(), "test.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer meta.Close()
+	blob, err := fsblob.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv := httptest.NewServer(NewHandler(registry.New(meta, blob), ""))
+	defer srv.Close()
+
+	resp, err := http.Get(srv.URL + "/catalog")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusNotFound {
+		t.Fatalf("expected 404 when no catalog is configured, got %d", resp.StatusCode)
+	}
+}
+
+func TestCatalogPage_ShowsResults(t *testing.T) {
+	meta, err := sqlite.Open(filepath.Join(t.TempDir(), "test.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer meta.Close()
+	blob, err := fsblob.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	catalogPath := filepath.Join(t.TempDir(), "catalog.json")
+	os.WriteFile(catalogPath, []byte(`{
+		"generated_at": "2026-08-30T10:00:00Z",
+		"source": "https://example.com/list",
+		"results": [
+			{"Name": "good-plugin", "Category": "Dev", "RepoURL": "https://github.com/a/good", "Author": "a", "AuthorURL": "https://github.com/a", "Description": "does good things", "Tag": "production", "Valid": true, "PluginName": "good-plugin", "PluginVersion": "1.0.0", "Skills": ["one"], "HasMCP": true},
+			{"Name": "bad-plugin", "Category": "Dev", "RepoURL": "https://github.com/b/bad", "Author": "b", "AuthorURL": "https://github.com/b", "Description": "missing bits", "Tag": "production", "Valid": false, "ValidationError": "plugin has neither a skills/ directory nor an mcp.json"}
+		]
+	}`), 0o644)
+
+	srv := httptest.NewServer(NewHandler(registry.New(meta, blob), catalogPath))
+	defer srv.Close()
+
+	resp, err := http.Get(srv.URL + "/catalog")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	}
+	body := readBody(t, resp)
+	for _, want := range []string{
+		"good-plugin", "does good things", "v1.0.0", "has MCP server",
+		"bad-plugin", "missing bits", "plugin has neither a skills/",
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("expected catalog page to contain %q, got:\n%s", want, body)
+		}
 	}
 }
 

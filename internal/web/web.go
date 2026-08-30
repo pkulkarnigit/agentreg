@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/pkulkarni/apreg/internal/crawler"
 	"github.com/pkulkarni/apreg/internal/pack"
 	"github.com/pkulkarni/apreg/internal/registry"
 	"github.com/pkulkarni/apreg/internal/store"
@@ -27,18 +28,24 @@ var templateFS embed.FS
 // parsing all files into one namespace would let the last-parsed file's
 // definitions silently win for every page.
 var (
-	indexTmpl  = template.Must(template.ParseFS(templateFS, "templates/layout.html", "templates/index.html"))
-	pluginTmpl = template.Must(template.ParseFS(templateFS, "templates/layout.html", "templates/plugin.html"))
+	indexTmpl   = template.Must(template.ParseFS(templateFS, "templates/layout.html", "templates/index.html"))
+	pluginTmpl  = template.Must(template.ParseFS(templateFS, "templates/layout.html", "templates/plugin.html"))
+	catalogTmpl = template.Must(template.ParseFS(templateFS, "templates/layout.html", "templates/catalog.html"))
 )
 
 type Server struct {
-	reg *registry.Registry
+	reg         *registry.Registry
+	catalogPath string
 }
 
-func NewHandler(reg *registry.Registry) http.Handler {
-	s := &Server{reg: reg}
+// NewHandler builds the web UI. catalogPath, if non-empty, is where
+// /catalog reads cmd/crawler's JSON output from (see internal/crawler) —
+// leave empty to disable that page (it 404s with a clear message instead).
+func NewHandler(reg *registry.Registry, catalogPath string) http.Handler {
+	s := &Server{reg: reg, catalogPath: catalogPath}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", s.handleIndex)
+	mux.HandleFunc("GET /catalog", s.handleCatalog)
 	// Go's ServeMux requires a wildcard to own its whole path segment, so
 	// "@scope" can't be split into a literal "@" + "{scope}" wildcard in
 	// the pattern; the leading "@" is stripped from {scopeAt} in the handler.
@@ -54,6 +61,49 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	render(w, indexTmpl, map[string]any{"Plugins": plugins, "Query": q})
+}
+
+// handleCatalog shows the crawler's most recent output (internal/crawler,
+// run via cmd/crawler) — publicly known Agent Plugins discovered and
+// validated, not anything published into this registry. Reads the JSON
+// file fresh on every request rather than caching it in memory: it's a
+// batch artifact refreshed by re-running the crawler, small (dozens of
+// entries), and this way a redeployed catalog file shows up without a
+// server restart.
+func (s *Server) handleCatalog(w http.ResponseWriter, r *http.Request) {
+	if s.catalogPath == "" {
+		http.Error(w, "no catalog configured (APREG_CATALOG_PATH not set)", http.StatusNotFound)
+		return
+	}
+	data, err := os.ReadFile(s.catalogPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			http.Error(w, "no catalog has been generated yet — run cmd/crawler", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	var cat crawler.Catalog
+	if err := json.Unmarshal(data, &cat); err != nil {
+		http.Error(w, "catalog file is not valid JSON: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var valid, invalid []crawler.Result
+	for _, res := range cat.Results {
+		if res.Valid {
+			valid = append(valid, res)
+		} else {
+			invalid = append(invalid, res)
+		}
+	}
+
+	render(w, catalogTmpl, map[string]any{
+		"Catalog": cat,
+		"Valid":   valid,
+		"Invalid": invalid,
+	})
 }
 
 type skillView struct {

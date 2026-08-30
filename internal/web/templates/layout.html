@@ -8,7 +8,9 @@
   :root { color-scheme: light dark; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 880px; margin: 0 auto; padding: 1.5rem; line-height: 1.5; }
   header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2rem; }
-  header a { text-decoration: none; color: inherit; font-weight: 700; font-size: 1.25rem; }
+  header a { text-decoration: none; color: inherit; }
+  nav.top a.brand { font-weight: 700; font-size: 1.25rem; }
+  nav.top a:not(.brand) { color: #888; font-size: 0.9rem; }
   .tagline { color: #888; font-size: 0.9rem; }
   form.search { margin-bottom: 2rem; }
   form.search input { width: 100%; padding: 0.6rem 0.8rem; font-size: 1rem; box-sizing: border-box; border: 1px solid #999; border-radius: 6px; }
@@ -24,11 +26,18 @@
   table { border-collapse: collapse; width: 100%; }
   td, th { text-align: left; padding: 0.3rem 0.6rem 0.3rem 0; border-bottom: 1px solid rgba(128,128,128,0.3); }
   section { margin-top: 2rem; }
+  nav.top { display: flex; gap: 1rem; align-items: baseline; }
+  .badge { display: inline-block; border-radius: 4px; padding: 0.1rem 0.5rem; font-size: 0.8rem; font-weight: 600; }
+  .badge.valid { background: rgba(34,197,94,0.2); color: #16a34a; }
+  .badge.invalid { background: rgba(239,68,68,0.2); color: #dc2626; }
 </style>
 </head>
 <body>
 <header>
-  <a href="/">AgentReg</a>
+  <nav class="top">
+    <a href="/" class="brand">AgentReg</a>
+    <a href="/catalog">discovered plugins</a>
+  </nav>
   <span class="tagline">a registry for Agent Plugins (skills + MCP servers)</span>
 </header>
 {{block "content" .}}{{end}}

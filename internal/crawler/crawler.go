@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/pkulkarni/apreg/internal/manifest"
@@ -97,7 +98,7 @@ func Crawl(ctx context.Context, logger *slog.Logger, entries []Entry) []Result {
 			repoCache[cacheKey] = cached
 		}
 		if cached.err != nil {
-			r.FetchError = cached.err.Error()
+			r.FetchError = sanitizePath(cached.err.Error(), workDir)
 			results[i] = r
 			logger.Warn("fetch failed", "name", e.Name, "owner", owner, "repo", repo, "ref", ref, "error", cached.err)
 			continue
@@ -110,7 +111,7 @@ func Crawl(ctx context.Context, logger *slog.Logger, entries []Entry) []Result {
 
 		bundle, err := manifest.ValidateDir(pluginDir)
 		if err != nil {
-			r.ValidationError = err.Error()
+			r.ValidationError = sanitizePath(err.Error(), workDir)
 			results[i] = r
 			continue
 		}
@@ -124,4 +125,12 @@ func Crawl(ctx context.Context, logger *slog.Logger, entries []Entry) []Result {
 	}
 
 	return results
+}
+
+// sanitizePath strips the crawler's local temp-dir prefix from an error
+// message so recorded errors read as repo-relative paths, not a leftover
+// local filesystem detail from whichever machine ran the crawl — this
+// ends up on a public catalog page.
+func sanitizePath(msg, workDir string) string {
+	return strings.ReplaceAll(msg, workDir+string(filepath.Separator), "")
 }

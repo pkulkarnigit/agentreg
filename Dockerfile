@@ -10,6 +10,11 @@ FROM alpine:3.20
 RUN adduser -D -h /home/apreg apreg
 COPY --from=build /out/apreg-server /usr/local/bin/apreg-server
 COPY --from=build /out/apreg /usr/local/bin/apreg
+# The crawler's catalog snapshot (cmd/crawler, internal/web's /catalog
+# page) is a checked-in artifact, not runtime-generated — baked into the
+# image so it's there without a volume. Refreshing it means re-running
+# the crawler and rebuilding, matching how infrequently that data changes.
+COPY --from=build /src/catalog /home/apreg/catalog
 # Pre-create and chown the data dir before the volume mount: a named
 # volume mounted over a directory that already exists in the image
 # inherits that directory's ownership on first creation, which is what

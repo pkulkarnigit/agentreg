@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-30T10:30:55.078425Z",
+  "generated_at": "2026-08-30T11:34:21.399883Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -36,7 +36,7 @@
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open /var/folders/78/3gfss6bs0_b50rf2hywfc4s80000gn/T/apreg-crawler-1003483395/repo-1/plugin.json: no such file or directory"
+      "ValidationError": "read plugin.json: open repo-1/plugin.json: no such file or directory"
     },
     {
       "Name": "awesome-copilot",
@@ -52,7 +52,7 @@
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open /var/folders/78/3gfss6bs0_b50rf2hywfc4s80000gn/T/apreg-crawler-1003483395/repo-2/plugin.json: no such file or directory"
+      "ValidationError": "read plugin.json: open repo-2/plugin.json: no such file or directory"
     },
     {
       "Name": "MiniMax-Code-Plugins",
@@ -68,7 +68,7 @@
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open /var/folders/78/3gfss6bs0_b50rf2hywfc4s80000gn/T/apreg-crawler-1003483395/repo-3/plugin.json: no such file or directory"
+      "ValidationError": "read plugin.json: open repo-3/plugin.json: no such file or directory"
     },
     {
       "Name": "b2c",
@@ -1023,7 +1023,7 @@
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open /var/folders/78/3gfss6bs0_b50rf2hywfc4s80000gn/T/apreg-crawler-1003483395/repo-32/plugin.json: no such file or directory"
+      "ValidationError": "read plugin.json: open repo-32/plugin.json: no such file or directory"
     },
     {
       "Name": "anthropics/skills",
@@ -1039,7 +1039,7 @@
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open /var/folders/78/3gfss6bs0_b50rf2hywfc4s80000gn/T/apreg-crawler-1003483395/repo-33/plugin.json: no such file or directory"
+      "ValidationError": "read plugin.json: open repo-33/plugin.json: no such file or directory"
     },
     {
       "Name": "browserbase/skills",
@@ -1055,7 +1055,7 @@
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open /var/folders/78/3gfss6bs0_b50rf2hywfc4s80000gn/T/apreg-crawler-1003483395/repo-34/plugin.json: no such file or directory"
+      "ValidationError": "read plugin.json: open repo-34/plugin.json: no such file or directory"
     },
     {
       "Name": "cloudflare/mcp-server-cloudflare",
@@ -1071,7 +1071,7 @@
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open /var/folders/78/3gfss6bs0_b50rf2hywfc4s80000gn/T/apreg-crawler-1003483395/repo-35/plugin.json: no such file or directory"
+      "ValidationError": "read plugin.json: open repo-35/plugin.json: no such file or directory"
     },
     {
       "Name": "grafana/mcp-grafana",
@@ -1087,7 +1087,7 @@
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open /var/folders/78/3gfss6bs0_b50rf2hywfc4s80000gn/T/apreg-crawler-1003483395/repo-36/plugin.json: no such file or directory"
+      "ValidationError": "read plugin.json: open repo-36/plugin.json: no such file or directory"
     },
     {
       "Name": "microsoft/playwright-mcp",
@@ -1103,7 +1103,7 @@
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open /var/folders/78/3gfss6bs0_b50rf2hywfc4s80000gn/T/apreg-crawler-1003483395/repo-37/plugin.json: no such file or directory"
+      "ValidationError": "read plugin.json: open repo-37/plugin.json: no such file or directory"
     },
     {
       "Name": "modelcontextprotocol/servers",
@@ -1119,7 +1119,7 @@
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open /var/folders/78/3gfss6bs0_b50rf2hywfc4s80000gn/T/apreg-crawler-1003483395/repo-38/plugin.json: no such file or directory"
+      "ValidationError": "read plugin.json: open repo-38/plugin.json: no such file or directory"
     }
   ]
 }
