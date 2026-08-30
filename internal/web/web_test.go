@@ -143,6 +143,37 @@ func TestIndexPage_SearchHidesHero(t *testing.T) {
 	}
 }
 
+func TestFontIsServed(t *testing.T) {
+	srv, _ := newTestServer(t)
+	defer srv.Close()
+
+	resp, err := http.Get(srv.URL + "/fonts/Inter-Variable.woff2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	}
+	if ct := resp.Header.Get("Content-Type"); ct != "font/woff2" {
+		t.Errorf("Content-Type = %q, want font/woff2", ct)
+	}
+	if cc := resp.Header.Get("Cache-Control"); !strings.Contains(cc, "immutable") {
+		t.Errorf("expected an immutable long-lived Cache-Control, got %q", cc)
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(body) < 1000 {
+		t.Fatalf("font file suspiciously small: %d bytes", len(body))
+	}
+	// woff2 files start with the magic bytes "wOF2".
+	if string(body[:4]) != "wOF2" {
+		t.Fatalf("served file doesn't look like a woff2 font: %q", body[:4])
+	}
+}
+
 func TestDocsPage(t *testing.T) {
 	srv, _ := newTestServer(t)
 	defer srv.Close()

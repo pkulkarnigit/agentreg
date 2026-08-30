@@ -1,12 +1,13 @@
 # AgentReg
 
-A registry for [Agent Plugins](https://agent-plugins.org) — the open packaging
-standard (published Aug 2026, backed by Amazon/Cursor/Microsoft/OpenAI/Vercel)
-that bundles Claude-style Skills and MCP server configs into one portable
-directory. The spec deliberately leaves distribution/publishing/registries to
-implementers — AgentReg is that layer: publish, install, search, and browse
-Agent Plugins, npm-style, with real accounts so anyone can publish under
-their own `@scope`.
+A free, open-source, self-hostable registry for [Agent Plugins](https://agent-plugins.org)
+— the open packaging standard (published Aug 2026, backed by
+Amazon/Cursor/Microsoft/OpenAI/Vercel) that bundles Claude-style Skills and
+MCP server configs into one portable directory. The spec deliberately leaves
+distribution/publishing/registries to implementers — AgentReg is that layer:
+publish, install, search, and browse Agent Plugins, npm-style, with real
+accounts so anyone can publish under their own `@scope`. MIT licensed — run
+it yourself, or use ours.
 
 ## Run it locally
 
@@ -191,3 +192,7 @@ APREG_TEST_POSTGRES_DSN="postgres://postgres:test@localhost:55432/apreg?sslmode=
 
 CI (`.github/workflows/ci.yml`) runs this automatically against a real
 Postgres service container on every push.
+
+## License
+
+[MIT](LICENSE) — use it, self-host it, fork it, ship it.

@@ -14,6 +14,7 @@
     <li><a href="#account">Accounts &amp; security</a></li>
     <li><a href="#cli">CLI reference</a></li>
     <li><a href="#api">REST API reference</a></li>
+    <li><a href="#self-hosting">Self-hosting</a></li>
   </ul>
 </nav>
 
@@ -157,5 +158,24 @@ apreg install @upstash/context7 --dir vendor/context7</code></pre>
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/gzip" \
   --data-binary @my-plugin-1.0.0.tar.gz</code></pre>
+</section>
+
+<section id="self-hosting">
+  <h2>Self-hosting</h2>
+  <p>
+    AgentReg is free and open — there's no paid tier and nothing about it requires this particular
+    instance. The whole thing (server, CLI, web UI, crawler) is one Go codebase with two moving parts:
+    a metadata store (SQLite by default, or Postgres) and local-disk blob storage for tarballs.
+  </p>
+  <pre><code>docker compose up --build</code></pre>
+  <p class="muted">
+    That runs the real production-shaped stack — the server backed by Postgres in a second container,
+    both on persistent volumes. No external services, no account with us required, no license key.
+  </p>
+  <div class="callout">
+    Running your own instance is a completely independent registry — plugins published to one aren't
+    visible on another. That's deliberate: self-hosting means your own namespace, your own users, your
+    own data.
+  </div>
 </section>
 {{end}}
