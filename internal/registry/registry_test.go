@@ -2,6 +2,7 @@ package registry
 
 import (
 	"context"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -147,15 +148,46 @@ func TestPublish_ImmutableVersion(t *testing.T) {
 
 	in := PublishInput{
 		Scope: "alice", Name: "hello", Version: "1.0.0",
-		Tarball: strings.NewReader("x"),
+		Tarball: strings.NewReader("original bytes"),
 		Bundle:  b, RequestorU: "alice",
 	}
-	if _, err := r.Publish(ctx, in); err != nil {
+	first, err := r.Publish(ctx, in)
+	if err != nil {
 		t.Fatalf("first publish: %v", err)
 	}
-	in.Tarball = strings.NewReader("x")
+
+	// Deliberately DIFFERENT content on the "duplicate" — this is the
+	// shape a real duplicate publish takes (e.g. the crawler's idempotent
+	// re-runs re-pack a fresh tarball with new mtimes each time, so the
+	// bytes differ even though it's logically "the same" plugin). Using
+	// identical bytes here would let a storage-overwrite bug pass
+	// undetected, since the checksum wouldn't visibly change.
+	in.Tarball = strings.NewReader("different bytes from a re-packed tarball")
 	if _, err := r.Publish(ctx, in); err != ErrConflict {
 		t.Fatalf("expected ErrConflict republishing same version, got %v", err)
+	}
+
+	// The rejected duplicate must not have touched the stored blob: what
+	// downloads now must still be exactly the first publish's bytes,
+	// under the same checksum recorded at that first publish.
+	resolved, err := r.ResolveVersion(ctx, "alice", "hello", "1.0.0")
+	if err != nil {
+		t.Fatalf("ResolveVersion: %v", err)
+	}
+	if resolved.Checksum != first.Checksum {
+		t.Fatalf("recorded checksum changed after a rejected duplicate publish: %s -> %s", first.Checksum, resolved.Checksum)
+	}
+	rc, err := r.OpenTarball(ctx, "alice", "hello", "1.0.0")
+	if err != nil {
+		t.Fatalf("OpenTarball: %v", err)
+	}
+	defer rc.Close()
+	got, err := io.ReadAll(rc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != "original bytes" {
+		t.Fatalf("stored blob was overwritten by the rejected duplicate publish: got %q", got)
 	}
 }
 

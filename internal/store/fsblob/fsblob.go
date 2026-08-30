@@ -40,7 +40,7 @@ func (s *Store) Put(_ context.Context, scope, name, version string, r io.Reader)
 		return "", 0, err
 	}
 	tmpPath := tmp.Name()
-	defer os.Remove(tmpPath) // no-op once renamed
+	defer os.Remove(tmpPath) // no-op once linked and cleaned up below
 
 	h := sha256.New()
 	size, err := io.Copy(io.MultiWriter(tmp, h), r)
@@ -51,7 +51,18 @@ func (s *Store) Put(_ context.Context, scope, name, version string, r io.Reader)
 	if err := tmp.Close(); err != nil {
 		return "", 0, err
 	}
-	if err := os.Rename(tmpPath, target); err != nil {
+
+	// os.Link (not os.Rename) deliberately: rename(2) silently clobbers an
+	// existing target, and versions are supposed to be immutable. The
+	// registry layer already checks for an existing version before ever
+	// calling Put, but this is the hard backstop — if a target somehow
+	// already exists (a bug upstream, or two publishes racing on a version
+	// that's new to both), Link fails with EEXIST instead of corrupting
+	// already-stored content.
+	if err := os.Link(tmpPath, target); err != nil {
+		if os.IsExist(err) {
+			return "", 0, store.ErrConflict
+		}
 		return "", 0, err
 	}
 	return hex.EncodeToString(h.Sum(nil)), size, nil

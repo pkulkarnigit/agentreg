@@ -330,7 +330,8 @@ func (s *Store) Search(ctx context.Context, query string) ([]store.Plugin, error
 	like := "%" + strings.ToLower(query) + "%"
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT DISTINCT p.scope, p.name, p.description, p.homepage, p.repository, p.license,
-		       p.latest_version, p.created_at, p.updated_at
+		       p.latest_version, p.created_at, p.updated_at,
+		       COALESCE((SELECT SUM(download_count) FROM versions v WHERE v.scope = p.scope AND v.name = p.name), 0)
 		FROM plugins p
 		LEFT JOIN keywords k ON k.scope = p.scope AND k.name = p.name
 		WHERE lower(p.scope || '/' || p.name) LIKE ?
@@ -347,14 +348,43 @@ func (s *Store) Search(ctx context.Context, query string) ([]store.Plugin, error
 		var p store.Plugin
 		var createdAt, updatedAt string
 		if err := rows.Scan(&p.Scope, &p.Name, &p.Description, &p.Homepage, &p.Repository, &p.License,
-			&p.LatestVersion, &createdAt, &updatedAt); err != nil {
+			&p.LatestVersion, &createdAt, &updatedAt, &p.TotalDownloads); err != nil {
 			return nil, err
 		}
 		p.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
 		p.UpdatedAt, _ = time.Parse(time.RFC3339, updatedAt)
 		out = append(out, p)
 	}
-	return out, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Keywords, like GetPlugin, are fetched per-plugin rather than
+	// aggregated in the main query — SQLite/Postgres have different
+	// string-aggregation syntax, and result sets here are small (dozens
+	// of plugins, not millions), so N+1 here trades a little query volume
+	// for identical, portable code across both backends.
+	for i := range out {
+		kwRows, err := s.db.QueryContext(ctx, `SELECT keyword FROM keywords WHERE scope = ? AND name = ?`, out[i].Scope, out[i].Name)
+		if err != nil {
+			return nil, err
+		}
+		for kwRows.Next() {
+			var kw string
+			if err := kwRows.Scan(&kw); err != nil {
+				kwRows.Close()
+				return nil, err
+			}
+			out[i].Keywords = append(out[i].Keywords, kw)
+		}
+		if err := kwRows.Err(); err != nil {
+			kwRows.Close()
+			return nil, err
+		}
+		kwRows.Close()
+	}
+
+	return out, nil
 }
 
 func (s *Store) CreateEmailVerification(ctx context.Context, userID int64, tokenHash string, expiresAt time.Time) error {

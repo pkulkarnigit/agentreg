@@ -20,6 +20,7 @@ func RunConformanceSuite(t *testing.T, newStore func(t *testing.T) store.Metadat
 	t.Run("UsersAndTokens", func(t *testing.T) { testUsersAndTokens(t, newStore(t)) })
 	t.Run("PublishAndResolve", func(t *testing.T) { testPublishAndResolve(t, newStore(t)) })
 	t.Run("DownloadCount", func(t *testing.T) { testDownloadCount(t, newStore(t)) })
+	t.Run("SearchIncludesDownloadCount", func(t *testing.T) { testSearchIncludesDownloadCount(t, newStore(t)) })
 	t.Run("EmailVerification", func(t *testing.T) { testEmailVerification(t, newStore(t)) })
 	t.Run("PasswordReset", func(t *testing.T) { testPasswordReset(t, newStore(t)) })
 }
@@ -108,6 +109,13 @@ func testPublishAndResolve(t *testing.T, s store.MetadataStore) {
 	if len(results) != 1 || results[0].Name != "hello" {
 		t.Fatalf("unexpected search results: %v", results)
 	}
+	// Regression coverage: Search used to select different columns than
+	// GetPlugin and silently omit Keywords/TotalDownloads for every
+	// result — every plugin card on the homepage showed "0 downloads"
+	// and no keyword tags regardless of the real values.
+	if len(results[0].Keywords) != 1 || results[0].Keywords[0] != "test" {
+		t.Fatalf("Search result missing keywords: %v", results[0].Keywords)
+	}
 
 	if _, err := s.GetVersion(ctx, "alice", "hello", "9.9.9"); err != store.ErrNotFound {
 		t.Fatalf("expected ErrNotFound for missing version, got %v", err)
@@ -142,6 +150,36 @@ func testDownloadCount(t *testing.T, s store.MetadataStore) {
 	}
 	if plugin.TotalDownloads != 3 {
 		t.Fatalf("expected total downloads 3, got %d", plugin.TotalDownloads)
+	}
+}
+
+// testSearchIncludesDownloadCount is a regression test: Search's query
+// used to select different columns than GetPlugin and never included the
+// download-count aggregate, so every plugin returned by Search (i.e.
+// every card on the homepage) silently showed 0 downloads no matter how
+// many real downloads it had.
+func testSearchIncludesDownloadCount(t *testing.T, s store.MetadataStore) {
+	ctx := context.Background()
+	p := store.NewPlugin{Scope: "carol", Name: "widget"}
+	v := store.NewVersion{Scope: "carol", Name: "widget", Version: "1.0.0", Checksum: "abc", ManifestJSON: "{}"}
+	if err := s.UpsertPluginAndVersion(ctx, p, v); err != nil {
+		t.Fatalf("UpsertPluginAndVersion: %v", err)
+	}
+	for i := 0; i < 5; i++ {
+		if err := s.IncrementDownloadCount(ctx, "carol", "widget", "1.0.0"); err != nil {
+			t.Fatalf("IncrementDownloadCount: %v", err)
+		}
+	}
+
+	results, err := s.Search(ctx, "widget")
+	if err != nil {
+		t.Fatalf("Search: %v", err)
+	}
+	if len(results) != 1 {
+		t.Fatalf("expected 1 search result, got %d", len(results))
+	}
+	if results[0].TotalDownloads != 5 {
+		t.Fatalf("Search result has stale download count: got %d, want 5", results[0].TotalDownloads)
 	}
 }
 

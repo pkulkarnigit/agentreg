@@ -77,6 +77,20 @@ func (r *Registry) Publish(ctx context.Context, in PublishInput) (*store.Version
 		return nil, fmt.Errorf("%w: version %q is not valid semver", ErrInvalidInput, in.Version)
 	}
 
+	// Check immutability BEFORE writing to blob storage. Versions are
+	// immutable, so a duplicate publish (e.g. a retried request, or the
+	// crawler's idempotent re-runs) must be rejected without touching the
+	// stored blob — otherwise it would silently overwrite the file on
+	// disk with a fresh (and not necessarily byte-identical — tarball
+	// headers embed mtimes) copy, while the checksum recorded at the
+	// *first* publish stays unchanged, corrupting every future download
+	// of a version the caller was told already existed unchanged.
+	if _, err := r.meta.GetVersion(ctx, in.Scope, in.Name, in.Version); err == nil {
+		return nil, ErrConflict
+	} else if err != store.ErrNotFound {
+		return nil, err
+	}
+
 	checksum, _, err := r.blob.Put(ctx, in.Scope, in.Name, in.Version, in.Tarball)
 	if err != nil {
 		return nil, fmt.Errorf("store tarball: %w", err)
