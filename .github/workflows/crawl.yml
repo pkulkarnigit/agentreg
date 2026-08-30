@@ -1,0 +1,43 @@
+name: Refresh catalog
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # daily at 06:00 UTC
+  workflow_dispatch: {} # allow a manual run from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build crawler
+        run: go build -o bin/crawler ./cmd/crawler
+
+      # Discovery only — no -publish here. This runner has no way to
+      # reach a self-hosted registry running on someone's own machine, so
+      # this job's only job is keeping the checked-in catalog snapshot
+      # (browsable at /catalog on any running instance) current. Mirroring
+      # into a specific live registry is a separate, local concern — see
+      # the README's "Catalog and mirror" section.
+      - name: Crawl
+        run: ./bin/crawler
+
+      - name: Commit catalog if it changed
+        run: |
+          if git diff --quiet -- catalog/agent-plugins-catalog.json; then
+            echo "No changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add catalog/agent-plugins-catalog.json
+          git commit -m "Refresh catalog (automated)"
+          git push
