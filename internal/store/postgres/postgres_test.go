@@ -49,6 +49,9 @@ func TestConformance(t *testing.T) {
 		if _, err := s.db.Exec(schemaSQL); err != nil {
 			t.Fatalf("apply schema: %v", err)
 		}
+		if _, err := s.db.Exec(migrateSearchVectorSQL); err != nil {
+			t.Fatalf("migrate search index: %v", err)
+		}
 		t.Cleanup(func() {
 			s.db.Exec(fmt.Sprintf(`DROP SCHEMA IF EXISTS %s CASCADE`, schema))
 			s.Close()

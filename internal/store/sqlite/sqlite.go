@@ -80,7 +80,43 @@ CREATE TABLE IF NOT EXISTS password_resets (
 	expires_at TEXT NOT NULL,
 	used_at    TEXT
 );
+
+-- Full-text index over plugins(scope, name, description), replacing a
+-- leading-wildcard LIKE '%...%' in Search, which can't use an index and
+-- forces a full table scan on every request. External-content FTS5 table
+-- (content='plugins') keeps the indexed text out of plugins itself; the
+-- three triggers below are the standard SQLite-documented way to keep it
+-- in sync with every insert/update/delete, since content='plugins' tables
+-- aren't maintained automatically. Keywords aren't included here — they're
+-- a separate one-to-many table and stay on a plain LIKE in Search, which is
+-- fine given how few keywords a single plugin actually has.
+CREATE VIRTUAL TABLE IF NOT EXISTS plugins_fts USING fts5(
+	scope, name, description,
+	content='plugins', content_rowid='rowid'
+);
+
+CREATE TRIGGER IF NOT EXISTS plugins_fts_ai AFTER INSERT ON plugins BEGIN
+	INSERT INTO plugins_fts(rowid, scope, name, description) VALUES (new.rowid, new.scope, new.name, new.description);
+END;
+
+CREATE TRIGGER IF NOT EXISTS plugins_fts_ad AFTER DELETE ON plugins BEGIN
+	INSERT INTO plugins_fts(plugins_fts, rowid, scope, name, description) VALUES ('delete', old.rowid, old.scope, old.name, old.description);
+END;
+
+CREATE TRIGGER IF NOT EXISTS plugins_fts_au AFTER UPDATE ON plugins BEGIN
+	INSERT INTO plugins_fts(plugins_fts, rowid, scope, name, description) VALUES ('delete', old.rowid, old.scope, old.name, old.description);
+	INSERT INTO plugins_fts(rowid, scope, name, description) VALUES (new.rowid, new.scope, new.name, new.description);
+END;
+
+CREATE TABLE IF NOT EXISTS schema_migrations (
+	name       TEXT PRIMARY KEY,
+	applied_at TEXT NOT NULL
+);
 `
+
+// backfillFTSMigration is the name recorded in schema_migrations once the
+// full-text index has been backfilled — see runBackfillFTS.
+const backfillFTSMigration = "plugins_fts_backfill"
 
 type Store struct {
 	db *sql.DB
@@ -101,7 +137,42 @@ func Open(path string) (*Store, error) {
 		db.Close()
 		return nil, fmt.Errorf("apply schema: %w", err)
 	}
+	if err := runBackfillFTS(db); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("backfill search index: %w", err)
+	}
 	return &Store{db: db}, nil
+}
+
+// runBackfillFTS indexes any plugins rows that predate the plugins_fts
+// table/triggers — those only cover writes from here on, so a database
+// that already had rows before this migration landed would otherwise have
+// them permanently missing from search.
+//
+// This can't be a plain "insert what's missing" query the way the rest of
+// this file's migrations are: for an external-content FTS5 table (one
+// backed by content='plugins' rather than storing its own copy of the
+// text), a bare SELECT against plugins_fts with no MATCH clause reads
+// straight through to the plugins table itself rather than reflecting
+// what's actually in the FTS index — so a "WHERE rowid NOT IN (SELECT
+// rowid FROM plugins_fts)" guard always looks like everything's already
+// indexed even when the index is completely empty. The real fix is
+// FTS5's documented 'rebuild' command, which reindexes from the content
+// table directly; schema_migrations just makes sure that full reindex
+// runs exactly once rather than on every process start.
+func runBackfillFTS(db *sql.DB) error {
+	res, err := db.Exec(
+		`INSERT OR IGNORE INTO schema_migrations (name, applied_at) VALUES (?, ?)`,
+		backfillFTSMigration, time.Now().UTC().Format(time.RFC3339))
+	if err != nil {
+		return err
+	}
+	n, err := res.RowsAffected()
+	if err != nil || n == 0 {
+		return err // already backfilled in a previous Open()
+	}
+	_, err = db.Exec(`INSERT INTO plugins_fts(plugins_fts) VALUES ('rebuild')`)
+	return err
 }
 
 func (s *Store) Close() error { return s.db.Close() }
@@ -319,6 +390,25 @@ func (s *Store) ListVersions(ctx context.Context, scope, name string) ([]store.V
 	return out, rows.Err()
 }
 
+// fts5MatchQuery turns raw search-box text into a safe FTS5 MATCH
+// expression. FTS5's own query syntax gives special meaning to quotes,
+// hyphens, colons, and boolean keywords — passing user input straight
+// through would let a query like `foo -bar` silently mean "exclude bar"
+// instead of a literal search for those two words, or error outright on
+// something like a bare `"`. Quoting each whitespace-separated token as
+// its own FTS5 string literal (doubling any embedded quote, FTS5's own
+// escape rule) makes every token literal; consecutive quoted tokens with
+// no explicit operator between them default to AND in FTS5, which is the
+// same "all these words" semantics the old LIKE-based search had.
+func fts5MatchQuery(query string) string {
+	fields := strings.Fields(query)
+	parts := make([]string, len(fields))
+	for i, f := range fields {
+		parts[i] = `"` + strings.ReplaceAll(f, `"`, `""`) + `"`
+	}
+	return strings.Join(parts, " ")
+}
+
 func (s *Store) IncrementDownloadCount(ctx context.Context, scope, name, version string) error {
 	_, err := s.db.ExecContext(ctx,
 		`UPDATE versions SET download_count = download_count + 1 WHERE scope = ? AND name = ? AND version = ?`,
@@ -327,17 +417,32 @@ func (s *Store) IncrementDownloadCount(ctx context.Context, scope, name, version
 }
 
 func (s *Store) Search(ctx context.Context, query string) ([]store.Plugin, error) {
-	like := "%" + strings.ToLower(query) + "%"
-	rows, err := s.db.QueryContext(ctx, `
-		SELECT DISTINCT p.scope, p.name, p.description, p.homepage, p.repository, p.license,
-		       p.latest_version, p.created_at, p.updated_at,
-		       COALESCE((SELECT SUM(download_count) FROM versions v WHERE v.scope = p.scope AND v.name = p.name), 0)
-		FROM plugins p
-		LEFT JOIN keywords k ON k.scope = p.scope AND k.name = p.name
-		WHERE lower(p.scope || '/' || p.name) LIKE ?
-		   OR lower(p.description) LIKE ?
-		   OR lower(k.keyword) LIKE ?
-		ORDER BY p.updated_at DESC`, like, like, like)
+	query = strings.TrimSpace(query)
+
+	var rows *sql.Rows
+	var err error
+	if query == "" {
+		// No query: browse-all, same as the old LIKE '%%' behavior — an
+		// empty FTS5 MATCH would error, not match everything, so this has
+		// to stay a separate path rather than falling through below.
+		rows, err = s.db.QueryContext(ctx, `
+			SELECT p.scope, p.name, p.description, p.homepage, p.repository, p.license,
+			       p.latest_version, p.created_at, p.updated_at,
+			       COALESCE((SELECT SUM(download_count) FROM versions v WHERE v.scope = p.scope AND v.name = p.name), 0)
+			FROM plugins p
+			ORDER BY p.updated_at DESC`)
+	} else {
+		like := "%" + strings.ToLower(query) + "%"
+		rows, err = s.db.QueryContext(ctx, `
+			SELECT DISTINCT p.scope, p.name, p.description, p.homepage, p.repository, p.license,
+			       p.latest_version, p.created_at, p.updated_at,
+			       COALESCE((SELECT SUM(download_count) FROM versions v WHERE v.scope = p.scope AND v.name = p.name), 0)
+			FROM plugins p
+			LEFT JOIN keywords k ON k.scope = p.scope AND k.name = p.name
+			WHERE p.rowid IN (SELECT rowid FROM plugins_fts WHERE plugins_fts MATCH ?)
+			   OR lower(k.keyword) LIKE ?
+			ORDER BY p.updated_at DESC`, fts5MatchQuery(query), like)
+	}
 	if err != nil {
 		return nil, err
 	}

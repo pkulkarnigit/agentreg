@@ -87,6 +87,26 @@ CREATE TABLE IF NOT EXISTS password_resets (
 );
 `
 
+// migrateSearchVectorSQL adds a full-text index over
+// plugins(scope, name, description), replacing a leading-wildcard
+// LIKE '%...%' in Search, which can't use a B-tree index and forces a
+// sequential scan on every request. It's a separate ALTER TABLE rather
+// than baked into schemaSQL's CREATE TABLE above because CREATE TABLE IF
+// NOT EXISTS is a no-op against a database that already has the plugins
+// table — this runs on every Open() and, being a GENERATED ALWAYS ...
+// STORED column, Postgres backfills it for every existing row the moment
+// the column is added, no separate backfill needed the way SQLite's FTS5
+// (an external-content table, not a generated column) requires. Keywords
+// aren't included — they're a separate one-to-many table and stay on a
+// plain LIKE in Search, which is fine given how few keywords a single
+// plugin actually has.
+const migrateSearchVectorSQL = `
+ALTER TABLE plugins ADD COLUMN IF NOT EXISTS search_vector tsvector
+	GENERATED ALWAYS AS (to_tsvector('simple', scope || ' ' || name || ' ' || description)) STORED;
+
+CREATE INDEX IF NOT EXISTS idx_plugins_search_vector ON plugins USING GIN (search_vector);
+`
+
 type Store struct {
 	db *sql.DB
 }
@@ -128,6 +148,10 @@ func Open(dsn string) (*Store, error) {
 	if _, err := db.Exec(schemaSQL); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("apply schema: %w", err)
+	}
+	if _, err := db.Exec(migrateSearchVectorSQL); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("migrate search index: %w", err)
 	}
 	return &Store{db: db}, nil
 }
@@ -337,17 +361,38 @@ func (s *Store) IncrementDownloadCount(ctx context.Context, scope, name, version
 }
 
 func (s *Store) Search(ctx context.Context, query string) ([]store.Plugin, error) {
-	like := "%" + strings.ToLower(query) + "%"
-	rows, err := s.db.QueryContext(ctx, `
-		SELECT DISTINCT p.scope, p.name, p.description, p.homepage, p.repository, p.license,
-		       p.latest_version, p.created_at, p.updated_at,
-		       COALESCE((SELECT SUM(download_count) FROM versions v WHERE v.scope = p.scope AND v.name = p.name), 0)
-		FROM plugins p
-		LEFT JOIN keywords k ON k.scope = p.scope AND k.name = p.name
-		WHERE lower(p.scope || '/' || p.name) LIKE $1
-		   OR lower(p.description) LIKE $2
-		   OR lower(k.keyword) LIKE $3
-		ORDER BY p.updated_at DESC`, like, like, like)
+	query = strings.TrimSpace(query)
+
+	var rows *sql.Rows
+	var err error
+	if query == "" {
+		// No query: browse-all, same as the old LIKE '%%' behavior —
+		// websearch_to_tsquery('') produces an empty tsquery that matches
+		// nothing, so this has to stay a separate path rather than
+		// falling through below.
+		rows, err = s.db.QueryContext(ctx, `
+			SELECT p.scope, p.name, p.description, p.homepage, p.repository, p.license,
+			       p.latest_version, p.created_at, p.updated_at,
+			       COALESCE((SELECT SUM(download_count) FROM versions v WHERE v.scope = p.scope AND v.name = p.name), 0)
+			FROM plugins p
+			ORDER BY p.updated_at DESC`)
+	} else {
+		like := "%" + strings.ToLower(query) + "%"
+		// websearch_to_tsquery parses raw search-box syntax (quotes,
+		// "-" for exclusion, implicit AND between words) the way a real
+		// search engine's box would, and — unlike plain to_tsquery —
+		// never errors on malformed input, so no extra sanitization of
+		// user-supplied query is needed here.
+		rows, err = s.db.QueryContext(ctx, `
+			SELECT DISTINCT p.scope, p.name, p.description, p.homepage, p.repository, p.license,
+			       p.latest_version, p.created_at, p.updated_at,
+			       COALESCE((SELECT SUM(download_count) FROM versions v WHERE v.scope = p.scope AND v.name = p.name), 0)
+			FROM plugins p
+			LEFT JOIN keywords k ON k.scope = p.scope AND k.name = p.name
+			WHERE p.search_vector @@ websearch_to_tsquery('simple', $1)
+			   OR lower(k.keyword) LIKE $2
+			ORDER BY p.updated_at DESC`, query, like)
+	}
 	if err != nil {
 		return nil, err
 	}

@@ -83,6 +83,18 @@ accidentally take down Postgres by scaling up. 10/replica leaves headroom
 for around 8 replicas before Postgres's own `max_connections` (100 by
 default) needs raising too.
 
+Search stopped doing a leading-wildcard `LIKE '%...%'` scan — that pattern
+can't use an index at all, so it got slower in direct proportion to how
+many plugins existed, on every single search request. Both backends now
+run real full-text search instead: SQLite via an FTS5 index
+(`internal/store/sqlite`), Postgres via a generated `tsvector` column with
+a GIN index (`internal/store/postgres`). One real behavior change comes
+with it — search now matches whole indexed words, not arbitrary
+substrings, which is what actually makes an index usable (and is how
+GitHub/npm/PyPI search behave too, not a novel restriction). An empty
+query still browses everything, same as before. Keywords stay on a plain
+`LIKE`, since a single plugin only ever has a handful.
+
 Blob storage has the same swap available: `internal/store/s3blob`
 implements the same `store.BlobStore` interface as the default local-disk
 `fsblob`, and runs the identical conformance suite (`internal/store/blobtest`)

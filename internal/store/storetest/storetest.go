@@ -21,6 +21,8 @@ func RunConformanceSuite(t *testing.T, newStore func(t *testing.T) store.Metadat
 	t.Run("PublishAndResolve", func(t *testing.T) { testPublishAndResolve(t, newStore(t)) })
 	t.Run("DownloadCount", func(t *testing.T) { testDownloadCount(t, newStore(t)) })
 	t.Run("SearchIncludesDownloadCount", func(t *testing.T) { testSearchIncludesDownloadCount(t, newStore(t)) })
+	t.Run("SearchEmptyQueryReturnsAll", func(t *testing.T) { testSearchEmptyQueryReturnsAll(t, newStore(t)) })
+	t.Run("SearchMatchesWholeWords", func(t *testing.T) { testSearchMatchesWholeWords(t, newStore(t)) })
 	t.Run("EmailVerification", func(t *testing.T) { testEmailVerification(t, newStore(t)) })
 	t.Run("PasswordReset", func(t *testing.T) { testPasswordReset(t, newStore(t)) })
 }
@@ -180,6 +182,64 @@ func testSearchIncludesDownloadCount(t *testing.T, s store.MetadataStore) {
 	}
 	if results[0].TotalDownloads != 5 {
 		t.Fatalf("Search result has stale download count: got %d, want 5", results[0].TotalDownloads)
+	}
+}
+
+func testSearchEmptyQueryReturnsAll(t *testing.T, s store.MetadataStore) {
+	ctx := context.Background()
+	for _, name := range []string{"one", "two"} {
+		p := store.NewPlugin{Scope: "dave", Name: name}
+		v := store.NewVersion{Scope: "dave", Name: name, Version: "1.0.0", Checksum: "abc", ManifestJSON: "{}"}
+		if err := s.UpsertPluginAndVersion(ctx, p, v); err != nil {
+			t.Fatalf("UpsertPluginAndVersion %s: %v", name, err)
+		}
+	}
+
+	results, err := s.Search(ctx, "")
+	if err != nil {
+		t.Fatalf("Search(\"\"): %v", err)
+	}
+	if len(results) != 2 {
+		t.Fatalf("expected empty query to return both plugins, got %d: %v", len(results), results)
+	}
+
+	results, err = s.Search(ctx, "   ")
+	if err != nil {
+		t.Fatalf("Search(whitespace): %v", err)
+	}
+	if len(results) != 2 {
+		t.Fatalf("expected whitespace-only query to return both plugins, got %d", len(results))
+	}
+}
+
+// testSearchMatchesWholeWords documents the switch from substring LIKE
+// matching to full-text search (SQLite FTS5 / Postgres tsvector) on both
+// backends: a query has to match a whole indexed word, not an arbitrary
+// substring within one. This is a deliberate behavior change (also what
+// makes the index usable at all), not a regression, so it's pinned here
+// rather than left implicit.
+func testSearchMatchesWholeWords(t *testing.T, s store.MetadataStore) {
+	ctx := context.Background()
+	p := store.NewPlugin{Scope: "erin", Name: "automation-tool", Description: "a tool for automating workflows"}
+	v := store.NewVersion{Scope: "erin", Name: "automation-tool", Version: "1.0.0", Checksum: "abc", ManifestJSON: "{}"}
+	if err := s.UpsertPluginAndVersion(ctx, p, v); err != nil {
+		t.Fatalf("UpsertPluginAndVersion: %v", err)
+	}
+
+	results, err := s.Search(ctx, "workflows")
+	if err != nil {
+		t.Fatalf("Search(whole word): %v", err)
+	}
+	if len(results) != 1 || results[0].Name != "automation-tool" {
+		t.Fatalf("expected whole-word query to match, got %v", results)
+	}
+
+	results, err = s.Search(ctx, "flow")
+	if err != nil {
+		t.Fatalf("Search(substring): %v", err)
+	}
+	if len(results) != 0 {
+		t.Fatalf("expected a bare substring not to match a whole-word index, got %v", results)
 	}
 }
 
