@@ -1,0 +1,11 @@
+services:
+  apreg-server:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - apreg-data:/home/apreg/data
+    restart: unless-stopped
+
+volumes:
+  apreg-data:

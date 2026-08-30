@@ -1,0 +1,6 @@
+/bin/
+/data/
+*.tar.gz
+*.db
+server.log
+server.pid

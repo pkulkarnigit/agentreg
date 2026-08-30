@@ -1,0 +1,55 @@
+{{define "title"}}@{{.Plugin.Scope}}/{{.Plugin.Name}} — AgentReg{{end}}
+{{define "content"}}
+<p><a href="/">&larr; back</a></p>
+<h1>@{{.Plugin.Scope}}/{{.Plugin.Name}}</h1>
+<p>{{.Plugin.Description}}</p>
+<p class="muted">
+  {{if .Plugin.License}}license: {{.Plugin.License}} &middot; {{end}}
+  {{if .Plugin.Homepage}}<a href="{{.Plugin.Homepage}}">homepage</a> &middot; {{end}}
+  {{if .Plugin.Repository}}<a href="{{.Plugin.Repository}}">repository</a>{{end}}
+</p>
+{{if .Plugin.Keywords}}<p class="keywords">{{range .Plugin.Keywords}}<span>{{.}}</span>{{end}}</p>{{end}}
+
+<div class="install">
+  <p class="muted">install this version:</p>
+  <pre>apreg install @{{.Plugin.Scope}}/{{.Plugin.Name}}@{{.Version.Version}}</pre>
+</div>
+
+<section>
+  <h2>Versions</h2>
+  <table>
+    <tr><th>version</th><th>published</th><th>checksum (sha256)</th></tr>
+    {{range .Versions}}
+    <tr>
+      <td><a href="/@{{$.Plugin.Scope}}/{{$.Plugin.Name}}?version={{.Version}}">{{.Version}}</a>{{if eq .Version $.Plugin.LatestVersion}} <span class="muted">(latest)</span>{{end}}</td>
+      <td class="muted">{{.PublishedAt.Format "2006-01-02 15:04"}}</td>
+      <td class="muted"><code>{{slice .Checksum 0 12}}&hellip;</code></td>
+    </tr>
+    {{end}}
+  </table>
+</section>
+
+{{if .Skills}}
+<section>
+  <h2>Skills ({{.Version.Version}})</h2>
+  {{range .Skills}}
+  <div class="card">
+    <h3>{{.Name}}</h3>
+    <pre>{{.Preview}}</pre>
+  </div>
+  {{end}}
+</section>
+{{end}}
+
+{{if .MCPServers}}
+<section>
+  <h2>MCP Servers ({{.Version.Version}})</h2>
+  <table>
+    <tr><th>name</th><th>type</th><th>command / url</th></tr>
+    {{range .MCPServers}}
+    <tr><td>{{.Name}}</td><td>{{.Type}}</td><td><code>{{.Target}}</code></td></tr>
+    {{end}}
+  </table>
+</section>
+{{end}}
+{{end}}

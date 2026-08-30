@@ -1,0 +1,19 @@
+{{define "title"}}AgentReg{{if .Query}} — search: {{.Query}}{{end}}{{end}}
+{{define "content"}}
+<form class="search" method="get" action="/">
+  <input type="text" name="q" placeholder="Search plugins by name, description, or keyword&hellip;" value="{{.Query}}">
+</form>
+
+{{if not .Plugins}}
+  <p class="muted">{{if .Query}}No plugins match "{{.Query}}".{{else}}No plugins published yet. Be the first: <code>apreg publish</code>.{{end}}</p>
+{{end}}
+
+{{range .Plugins}}
+<div class="card">
+  <h3><a href="/@{{.Scope}}/{{.Name}}">@{{.Scope}}/{{.Name}}</a></h3>
+  <p>{{.Description}}</p>
+  <p class="muted">latest: {{.LatestVersion}}</p>
+  {{if .Keywords}}<p class="keywords">{{range .Keywords}}<span>{{.}}</span>{{end}}</p>{{end}}
+</div>
+{{end}}
+{{end}}
