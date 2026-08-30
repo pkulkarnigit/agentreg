@@ -123,16 +123,14 @@ already done for Postgres) or local disk for S3 later is a new file
 implementing those interfaces, not a rewrite — see the package doc comment
 on `internal/store` for details.
 
-## Catalog: what's publicly out there
+## Catalog and mirror: what's publicly out there
 
 `cmd/crawler` discovers real, publicly known Agent Plugins (from the
 [awesome-agent-plugins](https://github.com/ZeroPointRepo/awesome-agent-plugins)
 directory), fetches each one from GitHub, and validates it against the
 exact same rules AgentReg enforces at publish time
-(`internal/manifest.ValidateDir`). It's a **discovery/reporting tool
-only** — it never publishes anything into a running AgentReg instance;
-third-party content landing under our own `@scope` namespace without the
-author's involvement would be an attribution problem, not a feature.
+(`internal/manifest.ValidateDir`). Browse the results at `/catalog` on a
+running server.
 
 ```bash
 go build -o bin/crawler ./cmd/crawler
@@ -146,8 +144,36 @@ server — plus, for anything that doesn't validate, exactly why (missing
 or the fetch itself failing). A real run found real, useful signal: several
 "Official & Reference" entries point at collection-repo roots rather than
 a single plugin (accurate — they're not individually a compliant plugin at
-that path), and a couple of entries fail MCP schema validation for
-reasons worth reporting upstream.
+that path), a couple of entries fail MCP schema validation for reasons
+worth reporting upstream, and at least one has a version string
+(`0.2.0.dev0`) that isn't valid semver — AgentReg correctly refuses to
+publish that one.
+
+Pass `-publish` to also mirror every valid entry into a running registry,
+under one dedicated account (never impersonating the original author —
+the server enforces that the publishing token's owner matches the scope
+on every publish, same as any other `apreg publish`):
+
+```bash
+# one-time: create the mirror account
+apreg signup --registry http://localhost:8080   # username: github-mirror
+apreg login  --registry http://localhost:8080
+export APREG_MIRROR_TOKEN=$(python3 -c "import json;print(json.load(open('$HOME/.apreg/config.json'))['token'])")
+
+./bin/crawler -publish -registry http://localhost:8080 -scope github-mirror
+```
+
+Publishing is idempotent — an unchanged upstream version publishes once,
+ever; re-running the crawler just confirms it's still there (HTTP 409,
+treated as success, not an error). Entries without a valid semver
+`version` field are skipped with a clear reason rather than guessing one.
+
+Note: resolving the default branch for entries that don't pin one via
+`/tree/{ref}/...` costs one GitHub API call each; unauthenticated, that's
+capped at 60/hour. Re-running the crawler several times in quick
+succession can hit that limit — those entries report a fetch error until
+it resets. A `GITHUB_TOKEN`-authenticated client (not yet wired up) would
+raise it to 5,000/hour.
 
 ## Tests
 

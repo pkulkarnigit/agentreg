@@ -1,9 +1,10 @@
 // Command crawler discovers publicly known Agent Plugins from the
 // awesome-agent-plugins directory on GitHub, fetches and validates each
 // one against internal/manifest (the same rules AgentReg enforces at
-// publish time), and writes the results as a JSON catalog. This is a
-// discovery/reporting tool only — it never publishes anything into a
-// running AgentReg instance.
+// publish time), and writes the results as a JSON catalog. With -publish,
+// it also mirrors every valid entry into a running AgentReg registry
+// under one dedicated account's scope (see internal/crawler.PublishConfig)
+// — otherwise it's discovery/reporting only.
 package main
 
 import (
@@ -24,9 +25,22 @@ import (
 func main() {
 	out := flag.String("out", "catalog/agent-plugins-catalog.json", "path to write the JSON catalog to")
 	sourceURL := flag.String("source", crawler.AwesomeListURL, "URL of the awesome-list markdown to crawl")
+	publish := flag.Bool("publish", false, "also mirror every valid entry into a running AgentReg registry")
+	registryURL := flag.String("registry", "", "registry URL to mirror into (required with -publish)")
+	scope := flag.String("scope", "github-mirror", "the mirror account's username to publish under (required with -publish)")
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
+
+	var publishCfg *crawler.PublishConfig
+	if *publish {
+		token := os.Getenv("APREG_MIRROR_TOKEN")
+		if *registryURL == "" || *scope == "" || token == "" {
+			logger.Error("-publish requires -registry, -scope, and APREG_MIRROR_TOKEN (an API token for that account) to be set")
+			os.Exit(1)
+		}
+		publishCfg = &crawler.PublishConfig{RegistryURL: *registryURL, Scope: *scope, Token: token}
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
@@ -44,7 +58,7 @@ func main() {
 	}
 	logger.Info("parsed entries", "count", len(entries))
 
-	results := crawler.Crawl(ctx, logger, entries)
+	results := crawler.Crawl(ctx, logger, entries, publishCfg)
 
 	cat := crawler.Catalog{
 		GeneratedAt: time.Now().UTC(),
@@ -70,15 +84,23 @@ func main() {
 		os.Exit(1)
 	}
 
-	valid, invalid := 0, 0
+	valid, invalid, published := 0, 0, 0
 	for _, r := range results {
 		if r.Valid {
 			valid++
 		} else {
 			invalid++
 		}
+		if r.Published {
+			published++
+		}
 	}
-	fmt.Printf("Catalog written to %s: %d entries (%d valid, %d invalid/unreachable)\n", *out, len(results), valid, invalid)
+	if publishCfg != nil {
+		fmt.Printf("Catalog written to %s: %d entries (%d valid, %d invalid/unreachable, %d mirrored to %s/@%s)\n",
+			*out, len(results), valid, invalid, published, *registryURL, *scope)
+	} else {
+		fmt.Printf("Catalog written to %s: %d entries (%d valid, %d invalid/unreachable)\n", *out, len(results), valid, invalid)
+	}
 }
 
 func fetchText(ctx context.Context, url string) (string, error) {

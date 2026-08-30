@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-30T11:34:21.399883Z",
+  "generated_at": "2026-08-30T11:44:21.956853Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -20,7 +20,8 @@
       "Skills": [
         "migrate-agent-plugin"
       ],
-      "HasMCP": false
+      "HasMCP": false,
+      "Published": true
     },
     {
       "Name": "agent-plugins-spec",
@@ -107,7 +108,8 @@
         "b2c-slas-auth-patterns",
         "b2c-webservices"
       ],
-      "HasMCP": false
+      "HasMCP": false,
+      "Published": true
     },
     {
       "Name": "csharp-dotnet-development",
@@ -161,7 +163,8 @@
         "model-integration",
         "self-review"
       ],
-      "HasMCP": false
+      "HasMCP": false,
+      "PublishError": "cannot mirror: plugin.json has no version field"
     },
     {
       "Name": "magpie",
@@ -251,7 +254,8 @@
         "workflow-security-audit",
         "write-skill"
       ],
-      "HasMCP": false
+      "HasMCP": false,
+      "PublishError": "publish failed: HTTP 422: {\"error\":\"invalid input: version \\\"0.2.0.dev0\\\" is not valid semver\"}"
     },
     {
       "Name": "swiftui-expert",
@@ -271,7 +275,8 @@
       "Skills": [
         "swiftui-expert-skill"
       ],
-      "HasMCP": false
+      "HasMCP": false,
+      "Published": true
     },
     {
       "Name": "testing-automation",
@@ -304,7 +309,8 @@
       "Valid": true,
       "PluginName": "vuetify-mcp",
       "PluginVersion": "1.0.0",
-      "HasMCP": true
+      "HasMCP": true,
+      "Published": true
     },
     {
       "Name": "dak",
@@ -351,7 +357,8 @@
         "ml-best-practices",
         "notebook-guidance"
       ],
-      "HasMCP": true
+      "HasMCP": true,
+      "Published": true
     },
     {
       "Name": "database-data-management",
@@ -387,7 +394,8 @@
       "Skills": [
         "hindsight-memory"
       ],
-      "HasMCP": true
+      "HasMCP": true,
+      "Published": true
     },
     {
       "Name": "neon-postgres",
@@ -413,7 +421,8 @@
         "neon-postgres-branches",
         "neon-postgres-egress-optimizer"
       ],
-      "HasMCP": true
+      "HasMCP": true,
+      "Published": true
     },
     {
       "Name": "open-knowledge",
@@ -430,7 +439,8 @@
       "Valid": true,
       "PluginName": "open-knowledge",
       "PluginVersion": "0.1.0",
-      "HasMCP": true
+      "HasMCP": true,
+      "Published": true
     },
     {
       "Name": "qdrant",
@@ -450,7 +460,8 @@
       "Skills": [
         "setup"
       ],
-      "HasMCP": true
+      "HasMCP": true,
+      "Published": true
     },
     {
       "Name": "upstash",
@@ -480,7 +491,8 @@
         "upstash-vector-js",
         "upstash-workflow-js"
       ],
-      "HasMCP": false
+      "HasMCP": false,
+      "Published": true
     },
     {
       "Name": "zillapi",
@@ -500,7 +512,8 @@
       "Skills": [
         "zillow"
       ],
-      "HasMCP": true
+      "HasMCP": true,
+      "Published": true
     },
     {
       "Name": "context7",
@@ -520,7 +533,8 @@
       "Skills": [
         "context7-mcp"
       ],
-      "HasMCP": true
+      "HasMCP": true,
+      "Published": true
     },
     {
       "Name": "exa",
@@ -541,7 +555,8 @@
         "exa-agent",
         "search"
       ],
-      "HasMCP": true
+      "HasMCP": true,
+      "Published": true
     },
     {
       "Name": "scientific-agent-skills",
@@ -577,7 +592,8 @@
       "Skills": [
         "stays"
       ],
-      "HasMCP": true
+      "HasMCP": true,
+      "Published": true
     },
     {
       "Name": "chromium-control-canvas",
@@ -615,7 +631,8 @@
         "visual-recap",
         "visualize-repo"
       ],
-      "HasMCP": true
+      "HasMCP": true,
+      "Published": true
     },
     {
       "Name": "backlog-swipe-triage",
@@ -706,7 +723,8 @@
         "kubernetes-architect",
         "terraform-specialist"
       ],
-      "HasMCP": false
+      "HasMCP": false,
+      "Published": true
     },
     {
       "Name": "aws-agents",
@@ -733,7 +751,8 @@
         "agents-optimize",
         "agents-pay"
       ],
-      "HasMCP": true
+      "HasMCP": true,
+      "Published": true
     },
     {
       "Name": "aws-cloud-development",
@@ -792,7 +811,8 @@
         "launch-with-aws",
         "signing-in-to-aws"
       ],
-      "HasMCP": true
+      "HasMCP": true,
+      "Published": true
     },
     {
       "Name": "devops-oncall",
@@ -825,7 +845,8 @@
       "Valid": true,
       "PluginName": "sentry",
       "PluginVersion": "0.0.0",
-      "HasMCP": true
+      "HasMCP": true,
+      "Published": true
     },
     {
       "Name": "remotion",
@@ -877,7 +898,8 @@
       "Skills": [
         "youtube"
       ],
-      "HasMCP": true
+      "HasMCP": true,
+      "Published": true
     },
     {
       "Name": "crowdstrike-falcon-fusion",
@@ -903,7 +925,8 @@
         "setup",
         "workflows"
       ],
-      "HasMCP": false
+      "HasMCP": false,
+      "Published": true
     },
     {
       "Name": "gitguardian",
@@ -987,7 +1010,8 @@
         "usage-based-billing",
         "webhook-integration"
       ],
-      "HasMCP": true
+      "HasMCP": true,
+      "Published": true
     },
     {
       "Name": "open-market-data",
@@ -1007,7 +1031,8 @@
       "Skills": [
         "open-market-data"
       ],
-      "HasMCP": true
+      "HasMCP": true,
+      "Published": true
     },
     {
       "Name": "ahujasid/blender-mcp",

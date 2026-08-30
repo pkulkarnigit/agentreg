@@ -1,8 +1,11 @@
 // Package crawler discovers publicly known Agent Plugins from the
 // awesome-agent-plugins directory on GitHub, fetches each one, validates
 // it against the same rules AgentReg enforces at publish time
-// (internal/manifest), and records the results as a catalog — a snapshot
-// of what's out there, not something published into the registry.
+// (internal/manifest), and records the results as a catalog. Optionally
+// (see PublishConfig), it also mirrors every valid entry into a running
+// AgentReg registry under one dedicated account's scope — never
+// impersonating the original author, since the server enforces that the
+// publishing token's owner matches the scope on every publish.
 package crawler
 
 import (

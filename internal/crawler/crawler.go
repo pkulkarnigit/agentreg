@@ -2,6 +2,7 @@ package crawler
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -28,6 +29,14 @@ type Result struct {
 	HasMCP          bool
 	ValidationError string `json:",omitempty"`
 	FetchError      string `json:",omitempty"`
+
+	// Published is true once this exact version is confirmed live in the
+	// mirror registry — either just published this run, or already there
+	// from a previous run (re-running the crawler is idempotent: an
+	// unchanged upstream version publishes once, ever). Only meaningful
+	// when Crawl was called with a non-nil PublishConfig.
+	Published    bool   `json:",omitempty"`
+	PublishError string `json:",omitempty"`
 }
 
 // Catalog is the persisted output of a crawl run.
@@ -40,8 +49,10 @@ type Catalog struct {
 // Crawl fetches and validates every entry, returning results in the same
 // order as entries. Repos referenced by more than one entry (common — the
 // list has several large collections with many plugins each) are only
-// downloaded once via repoCache, keyed by owner/repo/ref.
-func Crawl(ctx context.Context, logger *slog.Logger, entries []Entry) []Result {
+// downloaded once via repoCache, keyed by owner/repo/ref. If publish is
+// non-nil, every valid entry is also published into that registry (see
+// PublishConfig) before its temp files are cleaned up.
+func Crawl(ctx context.Context, logger *slog.Logger, entries []Entry, publish *PublishConfig) []Result {
 	if logger == nil {
 		logger = slog.Default()
 	}
@@ -121,6 +132,29 @@ func Crawl(ctx context.Context, logger *slog.Logger, entries []Entry) []Result {
 		r.PluginVersion = bundle.Plugin.Version
 		r.Skills = bundle.Skills
 		r.HasMCP = bundle.HasMCP
+
+		if publish != nil {
+			switch {
+			case bundle.Plugin.Version == "":
+				// Publishing requires an immutable, addressable version;
+				// the spec allows plugin.json to omit one, so this is a
+				// real (not exceptional) case, not a bug.
+				r.PublishError = "cannot mirror: plugin.json has no version field"
+			default:
+				pubErr := publishToRegistry(ctx, client, *publish, pluginDir, bundle.Plugin.Name, bundle.Plugin.Version)
+				switch {
+				case pubErr == nil:
+					r.Published = true
+					logger.Info("published", "plugin", bundle.Plugin.Name, "version", bundle.Plugin.Version)
+				case errors.Is(pubErr, errAlreadyPublished):
+					r.Published = true
+				default:
+					r.PublishError = sanitizePath(pubErr.Error(), workDir)
+					logger.Warn("publish failed", "name", e.Name, "plugin", bundle.Plugin.Name, "version", bundle.Plugin.Version, "error", pubErr)
+				}
+			}
+		}
+
 		results[i] = r
 	}
 

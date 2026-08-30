@@ -36,13 +36,16 @@ var (
 type Server struct {
 	reg         *registry.Registry
 	catalogPath string
+	mirrorScope string
 }
 
 // NewHandler builds the web UI. catalogPath, if non-empty, is where
 // /catalog reads cmd/crawler's JSON output from (see internal/crawler) —
 // leave empty to disable that page (it 404s with a clear message instead).
-func NewHandler(reg *registry.Registry, catalogPath string) http.Handler {
-	s := &Server{reg: reg, catalogPath: catalogPath}
+// mirrorScope is the account cmd/crawler -publish mirrors into, used only
+// to link "mirrored copy" from each catalog entry to its live listing.
+func NewHandler(reg *registry.Registry, catalogPath, mirrorScope string) http.Handler {
+	s := &Server{reg: reg, catalogPath: catalogPath, mirrorScope: mirrorScope}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", s.handleIndex)
 	mux.HandleFunc("GET /catalog", s.handleCatalog)
@@ -100,9 +103,10 @@ func (s *Server) handleCatalog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render(w, catalogTmpl, map[string]any{
-		"Catalog": cat,
-		"Valid":   valid,
-		"Invalid": invalid,
+		"Catalog":     cat,
+		"Valid":       valid,
+		"Invalid":     invalid,
+		"MirrorScope": s.mirrorScope,
 	})
 }
 

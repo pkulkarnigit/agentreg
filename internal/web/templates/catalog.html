@@ -4,9 +4,11 @@
 <p class="muted">
   Publicly known Agent Plugins found by <code>cmd/crawler</code> in the
   <a href="{{.Catalog.Source}}">awesome-agent-plugins</a> directory, fetched from GitHub and
-  validated against the same rules this registry enforces at publish time.
-  <strong>Nothing here has been published to this registry</strong> — this is a discovery report,
-  not a mirror.
+  validated against the same rules this registry enforces at publish time. Valid entries are
+  mirrored here under <a href="/@{{.MirrorScope}}">@{{.MirrorScope}}</a> — a dedicated account, so
+  mirrored content is never attributed to anyone but its original author (see each entry's
+  <code>repository</code> link) while staying clearly separate from plugins people publish
+  themselves.
 </p>
 <p class="muted">Generated {{.Catalog.GeneratedAt.Format "2006-01-02 15:04 UTC"}} &middot;
   {{len .Valid}} valid &middot; {{len .Invalid}} invalid/unreachable</p>
@@ -16,15 +18,19 @@
   {{if not .Valid}}<p class="muted">None yet.</p>{{end}}
   {{range .Valid}}
   <div class="card">
-    <h3><span class="badge valid">valid</span> {{.Name}}
+    <h3><span class="badge valid">valid</span>
+      {{if .Published}}<span class="badge mirrored">mirrored</span>{{end}}
+      {{.Name}}
       <span class="muted">by <a href="{{.AuthorURL}}">{{.Author}}</a></span></h3>
     <p>{{.Description}}</p>
     <p class="muted">
-      {{.Category}} &middot; <a href="{{.RepoURL}}">repository</a> &middot;
+      {{.Category}} &middot; <a href="{{.RepoURL}}">source</a> &middot;
       {{.PluginName}}{{if .PluginVersion}} v{{.PluginVersion}}{{end}} &middot;
       {{len .Skills}} skill{{if ne (len .Skills) 1}}s{{end}} &middot;
       {{if .HasMCP}}has MCP server{{else}}no MCP server{{end}}
+      {{if .Published}} &middot; <a href="/@{{$.MirrorScope}}/{{.PluginName}}">mirrored copy</a>{{end}}
     </p>
+    {{if .PublishError}}<p class="muted">not mirrored: {{.PublishError}}</p>{{end}}
   </div>
   {{end}}
 </section>

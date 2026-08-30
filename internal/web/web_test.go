@@ -29,7 +29,7 @@ func newTestServer(t *testing.T) (*httptest.Server, *registry.Registry) {
 		t.Fatalf("fsblob.Open: %v", err)
 	}
 	reg := registry.New(meta, blob)
-	return httptest.NewServer(NewHandler(reg, "")), reg
+	return httptest.NewServer(NewHandler(reg, "", "github-mirror")), reg
 }
 
 func publishSample(t *testing.T, reg *registry.Registry) {
@@ -171,7 +171,7 @@ func TestCatalogPage_NotConfigured(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	srv := httptest.NewServer(NewHandler(registry.New(meta, blob), ""))
+	srv := httptest.NewServer(NewHandler(registry.New(meta, blob), "", "github-mirror"))
 	defer srv.Close()
 
 	resp, err := http.Get(srv.URL + "/catalog")
@@ -200,12 +200,13 @@ func TestCatalogPage_ShowsResults(t *testing.T) {
 		"generated_at": "2026-08-30T10:00:00Z",
 		"source": "https://example.com/list",
 		"results": [
-			{"Name": "good-plugin", "Category": "Dev", "RepoURL": "https://github.com/a/good", "Author": "a", "AuthorURL": "https://github.com/a", "Description": "does good things", "Tag": "production", "Valid": true, "PluginName": "good-plugin", "PluginVersion": "1.0.0", "Skills": ["one"], "HasMCP": true},
-			{"Name": "bad-plugin", "Category": "Dev", "RepoURL": "https://github.com/b/bad", "Author": "b", "AuthorURL": "https://github.com/b", "Description": "missing bits", "Tag": "production", "Valid": false, "ValidationError": "plugin has neither a skills/ directory nor an mcp.json"}
+			{"Name": "good-plugin", "Category": "Dev", "RepoURL": "https://github.com/a/good", "Author": "a", "AuthorURL": "https://github.com/a", "Description": "does good things", "Tag": "production", "Valid": true, "PluginName": "good-plugin", "PluginVersion": "1.0.0", "Skills": ["one"], "HasMCP": true, "Published": true},
+			{"Name": "bad-plugin", "Category": "Dev", "RepoURL": "https://github.com/b/bad", "Author": "b", "AuthorURL": "https://github.com/b", "Description": "missing bits", "Tag": "production", "Valid": false, "ValidationError": "plugin has neither a skills/ directory nor an mcp.json"},
+			{"Name": "no-version-plugin", "Category": "Dev", "RepoURL": "https://github.com/c/nover", "Author": "c", "AuthorURL": "https://github.com/c", "Description": "has no version", "Tag": "production", "Valid": true, "PluginName": "no-version-plugin", "Skills": ["one"], "PublishError": "cannot mirror: plugin.json has no version field"}
 		]
 	}`), 0o644)
 
-	srv := httptest.NewServer(NewHandler(registry.New(meta, blob), catalogPath))
+	srv := httptest.NewServer(NewHandler(registry.New(meta, blob), catalogPath, "github-mirror"))
 	defer srv.Close()
 
 	resp, err := http.Get(srv.URL + "/catalog")
@@ -220,6 +221,8 @@ func TestCatalogPage_ShowsResults(t *testing.T) {
 	for _, want := range []string{
 		"good-plugin", "does good things", "v1.0.0", "has MCP server",
 		"bad-plugin", "missing bits", "plugin has neither a skills/",
+		"/@github-mirror/good-plugin", "mirrored copy",
+		"no-version-plugin", "cannot mirror: plugin.json has no version field",
 	} {
 		if !strings.Contains(body, want) {
 			t.Errorf("expected catalog page to contain %q, got:\n%s", want, body)

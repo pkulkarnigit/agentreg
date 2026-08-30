@@ -38,6 +38,7 @@ func main() {
 	driver := envOr("APREG_DB_DRIVER", "sqlite")
 	dsn := os.Getenv("APREG_DB_DSN")
 	catalogPath := envOr("APREG_CATALOG_PATH", "catalog/agent-plugins-catalog.json")
+	mirrorScope := envOr("APREG_MIRROR_SCOPE", "github-mirror")
 
 	if err := os.MkdirAll(dataDir, 0o755); err != nil {
 		log.Fatalf("create data dir %s: %v", dataDir, err)
@@ -73,7 +74,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle("/v1/", apiHandler)
 	mux.Handle("/healthz", apiHandler)
-	mux.Handle("/", web.NewHandler(reg, catalogPath))
+	mux.Handle("/", web.NewHandler(reg, catalogPath, mirrorScope))
 
 	logger := slog.Default()
 	handler := middleware.Logging(logger, mux)
