@@ -1,13 +1,14 @@
 # AgentReg
 
-A free, open-source, self-hostable registry for [Agent Plugins](https://agent-plugins.org)
-— the open packaging standard (published Aug 2026, backed by
-Amazon/Cursor/Microsoft/OpenAI/Vercel) that bundles Claude-style Skills and
-MCP server configs into one portable directory. The spec deliberately leaves
-distribution/publishing/registries to implementers — AgentReg is that layer:
-publish, install, search, and browse Agent Plugins, npm-style, with real
-accounts so anyone can publish under their own `@scope`. MIT licensed — run
-it yourself, or use ours.
+Agent Plugins is a new open spec (Amazon, Cursor, Microsoft, OpenAI, and
+Vercel shipped it in August 2026) for packaging Skills and MCP servers into
+one folder an agent can load. What the spec doesn't cover is how you'd
+actually get a plugin from your machine to someone else's — so that's what
+this is. Sign up, publish under your own `@username`, and anyone can
+`apreg install` it. Think npm, minus the fifteen years of baggage.
+
+Free and MIT licensed. Use the hosted instance, or run your own — it's the
+same code either way.
 
 ## Run it locally
 
@@ -15,12 +16,11 @@ it yourself, or use ours.
 docker compose up --build
 ```
 
-This runs the full production-shaped stack: `apreg-server` backed by real
-Postgres (not SQLite) in a second container, blob storage on a persistent
-volume. The server listens on `http://localhost:8080` — web UI at `/`, REST
-API under `/v1`.
+Spins up the real stack: `apreg-server` behind Postgres in its own
+container, blobs on a persistent volume. Server's at `http://localhost:8080`
+— web UI on `/`, API under `/v1`.
 
-Without Docker (SQLite, zero external dependencies):
+Don't want Docker? SQLite works fine with zero setup:
 
 ```bash
 go build -o bin/apreg-server ./cmd/apreg-server
@@ -28,10 +28,9 @@ go build -o bin/apreg ./cmd/apreg
 ./bin/apreg-server
 ```
 
-Server env vars: `APREG_DATA_DIR` (default `./data` — SQLite file + blob
-tree), `APREG_ADDR` (default `:8080`), `APREG_DB_DRIVER` (`sqlite` default,
-or `postgres`), `APREG_DB_DSN` (SQLite file path override, or a
-`postgres://...` URL when `APREG_DB_DRIVER=postgres`).
+Env vars if you need them: `APREG_DATA_DIR` (default `./data`), `APREG_ADDR`
+(default `:8080`), `APREG_DB_DRIVER` (`sqlite` or `postgres`),
+`APREG_DB_DSN` (a file path, or a `postgres://` URL).
 
 ## Using the CLI
 
@@ -40,62 +39,56 @@ or `postgres`), `APREG_DB_DSN` (SQLite file path override, or a
 apreg init my-plugin
 cd my-plugin
 
-# Validate locally (no network)
+# Validate locally, no network involved
 apreg validate
 
-# Create an account and log in
+# Create an account
 apreg signup --registry http://localhost:8080
 apreg login  --registry http://localhost:8080
 
-# Publish (validates, packs, uploads under your own @username scope)
+# Publish — validates, packs, uploads under your @username
 apreg publish
 
-# Discover and install
+# Find something, install it
 apreg search my-plugin
 apreg install @yourusername/my-plugin
 ```
 
-Plugins are addressed as `@scope/name`, where `scope` is the publishing
-user's username — a registry-level convention, since the Agent Plugins
-`plugin.json` `name` field itself must be a bare name per spec (no `@`/`/`).
+Plugins live at `@scope/name`, where scope is your username. That's a
+registry convention, not part of the spec itself — `plugin.json`'s own
+`name` field has to be a bare name, no `@` or `/` allowed.
 
 ### Account recovery
 
 ```bash
-apreg verify-email <token>       # confirm your email (advisory in v1 — see below)
+apreg verify-email <token>       # confirm your email — optional, not required to publish
 apreg reset-password --registry <url>
 ```
 
-There's no mail provider wired up yet (no domain to send from) — the
-verification/reset link is written to the server log instead of emailed.
-Signup and login work fine without ever verifying; see
-`internal/notify`'s doc comment for how real SMTP/SES delivery slots in
-later without touching any caller.
+No mail server behind this yet (no domain to send from), so verification
+and reset links just get written to the server log instead of emailed. You
+can sign up and publish without ever touching this. Swapping in real SMTP
+later is a one-file change — see `internal/notify`.
 
 ## Production hardening
 
-- **Postgres backend** — `internal/store/postgres`, the same
-  `store.MetadataStore` interface as SQLite, proven via a shared
-  conformance test suite (`internal/store/storetest`) both backends run.
-  `docker-compose.yml` runs on it by default.
-- **Rate limiting** — per-IP on signup/login, per-token on publish
-  (`internal/api/middleware/ratelimit.go`).
-- **Login lockout** — per-username, independent of source IP, defends
-  against distributed brute force (`internal/auth/lockout.go`).
-- **Structured logging** — every request logged (method, path, status,
-  latency, remote addr) via `log/slog`.
-- **Graceful shutdown** — `SIGINT`/`SIGTERM` drains in-flight requests
-  before exit.
-- **Backups** — `apreg-server -backup <path>` writes a consistent SQLite
-  snapshot via `VACUUM INTO`; for Postgres, use `pg_dump`. Blob storage is
-  plain files — `rsync`/`tar` it.
-- **Download counts** — tracked per version, shown on the web UI, a
-  cheap trust signal.
+The Postgres backend (`internal/store/postgres`) implements the exact same
+interface as SQLite and runs the identical test suite against it — same
+behavior, different database underneath. It's what `docker-compose.yml`
+uses by default.
 
-None of this required touching `internal/api`'s route handlers' business
-logic or `internal/registry` — see "Layout" below for why.
+Beyond that: rate limiting on signup/login/publish, an account lockout that
+kicks in after repeated failed logins no matter which IP they came from,
+structured request logging, graceful shutdown on SIGINT/SIGTERM, SQLite
+backups via `apreg-server -backup <path>` (`pg_dump` for Postgres), and
+download counts tracked per version.
+
+None of it touched `internal/api` or `internal/registry` — see Layout below
+for why that's not a coincidence.
 
 ## Layout
+
+Here's how the pieces fit together:
 
 ```
 cmd/apreg-server        registry server entrypoint
@@ -118,45 +111,40 @@ internal/auth              password hashing, API tokens, login lockout
 internal/crawler          fetches + validates public plugins for the catalog
 ```
 
-`api` and `web` only ever call `registry`; `registry` only ever calls the
-`store.MetadataStore`/`store.BlobStore` interfaces. Swapping backends (as
-already done for Postgres) or local disk for S3 later is a new file
-implementing those interfaces, not a rewrite — see the package doc comment
-on `internal/store` for details.
+`api` and `web` only ever talk to `registry`. `registry` only ever talks to
+the store interfaces. So when Postgres showed up, it was a new file
+implementing an interface, not a rewrite — see the doc comment on
+`internal/store` if you want the reasoning.
 
-## Catalog and mirror: what's publicly out there
+## Catalog and mirror: what's actually out there
 
-`cmd/crawler` discovers real, publicly known Agent Plugins (from the
+`cmd/crawler` goes and finds real Agent Plugins — right now from the
 [awesome-agent-plugins](https://github.com/ZeroPointRepo/awesome-agent-plugins)
-directory), fetches each one from GitHub, and validates it against the
-exact same rules AgentReg enforces at publish time
-(`internal/manifest.ValidateDir`). Browse the results at `/catalog` on a
-running server.
+list — pulls each one from GitHub, and runs it through the same validation
+this registry uses at publish time. Results live at `/catalog` on a running
+server.
 
 ```bash
 go build -o bin/crawler ./cmd/crawler
 ./bin/crawler   # writes catalog/agent-plugins-catalog.json
 ```
 
-The output records, per entry: whether it actually validates, its
-resolved plugin name/version, skill list, and whether it ships an MCP
-server — plus, for anything that doesn't validate, exactly why (missing
-`skills/`+`mcp.json`, a `SKILL.md`-less subdirectory, a schema violation,
-or the fetch itself failing). A real run found real, useful signal: several
-"Official & Reference" entries point at collection-repo roots rather than
-a single plugin (accurate — they're not individually a compliant plugin at
-that path), a couple of entries fail MCP schema validation for reasons
-worth reporting upstream, and at least one has a version string
-(`0.2.0.dev0`) that isn't valid semver — AgentReg correctly refuses to
-publish that one.
+For each entry you get: does it actually validate, its resolved
+name/version, what skills it has, whether it ships an MCP server — and if
+it doesn't validate, exactly why. The first real run turned up genuinely
+useful stuff: a few "Official & Reference" entries point at whole
+collection repos rather than a single plugin (true — they're not compliant
+at that specific path), a couple fail MCP schema validation for reasons
+worth filing upstream, and one has a version string (`0.2.0.dev0`) that
+isn't valid semver, which AgentReg correctly refuses to publish.
 
-Pass `-publish` to also mirror every valid entry into a running registry,
-under one dedicated account (never impersonating the original author —
-the server enforces that the publishing token's owner matches the scope
-on every publish, same as any other `apreg publish`):
+Add `-publish` and it'll also mirror every valid entry into a running
+registry, all under one dedicated account. It can't publish as anyone else
+— the server checks the token owner against the scope on every single
+publish, mirror or not.
 
 ```bash
-# one-time: create the mirror account
+# one-time setup: create the mirror account
 apreg signup --registry http://localhost:8080   # username: github-mirror
 apreg login  --registry http://localhost:8080
 export APREG_MIRROR_TOKEN=$(python3 -c "import json;print(json.load(open('$HOME/.apreg/config.json'))['token'])")
@@ -164,17 +152,15 @@ export APREG_MIRROR_TOKEN=$(python3 -c "import json;print(json.load(open('$HOME/
 ./bin/crawler -publish -registry http://localhost:8080 -scope github-mirror
 ```
 
-Publishing is idempotent — an unchanged upstream version publishes once,
-ever; re-running the crawler just confirms it's still there (HTTP 409,
-treated as success, not an error). Entries without a valid semver
-`version` field are skipped with a clear reason rather than guessing one.
+Publishing is idempotent, so running the crawler again doesn't break
+anything — an unchanged version just comes back as "already published"
+(409, not treated as an error). Anything missing a valid semver version
+gets skipped with a reason instead of a guess.
 
-Note: resolving the default branch for entries that don't pin one via
-`/tree/{ref}/...` costs one GitHub API call each; unauthenticated, that's
-capped at 60/hour. Re-running the crawler several times in quick
-succession can hit that limit — those entries report a fetch error until
-it resets. A `GITHUB_TOKEN`-authenticated client (not yet wired up) would
-raise it to 5,000/hour.
+One catch: resolving the default branch for entries that don't pin one
+costs a GitHub API call, and unauthenticated that's capped at 60/hour. Run
+the crawler a few times back to back and those entries start timing out
+until the limit resets. A `GITHUB_TOKEN` would fix this — not wired up yet.
 
 ## Tests
 
@@ -182,17 +168,17 @@ raise it to 5,000/hour.
 go test ./...
 ```
 
-The Postgres conformance suite skips cleanly without a reachable database;
-to run it too:
+The Postgres tests skip themselves cleanly if there's no database to talk
+to. To actually run them:
 
 ```bash
 docker run -d --rm -e POSTGRES_PASSWORD=test -e POSTGRES_DB=apreg -p 55432:5432 postgres:16-alpine
 APREG_TEST_POSTGRES_DSN="postgres://postgres:test@localhost:55432/apreg?sslmode=disable" go test ./...
 ```
 
-CI (`.github/workflows/ci.yml`) runs this automatically against a real
-Postgres service container on every push.
+CI does this on every push, against a real Postgres service container, not
+a mock.
 
 ## License
 
-[MIT](LICENSE) — use it, self-host it, fork it, ship it.
+MIT. Use it, fork it, self-host it, whatever.

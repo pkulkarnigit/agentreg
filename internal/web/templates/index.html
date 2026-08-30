@@ -2,9 +2,9 @@
 {{define "content"}}
 {{if not .Query}}
 <div class="hero">
-  <span class="badge-pill">Free &amp; open &middot; self-host it or use ours</span>
+  <span class="badge-pill">Free, open source, no catch</span>
   <h1>A registry for Agent Plugins</h1>
-  <p class="lede">Publish, discover, and install <a href="https://agent-plugins.org">Agent Plugins</a> — Skills and MCP servers bundled into one portable directory. No paid tier, no lock-in: the whole registry is open source and yours to run.</p>
+  <p class="lede">Skills and MCP servers, packaged into one folder your agent can load. Publish your own, grab someone else's, or just browse — and if you'd rather not use ours, the whole thing is open source and yours to run.</p>
   <form class="search" method="get" action="/">
     <input type="text" name="q" placeholder="Search plugins by name, description, or keyword&hellip;" value="{{.Query}}" autofocus>
   </form>
@@ -23,7 +23,7 @@
 {{end}}
 
 {{if not .Plugins}}
-  <p class="muted">{{if .Query}}No plugins match "{{.Query}}".{{else}}No plugins published yet. Be the first — see the <a href="/docs#publishing">publishing guide</a>.{{end}}</p>
+  <p class="muted">{{if .Query}}Nothing matches "{{.Query}}".{{else}}Nobody's published anything yet. Could be you — here's the <a href="/docs#publishing">publishing guide</a>.{{end}}</p>
 {{else}}
   {{if .Query}}<p class="muted">{{len .Plugins}} result{{if ne (len .Plugins) 1}}s{{end}} for &ldquo;{{.Query}}&rdquo;</p>{{else}}<h2>Recently updated</h2>{{end}}
 {{end}}

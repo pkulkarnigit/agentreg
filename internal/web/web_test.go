@@ -188,7 +188,7 @@ func TestDocsPage(t *testing.T) {
 	}
 	body := readBody(t, resp)
 	for _, want := range []string{
-		"Quickstart", "apreg publish", "apreg install", "Versioning", "immutable",
+		"Quickstart", "apreg publish", "apreg install", "Versioning", "permanent",
 		"CLI reference", "REST API reference", "PUT /v1/plugins/{scope}/{name}/{version}",
 	} {
 		if !strings.Contains(body, want) {

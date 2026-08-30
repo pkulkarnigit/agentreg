@@ -1,7 +1,7 @@
 {{define "title"}}Documentation — AgentReg{{end}}
 {{define "content"}}
 <h1>Documentation</h1>
-<p class="muted">Everything you need to install, publish, and browse Agent Plugins on this registry.</p>
+<p class="muted">Everything you need to actually use this thing — installing, publishing, browsing, all of it.</p>
 
 <nav class="docs-toc">
   <div>On this page</div>
@@ -25,7 +25,7 @@
     <pre><code>git clone https://github.com/pkulkarnigit/agentreg.git
 cd agentreg
 go build -o apreg ./cmd/apreg</code></pre>
-    <p class="muted">A <code>go install</code>-able release isn't published yet — build from source for now.</p>
+    <p class="muted">No <code>go install</code>-able release yet, so building from source is the only option for now.</p>
   </div>
   <div class="step">
     <strong>2. Create an account</strong>
@@ -50,29 +50,29 @@ apreg install @neondatabase/agent-skills</code></pre>
 <section id="installing">
   <h2>Installing plugins</h2>
   <p>
-    Search by name, description, or keyword, then install by <code>@scope/name</code>. Installing fetches
-    the tarball, verifies its sha256 checksum against what the registry recorded at publish time, and
-    unpacks it into <code>agent_plugins/&lt;name&gt;</code> (override with <code>--dir</code>).
+    Search covers name, description, and keywords. Install by <code>@scope/name</code> and it'll fetch
+    the tarball, check its sha256 against what got recorded at publish time, and unpack into
+    <code>agent_plugins/&lt;name&gt;</code> (or wherever you point <code>--dir</code>).
   </p>
   <pre><code>apreg search context7
 apreg view @upstash/context7          # inspect metadata without installing
 apreg install @upstash/context7       # latest version
 apreg install @upstash/context7@1.0.0 # a specific version
 apreg install @upstash/context7 --dir vendor/context7</code></pre>
-  <p>No signup required to search, view, or install — only publishing needs an account.</p>
+  <p>Searching, viewing, installing — none of that needs an account. Only publishing does.</p>
 </section>
 
 <section id="publishing">
   <h2>Publishing a plugin</h2>
   <p>
-    <code>apreg publish [dir]</code> validates the directory locally (the same checks the server
-    re-runs on receipt), packs it into a <code>.tar.gz</code>, and uploads it under your logged-in
-    scope. The manifest's own <code>name</code> and <code>version</code> fields must match the URL the
-    CLI publishes to — you never choose those independently of what's in <code>plugin.json</code>.
+    <code>apreg publish [dir]</code> checks the directory locally first (the server re-runs the same
+    checks on its end too), packs it into a <code>.tar.gz</code>, and uploads it under whatever scope
+    you're logged in as. The name and version come straight from <code>plugin.json</code> — you don't
+    get to pick something different at publish time.
   </p>
   <div class="callout">
-    Publishing under someone else's scope is impossible by design: the server checks that your API
-    token's owning username equals the scope you're publishing to, on every publish.
+    You can't publish under someone else's scope, on purpose. The server checks your token's owner
+    against the scope on every single publish. There's no override.
   </div>
 </section>
 
@@ -90,7 +90,7 @@ apreg install @upstash/context7 --dir vendor/context7</code></pre>
     <tr><th>field</th><th>required</th><th>notes</th></tr>
     <tr><td><code>$schema</code></td><td>yes</td><td>must be the official schema URL for the version you target</td></tr>
     <tr><td><code>name</code></td><td>yes</td><td>1&ndash;64 chars, lowercase alphanumeric/hyphen/period, no <code>--</code> or <code>..</code></td></tr>
-    <tr><td><code>version</code></td><td>for publishing</td><td>must be valid <a href="https://semver.org">semver</a> &mdash; the spec allows omitting it, but this registry requires one to publish (versions are how it addresses immutable releases)</td></tr>
+    <tr><td><code>version</code></td><td>for publishing</td><td>must be valid <a href="https://semver.org">semver</a>. The spec technically allows leaving it out, but we require it here &mdash; it's how the registry tells releases apart</td></tr>
     <tr><td><code>description</code>, <code>homepage</code>, <code>repository</code>, <code>license</code>, <code>keywords</code></td><td>no</td><td>shown on the plugin's page and used by search</td></tr>
   </table>
   <p class="muted">Run <code>apreg validate</code> in any plugin directory to check all of this locally before publishing.</p>
@@ -99,23 +99,23 @@ apreg install @upstash/context7 --dir vendor/context7</code></pre>
 <section id="versioning">
   <h2>Versioning</h2>
   <p>
-    Versions are <strong>immutable</strong>, like npm: once <code>@scope/name@1.0.0</code> is published, that
-    exact content is permanent — publishing the same scope/name/version again is rejected. To ship a
-    change, bump <code>version</code> in <code>plugin.json</code> and publish again. Installing without a
-    version (<code>apreg install @scope/name</code>) resolves to the latest one published.
+    Versions are <strong>permanent</strong>, same as npm. Publish <code>@scope/name@1.0.0</code> once,
+    and that's it — try to publish that exact version again and it gets rejected. Want to ship a fix?
+    Bump <code>version</code> in <code>plugin.json</code> and publish again. Leave the version off when
+    installing (<code>apreg install @scope/name</code>) and you get whatever's newest.
   </p>
 </section>
 
 <section id="account">
   <h2>Accounts &amp; security</h2>
-  <p>Signup only needs a username, email, and password (8+ characters) — no email verification is required to start publishing, though you can confirm your address:</p>
+  <p>Signup needs a username, email, and an 8+ character password. That's it — you don't need to verify your email to start publishing, though you can if you want to:</p>
   <pre><code>apreg verify-email {token}</code></pre>
   <p>Forgot your password:</p>
   <pre><code>apreg reset-password --registry {registry-url}</code></pre>
   <p class="muted">
-    API tokens are shown once at login and stored in <code>~/.apreg/config.json</code>. The registry
-    rate-limits signup/login/publish per IP and locks an account out after repeated failed logins,
-    independent of source IP.
+    Your API token shows up once, right after login, and gets saved to <code>~/.apreg/config.json</code>.
+    Signup, login, and publish are all rate-limited per IP, and an account locks out after enough
+    failed logins no matter where they're coming from.
   </p>
 </section>
 
@@ -139,7 +139,7 @@ apreg install @upstash/context7 --dir vendor/context7</code></pre>
 
 <section id="api">
   <h2>REST API reference</h2>
-  <p class="muted">The CLI is a thin client over this API — anything it does, you can do directly.</p>
+  <p class="muted">The CLI doesn't do anything you can't do yourself — it's just a thin wrapper around this API.</p>
   <table>
     <tr><th>method &amp; path</th><th>auth</th><th>what it does</th></tr>
     <tr><td><code>POST /v1/users</code></td><td>&mdash;</td><td>create an account</td></tr>
@@ -163,19 +163,19 @@ apreg install @upstash/context7 --dir vendor/context7</code></pre>
 <section id="self-hosting">
   <h2>Self-hosting</h2>
   <p>
-    AgentReg is free and open — there's no paid tier and nothing about it requires this particular
-    instance. The whole thing (server, CLI, web UI, crawler) is one Go codebase with two moving parts:
-    a metadata store (SQLite by default, or Postgres) and local-disk blob storage for tarballs.
+    There's no paid tier, and nothing here requires our instance specifically. It's all one Go
+    codebase &mdash; server, CLI, web UI, crawler &mdash; sitting on two things underneath: a metadata
+    store (SQLite or Postgres) and local disk for the actual tarballs.
   </p>
   <pre><code>docker compose up --build</code></pre>
   <p class="muted">
-    That runs the real production-shaped stack — the server backed by Postgres in a second container,
-    both on persistent volumes. No external services, no account with us required, no license key.
+    That's the real stack, not a stripped-down demo &mdash; Postgres in its own container, both on
+    persistent volumes. No external services, no account with us, no license key to enter.
   </p>
   <div class="callout">
-    Running your own instance is a completely independent registry — plugins published to one aren't
-    visible on another. That's deliberate: self-hosting means your own namespace, your own users, your
-    own data.
+    Your instance and ours don't talk to each other. Publish something here, and it won't show up on
+    your own server, or anyone else's. That's the whole point of self-hosting &mdash; your namespace,
+    your users, your data.
   </div>
 </section>
 {{end}}

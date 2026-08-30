@@ -2,12 +2,11 @@
 {{define "content"}}
 <h1>Discovered plugins</h1>
 <p class="muted">
-  Publicly known Agent Plugins found by <code>cmd/crawler</code> in the
-  <a href="{{.Catalog.Source}}">awesome-agent-plugins</a> directory, fetched from GitHub and
-  validated against the same rules this registry enforces at publish time. Valid entries are
-  mirrored here under <a href="/@{{.MirrorScope}}">@{{.MirrorScope}}</a> — a dedicated account, so
-  mirrored content is never attributed to anyone but its original author (see each entry's
-  <code>repository</code> link) while staying clearly separate from plugins people publish
+  This is what <code>cmd/crawler</code> found digging through the <a href="{{.Catalog.Source}}">awesome-agent-plugins</a>
+  directory &mdash; pulled from GitHub, checked against the same rules this registry enforces on
+  every publish. Anything that passes gets mirrored under <a href="/@{{.MirrorScope}}">@{{.MirrorScope}}</a>,
+  a dedicated account that keeps credit with the original author (see each entry's
+  <code>repository</code> link) and keeps mirrored stuff clearly apart from what people publish
   themselves.
 </p>
 <p class="muted">Generated {{.Catalog.GeneratedAt.Format "2006-01-02 15:04 UTC"}} &middot;
