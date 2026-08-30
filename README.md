@@ -99,6 +99,7 @@ logic or `internal/registry` — see "Layout" below for why.
 ```
 cmd/apreg-server        registry server entrypoint
 cmd/apreg                CLI entrypoint
+cmd/crawler              discovers + validates public plugins into catalog/ (see below)
 internal/manifest        plugin.json / mcp.json parsing & validation
 internal/schema           vendored official JSON Schemas (go:embed)
 internal/pack             tar.gz pack/unpack
@@ -113,6 +114,7 @@ internal/api               REST handlers (HTTP only, calls internal/registry)
 internal/api/middleware      auth check, rate limiting, request logging
 internal/web              read-only server-rendered browsing UI
 internal/auth              password hashing, API tokens, login lockout
+internal/crawler          fetches + validates public plugins for the catalog
 ```
 
 `api` and `web` only ever call `registry`; `registry` only ever calls the
@@ -120,6 +122,32 @@ internal/auth              password hashing, API tokens, login lockout
 already done for Postgres) or local disk for S3 later is a new file
 implementing those interfaces, not a rewrite — see the package doc comment
 on `internal/store` for details.
+
+## Catalog: what's publicly out there
+
+`cmd/crawler` discovers real, publicly known Agent Plugins (from the
+[awesome-agent-plugins](https://github.com/ZeroPointRepo/awesome-agent-plugins)
+directory), fetches each one from GitHub, and validates it against the
+exact same rules AgentReg enforces at publish time
+(`internal/manifest.ValidateDir`). It's a **discovery/reporting tool
+only** — it never publishes anything into a running AgentReg instance;
+third-party content landing under our own `@scope` namespace without the
+author's involvement would be an attribution problem, not a feature.
+
+```bash
+go build -o bin/crawler ./cmd/crawler
+./bin/crawler   # writes catalog/agent-plugins-catalog.json
+```
+
+The output records, per entry: whether it actually validates, its
+resolved plugin name/version, skill list, and whether it ships an MCP
+server — plus, for anything that doesn't validate, exactly why (missing
+`skills/`+`mcp.json`, a `SKILL.md`-less subdirectory, a schema violation,
+or the fetch itself failing). A real run found real, useful signal: several
+"Official & Reference" entries point at collection-repo roots rather than
+a single plugin (accurate — they're not individually a compliant plugin at
+that path), and a couple of entries fail MCP schema validation for
+reasons worth reporting upstream.
 
 ## Tests
 

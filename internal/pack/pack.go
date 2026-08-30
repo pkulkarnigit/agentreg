@@ -14,6 +14,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -109,19 +110,50 @@ const MaxDecompressedBytes int64 = 256 << 20
 // Unpack extracts a tar.gz archive into destDir, which must already exist.
 // Every entry is required to resolve inside destDir; anything else
 // (absolute paths, "../" traversal, symlinks pointing outside) is rejected.
-// Total decompressed output is capped at MaxDecompressedBytes.
+// Total decompressed output is capped at MaxDecompressedBytes. This is the
+// strict mode used for our own archives (server-side publish validation,
+// client install) — any entry type other than a file or directory aborts
+// the whole extraction.
 func Unpack(tarGzPath, destDir string) error {
-	return unpackLimited(tarGzPath, destDir, MaxDecompressedBytes)
-}
-
-func unpackLimited(tarGzPath, destDir string, limit int64) error {
 	f, err := os.Open(tarGzPath)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
+	return ExtractReader(f, destDir, ExtractOptions{})
+}
 
-	gz, err := gzip.NewReader(f)
+// ExtractOptions configures ExtractReader. The zero value matches Unpack's
+// behavior: MaxDecompressedBytes cap, no path stripping, unsupported entry
+// types are an error.
+type ExtractOptions struct {
+	// MaxBytes caps total decompressed bytes across all entries. Zero
+	// means MaxDecompressedBytes.
+	MaxBytes int64
+	// StripComponents drops this many leading path segments from every
+	// entry name before joining onto destDir — e.g. 1 to unwrap a
+	// GitHub codeload archive's "{owner}-{repo}-{sha}/" root directory.
+	StripComponents int
+	// SkipUnsupportedTypes, when true, silently skips tar entries that
+	// are neither a regular file nor a directory (symlinks, etc.)
+	// instead of aborting extraction. Real-world third-party archives
+	// (e.g. from the crawler) legitimately contain these; our own
+	// archives never should, so Unpack leaves this false.
+	SkipUnsupportedTypes bool
+}
+
+// ExtractReader is the shared extraction core behind Unpack, generalized
+// to work from any gzip-compressed tar stream (not just a local file) so
+// it can also power extracting untrusted third-party archives (see
+// internal/crawler) — one well-tested implementation of the
+// path-traversal and decompression-bomb protections, not two.
+func ExtractReader(r io.Reader, destDir string, opts ExtractOptions) error {
+	limit := opts.MaxBytes
+	if limit <= 0 {
+		limit = MaxDecompressedBytes
+	}
+
+	gz, err := gzip.NewReader(r)
 	if err != nil {
 		return fmt.Errorf("open gzip: %w", err)
 	}
@@ -138,7 +170,12 @@ func unpackLimited(tarGzPath, destDir string, limit int64) error {
 			return fmt.Errorf("read tar entry: %w", err)
 		}
 
-		target, err := safeJoin(destDir, hdr.Name)
+		name, ok := stripComponents(hdr.Name, opts.StripComponents)
+		if !ok {
+			continue // exactly the stripped prefix itself (e.g. the archive's root dir entry)
+		}
+
+		target, err := safeJoin(destDir, name)
 		if err != nil {
 			return err
 		}
@@ -178,9 +215,28 @@ func unpackLimited(tarGzPath, destDir string, limit int64) error {
 				return err
 			}
 		default:
-			return fmt.Errorf("unsupported tar entry type %d for %s", hdr.Typeflag, hdr.Name)
+			if opts.SkipUnsupportedTypes {
+				continue
+			}
+			return fmt.Errorf("unsupported tar entry type %d for %s", hdr.Typeflag, name)
 		}
 	}
+}
+
+// stripComponents drops the first n "/"-separated segments from a tar
+// entry name (tar names always use "/" regardless of host OS). Returns
+// ok=false if the name has n or fewer segments — i.e. it names exactly
+// the prefix being stripped, or is otherwise too shallow to keep.
+func stripComponents(name string, n int) (string, bool) {
+	name = path.Clean(name)
+	if name == "." {
+		return "", false
+	}
+	segs := strings.Split(name, "/")
+	if len(segs) <= n {
+		return "", false
+	}
+	return strings.Join(segs[n:], "/"), true
 }
 
 func fileMode(m int64) os.FileMode {
