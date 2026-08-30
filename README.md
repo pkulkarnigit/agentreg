@@ -76,7 +76,12 @@ later is a one-file change — see `internal/notify`.
 The Postgres backend (`internal/store/postgres`) implements the exact same
 interface as SQLite and runs the identical test suite against it — same
 behavior, different database underneath. It's what `docker-compose.yml`
-uses by default.
+uses by default. Its connection pool is capped (10 open, 5 idle) rather
+than left at database/sql's unbounded default — every apreg-server replica
+holds its own pool, so an unbounded one times N replicas is how you
+accidentally take down Postgres by scaling up. 10/replica leaves headroom
+for around 8 replicas before Postgres's own `max_connections` (100 by
+default) needs raising too.
 
 Blob storage has the same swap available: `internal/store/s3blob`
 implements the same `store.BlobStore` interface as the default local-disk

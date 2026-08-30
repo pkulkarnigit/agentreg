@@ -91,6 +91,24 @@ type Store struct {
 	db *sql.DB
 }
 
+// Connection pool limits. database/sql's own defaults are unbounded open
+// connections and only 2 idle — fine for one process talking to its own
+// database, but not for a store meant to run behind N horizontally scaled
+// apreg-server replicas: every replica holds this many connections
+// independently, so the total against one Postgres instance is
+// maxOpenConns × replica count, and it must stay comfortably under
+// Postgres's own max_connections (100 by default). At 10 per replica,
+// that's headroom for around 8 replicas before either number needs
+// raising. connMaxLifetime recycles connections periodically so a
+// long-running replica doesn't accumulate ones a load balancer or
+// Postgres-side failover has silently dropped.
+const (
+	maxOpenConns    = 10
+	maxIdleConns    = 5
+	connMaxLifetime = 30 * time.Minute
+	connMaxIdleTime = 5 * time.Minute
+)
+
 // Open connects to Postgres at dsn (a "postgres://..." URL) and ensures the
 // schema exists.
 func Open(dsn string) (*Store, error) {
@@ -98,6 +116,11 @@ func Open(dsn string) (*Store, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open postgres: %w", err)
 	}
+	db.SetMaxOpenConns(maxOpenConns)
+	db.SetMaxIdleConns(maxIdleConns)
+	db.SetConnMaxLifetime(connMaxLifetime)
+	db.SetConnMaxIdleTime(connMaxIdleTime)
+
 	if err := db.Ping(); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("ping postgres: %w", err)
