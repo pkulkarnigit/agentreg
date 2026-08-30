@@ -162,6 +162,12 @@ costs a GitHub API call, and unauthenticated that's capped at 60/hour. Run
 the crawler a few times back to back and those entries start timing out
 until the limit resets. A `GITHUB_TOKEN` would fix this — not wired up yet.
 
+A scheduled workflow (`.github/workflows/crawl.yml`) re-runs the crawler
+daily and commits `catalog/agent-plugins-catalog.json` back to the repo if
+anything changed — discovery only, no `-publish`. GitHub's runners have no
+way to reach a registry running on your own machine, so mirroring into a
+specific live instance stays a manual, local thing for now.
+
 ## Tests
 
 ```bash
