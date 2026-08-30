@@ -4,6 +4,7 @@
 <h1>@{{.Plugin.Scope}}/{{.Plugin.Name}}</h1>
 <p>{{.Plugin.Description}}</p>
 <p class="muted">
+  {{.Plugin.TotalDownloads}} downloads &middot;
   {{if .Plugin.License}}license: {{.Plugin.License}} &middot; {{end}}
   {{if .Plugin.Homepage}}<a href="{{.Plugin.Homepage}}">homepage</a> &middot; {{end}}
   {{if .Plugin.Repository}}<a href="{{.Plugin.Repository}}">repository</a>{{end}}
@@ -18,11 +19,12 @@
 <section>
   <h2>Versions</h2>
   <table>
-    <tr><th>version</th><th>published</th><th>checksum (sha256)</th></tr>
+    <tr><th>version</th><th>published</th><th>downloads</th><th>checksum (sha256)</th></tr>
     {{range .Versions}}
     <tr>
       <td><a href="/@{{$.Plugin.Scope}}/{{$.Plugin.Name}}?version={{.Version}}">{{.Version}}</a>{{if eq .Version $.Plugin.LatestVersion}} <span class="muted">(latest)</span>{{end}}</td>
       <td class="muted">{{.PublishedAt.Format "2006-01-02 15:04"}}</td>
+      <td class="muted">{{.DownloadCount}}</td>
       <td class="muted"><code>{{slice .Checksum 0 12}}&hellip;</code></td>
     </tr>
     {{end}}

@@ -6,24 +6,53 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/pkulkarni/apreg/internal/api/middleware"
+	"github.com/pkulkarni/apreg/internal/auth"
 	"github.com/pkulkarni/apreg/internal/registry"
 )
 
 type Server struct {
-	reg *registry.Registry
+	reg     *registry.Registry
+	lockout *auth.LoginLockout
 }
+
+// Rate limits, chosen per the project plan's "Abuse & auth hardening"
+// section: generous enough not to bother a real user, tight enough to
+// blunt scripted abuse against a single-instance server.
+const (
+	signupBurst  = 5
+	signupPer    = time.Hour
+	loginBurst   = 10
+	loginPer     = time.Minute
+	publishBurst = 30
+	publishPer   = time.Hour
+
+	loginLockoutMaxFailures = 10
+	loginLockoutWindow      = 15 * time.Minute
+)
 
 // NewHandler builds the full /v1 API routing table.
 func NewHandler(reg *registry.Registry) http.Handler {
-	s := &Server{reg: reg}
+	s := &Server{
+		reg:     reg,
+		lockout: auth.NewLoginLockout(loginLockoutMaxFailures, loginLockoutWindow),
+	}
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("POST /v1/users", s.handleSignup)
-	mux.HandleFunc("POST /v1/tokens", s.handleCreateToken)
+	signupLimiter := middleware.NewRateLimiter(signupBurst, signupPer)
+	loginLimiter := middleware.NewRateLimiter(loginBurst, loginPer)
+	publishLimiter := middleware.NewRateLimiter(publishBurst, publishPer)
 
-	mux.HandleFunc("PUT /v1/plugins/{scope}/{name}/{version}", middleware.RequireAuth(reg, s.handlePublish))
+	mux.HandleFunc("POST /v1/users", middleware.RateLimit(signupLimiter, middleware.ByIP, s.handleSignup))
+	mux.HandleFunc("POST /v1/users/verify", s.handleVerifyEmail)
+	mux.HandleFunc("POST /v1/tokens", middleware.RateLimit(loginLimiter, middleware.ByIP, s.handleCreateToken))
+	mux.HandleFunc("POST /v1/password-reset/request", middleware.RateLimit(loginLimiter, middleware.ByIP, s.handleRequestPasswordReset))
+	mux.HandleFunc("POST /v1/password-reset/confirm", s.handleConfirmPasswordReset)
+
+	mux.HandleFunc("PUT /v1/plugins/{scope}/{name}/{version}",
+		middleware.RequireAuth(reg, middleware.RateLimit(publishLimiter, middleware.ByAuthenticatedUser, s.handlePublish)))
 	mux.HandleFunc("GET /v1/plugins/{scope}/{name}", s.handleGetPlugin)
 	mux.HandleFunc("GET /v1/plugins/{scope}/{name}/{version}", s.handleGetVersion)
 	mux.HandleFunc("GET /v1/plugins/{scope}/{name}/{version}/download", s.handleDownload)
@@ -35,6 +64,26 @@ func NewHandler(reg *registry.Registry) http.Handler {
 	})
 
 	return mux
+}
+
+// maxJSONBodyBytes bounds every JSON-decoding endpoint's request body.
+// Without this, an attacker can send a multi-gigabyte body to any of
+// these small-payload endpoints (signup, login, verify, password reset)
+// and exhaust server memory decoding it — the tarball upload path has its
+// own, much larger cap (maxTarballBytes) for legitimate reasons; these
+// don't need one.
+const maxJSONBodyBytes = 1 << 20 // 1MiB
+
+// decodeJSONBody reads and decodes a JSON request body capped at
+// maxJSONBodyBytes, writing a 400 response and returning false on any
+// failure (invalid JSON, oversized body, or empty body).
+func decodeJSONBody(w http.ResponseWriter, r *http.Request, dst any) bool {
+	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodyBytes)
+	if err := json.NewDecoder(r.Body).Decode(dst); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid or oversized JSON body")
+		return false
+	}
+	return true
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {

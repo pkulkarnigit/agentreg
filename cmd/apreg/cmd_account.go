@@ -73,3 +73,66 @@ func cmdLogin(args []string) error {
 	fmt.Printf("Logged in as %q on %s\n", resp.Username, *registry)
 	return nil
 }
+
+func cmdVerifyEmail(args []string) error {
+	fs := flag.NewFlagSet("verify-email", flag.ExitOnError)
+	registryFlag := fs.String("registry", "", "registry URL (defaults to the one from `apreg login`)")
+	fs.Parse(args)
+	if fs.NArg() != 1 {
+		return fmt.Errorf("usage: apreg verify-email <token>")
+	}
+
+	base := *registryFlag
+	if base == "" {
+		cfg, err := loadConfig()
+		if err != nil {
+			return err
+		}
+		base = cfg.Registry
+	}
+	if base == "" {
+		return fmt.Errorf("no registry configured — pass --registry <url> or run `apreg login` first")
+	}
+
+	if err := doJSON("POST", base+"/v1/users/verify", "", map[string]string{"token": fs.Arg(0)}, nil); err != nil {
+		return fmt.Errorf("verification failed: %w", err)
+	}
+	fmt.Println("Email verified.")
+	return nil
+}
+
+func cmdResetPassword(args []string) error {
+	fs := flag.NewFlagSet("reset-password", flag.ExitOnError)
+	registry := fs.String("registry", "", "registry URL, e.g. http://localhost:8080")
+	fs.Parse(args)
+	if *registry == "" {
+		return fmt.Errorf("--registry is required")
+	}
+
+	username, err := promptLine("Username: ")
+	if err != nil {
+		return err
+	}
+	if err := doJSON("POST", *registry+"/v1/password-reset/request", "", map[string]string{"username": username}, nil); err != nil {
+		return fmt.Errorf("reset request failed: %w", err)
+	}
+	fmt.Println("If that account exists, a reset link/token has been sent to its registered email (or logged server-side, if no mail provider is configured).")
+
+	token, err := promptLine("Reset token: ")
+	if err != nil {
+		return err
+	}
+	newPassword, err := promptPassword("New password: ")
+	if err != nil {
+		return err
+	}
+
+	if err := doJSON("POST", *registry+"/v1/password-reset/confirm", "", map[string]string{
+		"token": token, "new_password": newPassword,
+	}, nil); err != nil {
+		return fmt.Errorf("reset failed: %w", err)
+	}
+
+	fmt.Println("Password reset. Run `apreg login` to authenticate with it.")
+	return nil
+}

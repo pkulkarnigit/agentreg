@@ -2,6 +2,7 @@ package api
 
 import (
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -148,17 +149,18 @@ func (s *Server) handleGetPlugin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
-		"scope":          p.Scope,
-		"name":           p.Name,
-		"description":    p.Description,
-		"homepage":       p.Homepage,
-		"repository":     p.Repository,
-		"license":        p.License,
-		"keywords":       p.Keywords,
-		"latest_version": p.LatestVersion,
-		"versions":       versionStrings,
-		"created_at":     p.CreatedAt,
-		"updated_at":     p.UpdatedAt,
+		"scope":           p.Scope,
+		"name":            p.Name,
+		"description":     p.Description,
+		"homepage":        p.Homepage,
+		"repository":      p.Repository,
+		"license":         p.License,
+		"keywords":        p.Keywords,
+		"latest_version":  p.LatestVersion,
+		"versions":        versionStrings,
+		"total_downloads": p.TotalDownloads,
+		"created_at":      p.CreatedAt,
+		"updated_at":      p.UpdatedAt,
 	})
 }
 
@@ -170,13 +172,14 @@ func (s *Server) handleGetVersion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"scope":        v.Scope,
-		"name":         v.Name,
-		"version":      v.Version,
-		"checksum":     v.Checksum,
-		"manifest":     rawJSON(v.ManifestJSON),
-		"published_at": v.PublishedAt,
-		"download_url": "/v1/plugins/" + scope + "/" + name + "/" + v.Version + "/download",
+		"scope":          v.Scope,
+		"name":           v.Name,
+		"version":        v.Version,
+		"checksum":       v.Checksum,
+		"manifest":       rawJSON(v.ManifestJSON),
+		"published_at":   v.PublishedAt,
+		"download_count": v.DownloadCount,
+		"download_url":   "/v1/plugins/" + scope + "/" + name + "/" + v.Version + "/download",
 	})
 }
 
@@ -193,6 +196,10 @@ func (s *Server) handleDownload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer rc.Close()
+
+	if err := s.reg.IncrementDownloadCount(r.Context(), scope, name, resolved.Version); err != nil {
+		slog.Warn("failed to increment download count", "scope", scope, "name", name, "version", resolved.Version, "error", err)
+	}
 
 	w.Header().Set("Content-Type", "application/gzip")
 	w.Header().Set("X-Checksum-Sha256", resolved.Checksum)

@@ -125,6 +125,28 @@ func TestPluginPage(t *testing.T) {
 	}
 }
 
+func TestPluginPage_ShowsDownloadCounts(t *testing.T) {
+	srv, reg := newTestServer(t)
+	defer srv.Close()
+	publishSample(t, reg)
+
+	for i := 0; i < 4; i++ {
+		if err := reg.IncrementDownloadCount(context.Background(), "alice", "hello", "1.0.0"); err != nil {
+			t.Fatalf("IncrementDownloadCount: %v", err)
+		}
+	}
+
+	resp, err := http.Get(srv.URL + "/@alice/hello")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	body := readBody(t, resp)
+	if !strings.Contains(body, "4 downloads") {
+		t.Fatalf("expected page to show '4 downloads', got:\n%s", body)
+	}
+}
+
 func TestPluginPage_NotFound(t *testing.T) {
 	srv, _ := newTestServer(t)
 	defer srv.Close()

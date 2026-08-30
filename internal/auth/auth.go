@@ -36,14 +36,28 @@ func CheckPassword(hash, password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
 }
 
-// NewAPIToken generates a random API token. The plaintext is returned once
-// (to hand to the caller); only its sha256 hash should ever be persisted.
-func NewAPIToken() (plaintext string, err error) {
+// NewRandomToken generates a high-entropy random token (32 bytes, hex
+// encoded). Used as the base for API tokens, email-verification tokens, and
+// password-reset tokens alike — only its sha256 hash (HashToken) should
+// ever be persisted.
+func NewRandomToken() (string, error) {
 	b := make([]byte, 32)
 	if _, err := rand.Read(b); err != nil {
 		return "", fmt.Errorf("generate token: %w", err)
 	}
-	return "apreg_" + hex.EncodeToString(b), nil
+	return hex.EncodeToString(b), nil
+}
+
+// NewAPIToken generates a random API token, prefixed so it's visually
+// distinguishable from other token kinds (e.g. in logs). The plaintext is
+// returned once (to hand to the caller); only its sha256 hash should ever
+// be persisted.
+func NewAPIToken() (plaintext string, err error) {
+	tok, err := NewRandomToken()
+	if err != nil {
+		return "", err
+	}
+	return "apreg_" + tok, nil
 }
 
 // HashToken returns the sha256 hash (hex) of a token's plaintext, for

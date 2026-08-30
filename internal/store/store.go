@@ -21,12 +21,22 @@ var ErrNotFound = errors.New("not found")
 // (duplicate username/email, or republishing an existing version).
 var ErrConflict = errors.New("conflict")
 
+// ErrTokenInvalid is returned when consuming an email-verification or
+// password-reset token that does not exist, has expired, or was already
+// used. Deliberately a single sentinel rather than three distinct ones:
+// callers shouldn't distinguish "expired" from "already used" from "never
+// existed" for a single-use random token — there's no legitimate reason a
+// caller needs to tell those apart, and collapsing them avoids giving an
+// attacker probing tokens any extra signal.
+var ErrTokenInvalid = errors.New("token invalid, expired, or already used")
+
 type User struct {
-	ID           int64
-	Username     string
-	Email        string
-	PasswordHash string
-	CreatedAt    time.Time
+	ID            int64
+	Username      string
+	Email         string
+	PasswordHash  string
+	EmailVerified bool
+	CreatedAt     time.Time
 }
 
 type Token struct {
@@ -38,25 +48,27 @@ type Token struct {
 }
 
 type Plugin struct {
-	Scope         string
-	Name          string
-	Description   string
-	Homepage      string
-	Repository    string
-	License       string
-	LatestVersion string
-	Keywords      []string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	Scope          string
+	Name           string
+	Description    string
+	Homepage       string
+	Repository     string
+	License        string
+	LatestVersion  string
+	Keywords       []string
+	TotalDownloads int64
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 type Version struct {
-	Scope        string
-	Name         string
-	Version      string
-	Checksum     string
-	ManifestJSON string
-	PublishedAt  time.Time
+	Scope         string
+	Name          string
+	Version       string
+	Checksum      string
+	ManifestJSON  string
+	PublishedAt   time.Time
+	DownloadCount int64
 }
 
 // NewPlugin/NewVersion are the write-side inputs for publishing.
@@ -99,6 +111,25 @@ type MetadataStore interface {
 	ListVersions(ctx context.Context, scope, name string) ([]Version, error)
 	// Search does a simple substring match over scope/name/description/keywords.
 	Search(ctx context.Context, query string) ([]Plugin, error)
+	// IncrementDownloadCount is called once per successful tarball download.
+	IncrementDownloadCount(ctx context.Context, scope, name, version string) error
+
+	// CreateEmailVerification records a one-time token for confirming a
+	// user's email address.
+	CreateEmailVerification(ctx context.Context, userID int64, tokenHash string, expiresAt time.Time) error
+	// ConsumeEmailVerification atomically validates and deletes a
+	// verification token, marks the owning user verified, and returns
+	// their ID. Returns ErrTokenInvalid if the token is missing/expired.
+	ConsumeEmailVerification(ctx context.Context, tokenHash string) (userID int64, err error)
+
+	// CreatePasswordReset records a one-time token for resetting a user's
+	// password.
+	CreatePasswordReset(ctx context.Context, userID int64, tokenHash string, expiresAt time.Time) error
+	// ConsumePasswordReset atomically validates and marks-used a reset
+	// token and returns the owning user's ID. Returns ErrTokenInvalid if
+	// the token is missing, expired, or already used.
+	ConsumePasswordReset(ctx context.Context, tokenHash string) (userID int64, err error)
+	UpdatePassword(ctx context.Context, userID int64, newPasswordHash string) error
 
 	Close() error
 }

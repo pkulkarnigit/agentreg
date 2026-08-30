@@ -4,13 +4,39 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/pkulkarni/apreg/internal/manifest"
+	"github.com/pkulkarni/apreg/internal/store"
 	"github.com/pkulkarni/apreg/internal/store/fsblob"
 	"github.com/pkulkarni/apreg/internal/store/sqlite"
 )
+
+// fakeSender captures messages instead of delivering them, so tests can
+// pull the verification/reset token out of what would have been sent.
+type fakeSender struct {
+	to, subject, body string
+	calls             int
+}
+
+func (f *fakeSender) Send(_ context.Context, to, subject, body string) error {
+	f.to, f.subject, f.body = to, subject, body
+	f.calls++
+	return nil
+}
+
+var tokenInBodyRE = regexp.MustCompile(`(?:verify-email|--token) (\S+)`)
+
+func extractToken(t *testing.T, body string) string {
+	t.Helper()
+	m := tokenInBodyRE.FindStringSubmatch(body)
+	if m == nil {
+		t.Fatalf("could not find token in message body: %q", body)
+	}
+	return m[1]
+}
 
 func newTestRegistry(t *testing.T) *Registry {
 	t.Helper()
@@ -165,5 +191,124 @@ func TestSearch(t *testing.T) {
 	}
 	if len(results) != 1 {
 		t.Fatalf("expected 1 result, got %d", len(results))
+	}
+}
+
+func TestDownloadCount(t *testing.T) {
+	ctx := context.Background()
+	r := newTestRegistry(t)
+	b := testBundle(t, "hello", "1.0.0")
+	if _, err := r.Publish(ctx, PublishInput{
+		Scope: "alice", Name: "hello", Version: "1.0.0",
+		Tarball: strings.NewReader("x"), Bundle: b, RequestorU: "alice",
+	}); err != nil {
+		t.Fatalf("Publish: %v", err)
+	}
+
+	for i := 0; i < 2; i++ {
+		if err := r.IncrementDownloadCount(ctx, "alice", "hello", "1.0.0"); err != nil {
+			t.Fatalf("IncrementDownloadCount: %v", err)
+		}
+	}
+
+	v, err := r.ResolveVersion(ctx, "alice", "hello", "1.0.0")
+	if err != nil {
+		t.Fatalf("ResolveVersion: %v", err)
+	}
+	if v.DownloadCount != 2 {
+		t.Fatalf("expected download count 2, got %d", v.DownloadCount)
+	}
+}
+
+func TestEmailVerificationFlow(t *testing.T) {
+	ctx := context.Background()
+	r := newTestRegistry(t)
+	sender := &fakeSender{}
+	r.SetSender(sender)
+
+	u, err := r.Signup(ctx, "alice", "alice@example.com", "hashed")
+	if err != nil {
+		t.Fatalf("Signup: %v", err)
+	}
+
+	if err := r.RequestEmailVerification(ctx, u); err != nil {
+		t.Fatalf("RequestEmailVerification: %v", err)
+	}
+	if sender.calls != 1 || sender.to != "alice@example.com" {
+		t.Fatalf("unexpected sender state: %+v", sender)
+	}
+	token := extractToken(t, sender.body)
+
+	if err := r.ConfirmEmailVerification(ctx, token); err != nil {
+		t.Fatalf("ConfirmEmailVerification: %v", err)
+	}
+
+	got, err := r.UserByUsername(ctx, "alice")
+	if err != nil {
+		t.Fatalf("UserByUsername: %v", err)
+	}
+	if !got.EmailVerified {
+		t.Fatal("expected user to be marked verified")
+	}
+
+	// Reusing the token must fail.
+	if err := r.ConfirmEmailVerification(ctx, token); err != store.ErrTokenInvalid {
+		t.Fatalf("expected ErrTokenInvalid reusing a consumed token, got %v", err)
+	}
+
+	// A forged/unknown token must fail the same way.
+	if err := r.ConfirmEmailVerification(ctx, "totally-made-up-token"); err != store.ErrTokenInvalid {
+		t.Fatalf("expected ErrTokenInvalid for a forged token, got %v", err)
+	}
+}
+
+func TestPasswordResetFlow(t *testing.T) {
+	ctx := context.Background()
+	r := newTestRegistry(t)
+	sender := &fakeSender{}
+	r.SetSender(sender)
+
+	if _, err := r.Signup(ctx, "bob", "bob@example.com", "old-hash"); err != nil {
+		t.Fatalf("Signup: %v", err)
+	}
+
+	if err := r.RequestPasswordReset(ctx, "bob"); err != nil {
+		t.Fatalf("RequestPasswordReset: %v", err)
+	}
+	if sender.calls != 1 || sender.to != "bob@example.com" {
+		t.Fatalf("unexpected sender state: %+v", sender)
+	}
+	token := extractToken(t, sender.body)
+
+	if err := r.ConfirmPasswordReset(ctx, token, "new-hash"); err != nil {
+		t.Fatalf("ConfirmPasswordReset: %v", err)
+	}
+
+	got, err := r.UserByUsername(ctx, "bob")
+	if err != nil {
+		t.Fatalf("UserByUsername: %v", err)
+	}
+	if got.PasswordHash != "new-hash" {
+		t.Fatalf("expected password hash updated, got %q", got.PasswordHash)
+	}
+
+	if err := r.ConfirmPasswordReset(ctx, token, "another-hash"); err != store.ErrTokenInvalid {
+		t.Fatalf("expected ErrTokenInvalid reusing a consumed reset token, got %v", err)
+	}
+}
+
+func TestPasswordReset_UnknownUsernameDoesNotError(t *testing.T) {
+	ctx := context.Background()
+	r := newTestRegistry(t)
+	sender := &fakeSender{}
+	r.SetSender(sender)
+
+	// Must not error and must not reveal (via error or send) that the
+	// username doesn't exist.
+	if err := r.RequestPasswordReset(ctx, "nobody-by-this-name"); err != nil {
+		t.Fatalf("expected nil error for unknown username, got %v", err)
+	}
+	if sender.calls != 0 {
+		t.Fatalf("expected no message sent for an unknown username, got %d calls", sender.calls)
 	}
 }

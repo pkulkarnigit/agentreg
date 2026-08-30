@@ -1,11 +1,43 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      # Local-dev-only credentials — fine here because postgres has no
+      # published port (below), so it's unreachable outside this
+      # compose network. Replace with real secrets (e.g. via an env
+      # file or secrets manager, not committed here) before any real
+      # deployment.
+      POSTGRES_USER: apreg
+      POSTGRES_PASSWORD: apreg
+      POSTGRES_DB: apreg
+    volumes:
+      - apreg-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U apreg"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+    restart: unless-stopped
+    # No published port: only apreg-server (on the compose network) needs
+    # to reach this. Use `docker compose exec postgres psql -U apreg` for
+    # direct access instead of exposing it to the host.
+
   apreg-server:
     build: .
     ports:
       - "8080:8080"
+    environment:
+      APREG_DB_DRIVER: postgres
+      APREG_DB_DSN: postgres://apreg:apreg@postgres:5432/apreg?sslmode=disable
     volumes:
-      - apreg-data:/home/apreg/data
+      # Blob storage stays on local disk regardless of metadata backend —
+      # this volume only ever holds data/blobs/ when APREG_DB_DRIVER=postgres.
+      - apreg-blobs:/home/apreg/data
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
-  apreg-data:
+  apreg-pgdata:
+  apreg-blobs:

@@ -10,11 +10,19 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"time"
 
 	"golang.org/x/mod/semver"
 
+	"github.com/pkulkarni/apreg/internal/auth"
 	"github.com/pkulkarni/apreg/internal/manifest"
+	"github.com/pkulkarni/apreg/internal/notify"
 	"github.com/pkulkarni/apreg/internal/store"
+)
+
+const (
+	emailVerificationTTL = 24 * time.Hour
+	passwordResetTTL     = 1 * time.Hour
 )
 
 var (
@@ -25,13 +33,20 @@ var (
 )
 
 type Registry struct {
-	meta store.MetadataStore
-	blob store.BlobStore
+	meta   store.MetadataStore
+	blob   store.BlobStore
+	sender notify.Sender
 }
 
 func New(meta store.MetadataStore, blob store.BlobStore) *Registry {
-	return &Registry{meta: meta, blob: blob}
+	return &Registry{meta: meta, blob: blob, sender: notify.LogSender{}}
 }
+
+// SetSender overrides the notification sender used for account-recovery
+// emails (default: notify.LogSender, which just logs the link — see that
+// package's doc comment). Real SMTP/SES delivery at actual deploy time is
+// a new Sender implementation passed here, not a change to any caller.
+func (r *Registry) SetSender(s notify.Sender) { r.sender = s }
 
 // PublishInput is everything needed to publish one version of a plugin.
 type PublishInput struct {
@@ -143,4 +158,68 @@ func (r *Registry) IssueToken(ctx context.Context, userID int64, tokenHash, labe
 // Authenticate resolves a bearer token's sha256 hash to its owning user.
 func (r *Registry) Authenticate(ctx context.Context, tokenHash string) (*store.User, error) {
 	return r.meta.GetUserByTokenHash(ctx, tokenHash)
+}
+
+// IncrementDownloadCount is called once per successful tarball download.
+func (r *Registry) IncrementDownloadCount(ctx context.Context, scope, name, version string) error {
+	return r.meta.IncrementDownloadCount(ctx, scope, name, version)
+}
+
+// RequestEmailVerification issues a fresh verification token for user and
+// delivers it via the configured Sender. Verification is advisory in v1 —
+// an unverified account can still log in and publish; gating publish on
+// verification is a one-line change once real email delivery exists.
+func (r *Registry) RequestEmailVerification(ctx context.Context, user *store.User) error {
+	token, err := auth.NewRandomToken()
+	if err != nil {
+		return err
+	}
+	if err := r.meta.CreateEmailVerification(ctx, user.ID, auth.HashToken(token), time.Now().Add(emailVerificationTTL)); err != nil {
+		return err
+	}
+	body := fmt.Sprintf("Confirm your AgentReg account:\n\n  apreg verify-email %s\n\nThis link expires in 24 hours.", token)
+	return r.sender.Send(ctx, user.Email, "Verify your AgentReg account", body)
+}
+
+// ConfirmEmailVerification consumes a verification token, marking its
+// owning user's email verified. Returns store.ErrTokenInvalid for a
+// missing, expired, or already-used token.
+func (r *Registry) ConfirmEmailVerification(ctx context.Context, token string) error {
+	_, err := r.meta.ConsumeEmailVerification(ctx, auth.HashToken(token))
+	return err
+}
+
+// RequestPasswordReset issues a fresh reset token for username (looking up
+// their registered email to deliver it to) if the account exists.
+// Deliberately returns nil rather than store.ErrNotFound for an unknown
+// username — callers must not let this endpoint reveal which usernames
+// are registered.
+func (r *Registry) RequestPasswordReset(ctx context.Context, username string) error {
+	user, err := r.meta.GetUserByUsername(ctx, username)
+	if err != nil {
+		if err == store.ErrNotFound {
+			return nil
+		}
+		return err
+	}
+	token, err := auth.NewRandomToken()
+	if err != nil {
+		return err
+	}
+	if err := r.meta.CreatePasswordReset(ctx, user.ID, auth.HashToken(token), time.Now().Add(passwordResetTTL)); err != nil {
+		return err
+	}
+	body := fmt.Sprintf("Reset your AgentReg password:\n\n  apreg reset-password --token %s\n\nThis link expires in 1 hour. If you didn't request this, ignore this message.", token)
+	return r.sender.Send(ctx, user.Email, "Reset your AgentReg password", body)
+}
+
+// ConfirmPasswordReset consumes a reset token and sets a new password
+// hash. Returns store.ErrTokenInvalid for a missing, expired, or
+// already-used token.
+func (r *Registry) ConfirmPasswordReset(ctx context.Context, token, newPasswordHash string) error {
+	userID, err := r.meta.ConsumePasswordReset(ctx, auth.HashToken(token))
+	if err != nil {
+		return err
+	}
+	return r.meta.UpdatePassword(ctx, userID, newPasswordHash)
 }

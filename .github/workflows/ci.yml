@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: apreg
+          POSTGRES_PASSWORD: apreg
+          POSTGRES_DB: apreg
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U apreg"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - run: go vet ./...
+
+      - run: go build ./...
+
+      - name: Test
+        env:
+          APREG_TEST_POSTGRES_DSN: postgres://apreg:apreg@localhost:5432/apreg?sslmode=disable
+        run: go test ./... -v

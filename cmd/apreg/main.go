@@ -35,6 +35,10 @@ func main() {
 		err = cmdSearch(args)
 	case "view":
 		err = cmdView(args)
+	case "verify-email":
+		err = cmdVerifyEmail(args)
+	case "reset-password":
+		err = cmdResetPassword(args)
 	case "-h", "--help", "help":
 		printUsage()
 		return
@@ -63,5 +67,7 @@ Usage:
   apreg install @scope/name[@version]       fetch and unpack into agent_plugins/<name>
   apreg search <query>                      search the registry
   apreg view @scope/name[@version]          print resolved metadata
+  apreg verify-email <token>                confirm your account's email address
+  apreg reset-password --registry <url>     reset a forgotten password (interactive)
 `)
 }

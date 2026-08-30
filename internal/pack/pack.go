@@ -1,7 +1,8 @@
 // Package pack tars/gzips a plugin directory into a distributable archive
 // and unpacks it back out, verifying containment so no entry can escape the
 // target directory (path traversal via "../" or absolute paths in the
-// archive).
+// archive) and capping total decompressed output (decompression-bomb
+// protection).
 package pack
 
 import (
@@ -97,10 +98,23 @@ func Checksum(path string) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
+// MaxDecompressedBytes caps the total bytes Unpack will write across every
+// entry in an archive. Without this, a small, highly-compressible upload
+// (well under the transport-level upload size cap, since that cap only
+// bounds the *compressed* bytes) could decompress to gigabytes and exhaust
+// disk — a classic decompression-bomb DoS. 256MiB is generous for a plugin
+// bundle (skills/docs/small scripts).
+const MaxDecompressedBytes int64 = 256 << 20
+
 // Unpack extracts a tar.gz archive into destDir, which must already exist.
 // Every entry is required to resolve inside destDir; anything else
 // (absolute paths, "../" traversal, symlinks pointing outside) is rejected.
+// Total decompressed output is capped at MaxDecompressedBytes.
 func Unpack(tarGzPath, destDir string) error {
+	return unpackLimited(tarGzPath, destDir, MaxDecompressedBytes)
+}
+
+func unpackLimited(tarGzPath, destDir string, limit int64) error {
 	f, err := os.Open(tarGzPath)
 	if err != nil {
 		return err
@@ -114,6 +128,7 @@ func Unpack(tarGzPath, destDir string) error {
 	defer gz.Close()
 
 	tr := tar.NewReader(gz)
+	var totalWritten int64
 	for {
 		hdr, err := tr.Next()
 		if err == io.EOF {
@@ -141,9 +156,23 @@ func Unpack(tarGzPath, destDir string) error {
 			if err != nil {
 				return err
 			}
-			if _, err := io.Copy(out, tr); err != nil {
+
+			remaining := limit - totalWritten
+			if remaining <= 0 {
+				out.Close()
+				os.Remove(target)
+				return fmt.Errorf("archive exceeds %d byte decompressed size limit", limit)
+			}
+			n, err := io.CopyN(out, tr, remaining+1)
+			totalWritten += n
+			if err != nil && err != io.EOF {
 				out.Close()
 				return err
+			}
+			if n > remaining {
+				out.Close()
+				os.Remove(target)
+				return fmt.Errorf("archive exceeds %d byte decompressed size limit", limit)
 			}
 			if err := out.Close(); err != nil {
 				return err
