@@ -62,6 +62,24 @@ services:
       retries: 15
     restart: unless-stopped
 
+  # Opt-in: a shared target for rate limiting/login lockout
+  # (`APREG_REDIS_ADDR`), so several apreg-server replicas can share one
+  # set of buckets/failure counts instead of each keeping its own
+  # in-memory copy. Not started by a plain `docker compose up` — bring it
+  # up explicitly with `docker compose --profile redis up -d redis`, then
+  # point apreg-server at it (see README).
+  redis:
+    image: redis:7-alpine
+    profiles: ["redis"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+    restart: unless-stopped
+
 volumes:
   apreg-pgdata:
   apreg-blobs:

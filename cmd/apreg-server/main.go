@@ -17,8 +17,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/redis/go-redis/v9"
+
 	"github.com/pkulkarni/apreg/internal/api"
 	"github.com/pkulkarni/apreg/internal/api/middleware"
+	"github.com/pkulkarni/apreg/internal/auth"
 	"github.com/pkulkarni/apreg/internal/registry"
 	"github.com/pkulkarni/apreg/internal/store"
 	"github.com/pkulkarni/apreg/internal/store/fsblob"
@@ -71,7 +74,9 @@ func main() {
 	// (reg.SetSender(...)) before this server is ever exposed to
 	// untrusted users or the public internet.
 	log.Print("WARNING: no email provider configured — account verification/password-reset links are being written to this log, not emailed. Do not expose this server to untrusted users without configuring a real notify.Sender first.")
-	apiHandler := api.NewHandler(reg)
+
+	apiOpts, redisAddr := apiOptions()
+	apiHandler := api.NewHandler(reg, apiOpts...)
 
 	mux := http.NewServeMux()
 	mux.Handle("/v1/", apiHandler)
@@ -86,9 +91,14 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
+	rateLimitBackend := "in-memory"
+	if redisAddr != "" {
+		rateLimitBackend = "redis (" + redisAddr + ")"
+	}
+
 	serverErr := make(chan error, 1)
 	go func() {
-		log.Printf("apreg-server listening on %s (db driver: %s, blob driver: %s, data dir: %s)", addr, driver, blobDriver, dataDir)
+		log.Printf("apreg-server listening on %s (db driver: %s, blob driver: %s, rate limiting: %s, data dir: %s)", addr, driver, blobDriver, rateLimitBackend, dataDir)
 		serverErr <- srv.ListenAndServe()
 	}()
 
@@ -173,6 +183,30 @@ func openBlobStore(driver, dataDir string) (store.BlobStore, error) {
 	default:
 		return nil, errors.New("unknown APREG_BLOB_DRIVER " + driver + " (want \"fs\" or \"s3\")")
 	}
+}
+
+// apiOptions decides whether the API's rate limiting and login lockout run
+// in-memory (single instance, the default) or against Redis (shared across
+// replicas, opt-in via APREG_REDIS_ADDR). It reuses api's own tuning
+// constants so the Redis-backed path behaves identically to the in-memory
+// default it's replacing, just with shared state. Returns the redis addr
+// too (empty when unused) purely so the caller can log which backend is
+// active.
+func apiOptions() ([]api.Option, string) {
+	redisAddr := os.Getenv("APREG_REDIS_ADDR")
+	if redisAddr == "" {
+		return nil, ""
+	}
+
+	client := redis.NewClient(&redis.Options{Addr: redisAddr})
+
+	opts := []api.Option{
+		api.WithLockout(auth.NewRedisLockout(client, "login", api.LoginLockoutMaxFailures, api.LoginLockoutWindow)),
+		api.WithLimiterFactory(func(name string, burst int, per time.Duration) middleware.Limiter {
+			return middleware.NewRedisLimiter(client, name, burst, per)
+		}),
+	}
+	return opts, redisAddr
 }
 
 func envOr(key, fallback string) string {

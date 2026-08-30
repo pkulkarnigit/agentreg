@@ -293,7 +293,7 @@ func TestSignupRateLimit(t *testing.T) {
 	defer srv.Close()
 	client := srv.Client()
 
-	for i := 0; i < signupBurst; i++ {
+	for i := 0; i < SignupBurst; i++ {
 		resp := postJSON(t, client, srv.URL+"/v1/users", map[string]string{
 			"username": fmt.Sprintf("user%d", i), "email": fmt.Sprintf("user%d@example.com", i), "password": "hunter22222",
 		})
@@ -319,7 +319,7 @@ func TestLoginRateLimit_PerIP(t *testing.T) {
 
 	// Distinct usernames per attempt so per-username lockout (also
 	// threshold 10) never engages — isolates the per-IP rate limiter.
-	for i := 0; i < loginBurst; i++ {
+	for i := 0; i < LoginBurst; i++ {
 		resp := postJSON(t, client, srv.URL+"/v1/tokens", map[string]string{
 			"username": fmt.Sprintf("nouser%d", i), "password": "wrong",
 		})

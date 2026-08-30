@@ -5,45 +5,14 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/pkulkarni/apreg/internal/api/middleware/limitertest"
 )
 
-func TestRateLimiter_AllowsUpToBurstThenBlocks(t *testing.T) {
-	rl := NewRateLimiter(3, time.Hour)
-	for i := 0; i < 3; i++ {
-		if !rl.Allow("alice") {
-			t.Fatalf("request %d: expected allowed within burst", i)
-		}
-	}
-	if rl.Allow("alice") {
-		t.Fatal("expected 4th request to be blocked")
-	}
-}
-
-func TestRateLimiter_IndependentPerKey(t *testing.T) {
-	rl := NewRateLimiter(1, time.Hour)
-	if !rl.Allow("alice") {
-		t.Fatal("expected alice's first request to be allowed")
-	}
-	if !rl.Allow("bob") {
-		t.Fatal("expected bob's first request to be allowed independently of alice's bucket")
-	}
-	if rl.Allow("alice") {
-		t.Fatal("expected alice's second request to be blocked")
-	}
-}
-
-func TestRateLimiter_RefillsOverTime(t *testing.T) {
-	rl := NewRateLimiter(1, 50*time.Millisecond)
-	if !rl.Allow("alice") {
-		t.Fatal("expected first request to be allowed")
-	}
-	if rl.Allow("alice") {
-		t.Fatal("expected immediate second request to be blocked")
-	}
-	time.Sleep(60 * time.Millisecond)
-	if !rl.Allow("alice") {
-		t.Fatal("expected request after refill window to be allowed")
-	}
+func TestRateLimiter_Conformance(t *testing.T) {
+	limitertest.RunConformanceSuite(t, func(t *testing.T, burst int, per time.Duration) limitertest.Limiter {
+		return NewRateLimiter(burst, per)
+	})
 }
 
 func TestRateLimit_Middleware(t *testing.T) {

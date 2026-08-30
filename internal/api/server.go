@@ -15,35 +15,72 @@ import (
 
 type Server struct {
 	reg     *registry.Registry
-	lockout *auth.LoginLockout
+	lockout auth.Lockout
+}
+
+// limiterFactory builds a named Limiter — name distinguishes the
+// signup/login/publish buckets so a Redis-backed factory can prefix their
+// keys separately even though they share one Redis instance.
+type limiterFactory func(name string, burst int, per time.Duration) middleware.Limiter
+
+// Option configures NewHandler's rate limiting and lockout backends. The
+// zero value (no options) is the single-instance, in-memory default;
+// WithLockout/WithLimiterFactory swap in Redis-backed implementations for
+// a horizontally scaled deployment. See cmd/apreg-server/main.go for how
+// APREG_REDIS_ADDR selects between them.
+type Option func(*handlerConfig)
+
+type handlerConfig struct {
+	lockout    auth.Lockout
+	newLimiter limiterFactory
+}
+
+// WithLockout overrides the default in-memory login lockout.
+func WithLockout(l auth.Lockout) Option {
+	return func(c *handlerConfig) { c.lockout = l }
+}
+
+// WithLimiterFactory overrides how the signup/login/publish rate limiters
+// are constructed.
+func WithLimiterFactory(f limiterFactory) Option {
+	return func(c *handlerConfig) { c.newLimiter = f }
 }
 
 // Rate limits, chosen per the project plan's "Abuse & auth hardening"
 // section: generous enough not to bother a real user, tight enough to
-// blunt scripted abuse against a single-instance server.
+// blunt scripted abuse against a single-instance server. Exported so
+// cmd/apreg-server can reuse the exact same tuning when constructing
+// Redis-backed limiters/lockout via the Option hooks above.
 const (
-	signupBurst  = 5
-	signupPer    = time.Hour
-	loginBurst   = 10
-	loginPer     = time.Minute
-	publishBurst = 30
-	publishPer   = time.Hour
+	SignupBurst  = 5
+	SignupPer    = time.Hour
+	LoginBurst   = 10
+	LoginPer     = time.Minute
+	PublishBurst = 30
+	PublishPer   = time.Hour
 
-	loginLockoutMaxFailures = 10
-	loginLockoutWindow      = 15 * time.Minute
+	LoginLockoutMaxFailures = 10
+	LoginLockoutWindow      = 15 * time.Minute
 )
 
 // NewHandler builds the full /v1 API routing table.
-func NewHandler(reg *registry.Registry) http.Handler {
-	s := &Server{
-		reg:     reg,
-		lockout: auth.NewLoginLockout(loginLockoutMaxFailures, loginLockoutWindow),
+func NewHandler(reg *registry.Registry, opts ...Option) http.Handler {
+	cfg := &handlerConfig{
+		lockout: auth.NewLoginLockout(LoginLockoutMaxFailures, LoginLockoutWindow),
+		newLimiter: func(_ string, burst int, per time.Duration) middleware.Limiter {
+			return middleware.NewRateLimiter(burst, per)
+		},
 	}
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
+	s := &Server{reg: reg, lockout: cfg.lockout}
 	mux := http.NewServeMux()
 
-	signupLimiter := middleware.NewRateLimiter(signupBurst, signupPer)
-	loginLimiter := middleware.NewRateLimiter(loginBurst, loginPer)
-	publishLimiter := middleware.NewRateLimiter(publishBurst, publishPer)
+	signupLimiter := cfg.newLimiter("signup", SignupBurst, SignupPer)
+	loginLimiter := cfg.newLimiter("login", LoginBurst, LoginPer)
+	publishLimiter := cfg.newLimiter("publish", PublishBurst, PublishPer)
 
 	mux.HandleFunc("POST /v1/users", middleware.RateLimit(signupLimiter, middleware.ByIP, s.handleSignup))
 	mux.HandleFunc("POST /v1/users/verify", s.handleVerifyEmail)

@@ -5,11 +5,21 @@ import (
 	"time"
 )
 
-// LoginLockout tracks failed login attempts per username, independent of
-// source IP — a per-IP rate limiter alone doesn't stop a distributed
-// brute force against one account from many addresses. In-memory and
-// single-instance, like RateLimiter; same future swap story if the server
-// ever scales horizontally.
+// Lockout tracks failed login attempts per username, independent of source
+// IP — a per-IP rate limiter alone doesn't stop a distributed brute force
+// against one account from many addresses. LoginLockout (below) is the
+// in-memory, single-instance implementation; RedisLockout (redislockout.go)
+// is the same contract backed by Redis, for when apreg-server runs as more
+// than one replica and failure counts need to be shared rather than
+// per-process.
+type Lockout interface {
+	Locked(username string) bool
+	RecordFailure(username string)
+	Reset(username string)
+}
+
+// LoginLockout is an in-memory, single-instance Lockout. Fine for a single
+// apreg-server instance; swap in RedisLockout once there's more than one.
 type LoginLockout struct {
 	mu          sync.Mutex
 	failures    map[string][]time.Time
@@ -28,6 +38,8 @@ func NewLoginLockout(maxFailures int, window time.Duration) *LoginLockout {
 		window:      window,
 	}
 }
+
+var _ Lockout = (*LoginLockout)(nil)
 
 // Locked reports whether username currently has >= maxFailures recorded
 // failures within the trailing window.

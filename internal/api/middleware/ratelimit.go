@@ -7,10 +7,19 @@ import (
 	"time"
 )
 
+// Limiter is anything that can answer "may this key make one more request
+// right now." RateLimiter (below) is the in-memory, single-instance
+// implementation; RedisLimiter (redislimiter.go) is the same contract
+// backed by Redis, for when apreg-server runs as more than one replica and
+// the buckets need to be shared rather than per-process.
+type Limiter interface {
+	Allow(key string) bool
+}
+
 // RateLimiter is an in-memory per-key token bucket. It's single-instance by
-// design — v1 runs one apreg-server process. If the server ever scales
-// horizontally, the natural swap is a Redis-backed limiter behind the same
-// Allow(key) signature, the same pattern as the store interfaces.
+// design — each process has its own buckets, invisible to any other
+// replica. Fine for a single apreg-server instance; swap in RedisLimiter
+// once there's more than one.
 type RateLimiter struct {
 	mu      sync.Mutex
 	buckets map[string]*bucket
@@ -61,9 +70,11 @@ func (rl *RateLimiter) Allow(key string) bool {
 	return true
 }
 
+var _ Limiter = (*RateLimiter)(nil)
+
 // RateLimit wraps next, rejecting requests with 429 once keyFunc(r)'s
 // bucket is exhausted.
-func RateLimit(rl *RateLimiter, keyFunc func(*http.Request) string, next http.HandlerFunc) http.HandlerFunc {
+func RateLimit(rl Limiter, keyFunc func(*http.Request) string, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !rl.Allow(keyFunc(r)) {
 			w.Header().Set("Retry-After", "60")

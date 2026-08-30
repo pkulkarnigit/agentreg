@@ -108,14 +108,42 @@ APREG_BLOB_DRIVER=s3 APREG_S3_BUCKET=apreg APREG_S3_ENDPOINT=http://localhost:90
   ./bin/apreg-server
 ```
 
-Beyond that: rate limiting on signup/login/publish, an account lockout that
-kicks in after repeated failed logins no matter which IP they came from,
-structured request logging, graceful shutdown on SIGINT/SIGTERM, SQLite
-backups via `apreg-server -backup <path>` (`pg_dump` for Postgres), and
-download counts tracked per version.
+Rate limiting and login lockout get the same swap, for the same reason:
+they default to in-memory (`internal/api/middleware.RateLimiter`,
+`internal/auth.LoginLockout`), which is fine for one instance but means
+each replica enforces its own limits independently — ten replicas behind a
+load balancer effectively multiply every limit by ten. `RedisLimiter` and
+`RedisLockout` implement the same `Limiter`/`Lockout` interfaces backed by
+Redis instead, so every replica shares one set of buckets and failure
+counts. Both run the identical conformance suites
+(`internal/api/middleware/limitertest`, `internal/auth/lockouttest`)
+against a real Redis. A Redis outage fails open (requests/logins allowed,
+with a logged warning) rather than locking everyone out — this is
+defense-in-depth on top of bcrypt password hashing and per-scope publish
+authorization, not the only thing standing between the registry and abuse.
 
-None of it touched `internal/api` or `internal/registry` — see Layout below
-for why that's not a coincidence.
+```bash
+APREG_REDIS_ADDR=localhost:6379
+```
+
+That single env var switches both signup/login/publish rate limiting and
+login lockout over to Redis; leave it unset and both stay in-memory. To
+try it locally:
+
+```bash
+docker compose --profile redis up -d redis
+APREG_REDIS_ADDR=localhost:6379 ./bin/apreg-server
+```
+
+Beyond that: structured request logging, graceful shutdown on
+SIGINT/SIGTERM, SQLite backups via `apreg-server -backup <path>` (`pg_dump`
+for Postgres), and download counts tracked per version.
+
+None of it touched `internal/registry` — see Layout below for why that's
+not a coincidence. `internal/api` picked up a small `Option` hook
+(`api.WithLockout`, `api.WithLimiterFactory`) so `cmd/apreg-server` can
+swap in the Redis-backed pieces above; the routing and handler logic
+itself didn't change.
 
 ## Layout
 
@@ -138,9 +166,11 @@ internal/store/blobtest       shared conformance suite both blob backends run
 internal/registry         business logic — the only caller of internal/store
 internal/notify            pluggable account-recovery message delivery
 internal/api               REST handlers (HTTP only, calls internal/registry)
-internal/api/middleware      auth check, rate limiting, request logging
+internal/api/middleware      auth check, rate limiting (in-memory or Redis), request logging
+internal/api/middleware/limitertest  shared conformance suite both rate limiter backends run
 internal/web              read-only server-rendered browsing UI
-internal/auth              password hashing, API tokens, login lockout
+internal/auth              password hashing, API tokens, login lockout (in-memory or Redis)
+internal/auth/lockouttest   shared conformance suite both lockout backends run
 internal/crawler          fetches + validates public plugins for the catalog
 ```
 
@@ -224,6 +254,13 @@ reachable. To actually run them:
 ```bash
 docker run -d --rm -p 9000:9000 -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin minio/minio server /data
 APREG_TEST_S3_ENDPOINT="http://localhost:9000" AWS_ACCESS_KEY_ID=minioadmin AWS_SECRET_ACCESS_KEY=minioadmin go test ./...
+```
+
+Same story for the Redis-backed rate limiter/lockout tests:
+
+```bash
+docker run -d --rm -p 6379:6379 redis:7-alpine
+APREG_TEST_REDIS_ADDR="localhost:6379" go test ./...
 ```
 
 ## License
