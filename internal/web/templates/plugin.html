@@ -23,7 +23,7 @@
     {{range .Versions}}
     <tr>
       <td><a href="/@{{$.Plugin.Scope}}/{{$.Plugin.Name}}?version={{.Version}}">{{.Version}}</a>{{if eq .Version $.Plugin.LatestVersion}} <span class="muted">(latest)</span>{{end}}</td>
-      <td class="muted">{{.PublishedAt.Format "2006-01-02 15:04"}}</td>
+      <td class="muted" title="{{.PublishedAt.Format "2006-01-02 15:04 UTC"}}">{{timeAgo .PublishedAt}}</td>
       <td class="muted">{{.DownloadCount}}</td>
       <td class="muted"><code>{{slice .Checksum 0 12}}&hellip;</code></td>
     </tr>

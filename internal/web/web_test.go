@@ -97,6 +97,75 @@ func TestIndexPage(t *testing.T) {
 	}
 }
 
+func TestIndexPage_ShowsHeroAndStats(t *testing.T) {
+	srv, reg := newTestServer(t)
+	defer srv.Close()
+	publishSample(t, reg)
+	if err := reg.IncrementDownloadCount(context.Background(), "alice", "hello", "1.0.0"); err != nil {
+		t.Fatal(err)
+	}
+
+	resp, err := http.Get(srv.URL + "/")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	body := readBody(t, resp)
+	for _, want := range []string{
+		"A registry for Agent Plugins", // hero headline
+		"apreg install @scope/name",    // hero install snippet
+		`<span class="n">1</span>`,     // count shared by the 1-plugin and 1-publisher stats
+		"publishers",                   // stat label
+		"downloads",                    // stat label
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("expected homepage to contain %q, got:\n%s", want, body)
+		}
+	}
+}
+
+func TestIndexPage_SearchHidesHero(t *testing.T) {
+	srv, reg := newTestServer(t)
+	defer srv.Close()
+	publishSample(t, reg)
+
+	resp, err := http.Get(srv.URL + "/?q=hello")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	body := readBody(t, resp)
+	if strings.Contains(body, "A registry for Agent Plugins") {
+		t.Error("expected hero headline to be hidden on a search results page")
+	}
+	if !strings.Contains(body, "1 result") {
+		t.Errorf("expected search results page to show a result count, got:\n%s", body)
+	}
+}
+
+func TestDocsPage(t *testing.T) {
+	srv, _ := newTestServer(t)
+	defer srv.Close()
+
+	resp, err := http.Get(srv.URL + "/docs")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	}
+	body := readBody(t, resp)
+	for _, want := range []string{
+		"Quickstart", "apreg publish", "apreg install", "Versioning", "immutable",
+		"CLI reference", "REST API reference", "PUT /v1/plugins/{scope}/{name}/{version}",
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("expected docs page to contain %q, got:\n%s", want, body)
+		}
+	}
+}
+
 func TestPluginPage(t *testing.T) {
 	srv, reg := newTestServer(t)
 	defer srv.Close()

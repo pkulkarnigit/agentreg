@@ -6,12 +6,14 @@ package web
 import (
 	"embed"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/pkulkarni/apreg/internal/crawler"
 	"github.com/pkulkarni/apreg/internal/pack"
@@ -22,15 +24,20 @@ import (
 //go:embed templates/*.html
 var templateFS embed.FS
 
+var funcMap = template.FuncMap{
+	"timeAgo": timeAgo,
+}
+
 // Each page is parsed together with layout.html into its own *template.Template
 // rather than one shared set: since every page's "title"/"content" blocks
 // share those same names (by design, so layout.html can invoke either),
 // parsing all files into one namespace would let the last-parsed file's
 // definitions silently win for every page.
 var (
-	indexTmpl   = template.Must(template.ParseFS(templateFS, "templates/layout.html", "templates/index.html"))
-	pluginTmpl  = template.Must(template.ParseFS(templateFS, "templates/layout.html", "templates/plugin.html"))
-	catalogTmpl = template.Must(template.ParseFS(templateFS, "templates/layout.html", "templates/catalog.html"))
+	indexTmpl   = template.Must(template.New("index").Funcs(funcMap).ParseFS(templateFS, "templates/layout.html", "templates/index.html"))
+	pluginTmpl  = template.Must(template.New("plugin").Funcs(funcMap).ParseFS(templateFS, "templates/layout.html", "templates/plugin.html"))
+	catalogTmpl = template.Must(template.New("catalog").Funcs(funcMap).ParseFS(templateFS, "templates/layout.html", "templates/catalog.html"))
+	docsTmpl    = template.Must(template.New("docs").Funcs(funcMap).ParseFS(templateFS, "templates/layout.html", "templates/docs.html"))
 )
 
 type Server struct {
@@ -49,11 +56,18 @@ func NewHandler(reg *registry.Registry, catalogPath, mirrorScope string) http.Ha
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", s.handleIndex)
 	mux.HandleFunc("GET /catalog", s.handleCatalog)
+	mux.HandleFunc("GET /docs", s.handleDocs)
 	// Go's ServeMux requires a wildcard to own its whole path segment, so
 	// "@scope" can't be split into a literal "@" + "{scope}" wildcard in
 	// the pattern; the leading "@" is stripped from {scopeAt} in the handler.
 	mux.HandleFunc("GET /{scopeAt}/{name}", s.handlePlugin)
 	return mux
+}
+
+type indexStats struct {
+	Plugins   int
+	Scopes    int
+	Downloads int64
 }
 
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -63,7 +77,28 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
-	render(w, indexTmpl, map[string]any{"Plugins": plugins, "Query": q})
+
+	// Stats only mean anything for the unfiltered (homepage) listing —
+	// Search("") returns everything, so `plugins` already is that set.
+	var stats indexStats
+	if q == "" {
+		scopes := make(map[string]struct{})
+		for _, p := range plugins {
+			scopes[p.Scope] = struct{}{}
+			stats.Downloads += p.TotalDownloads
+		}
+		stats.Plugins = len(plugins)
+		stats.Scopes = len(scopes)
+	}
+
+	render(w, indexTmpl, map[string]any{"Plugins": plugins, "Query": q, "Stats": stats})
+}
+
+// handleDocs serves a single static documentation page. It's plain
+// content with no registry data behind it, so unlike the other pages
+// there's no error path here beyond the template itself failing to render.
+func (s *Server) handleDocs(w http.ResponseWriter, r *http.Request) {
+	render(w, docsTmpl, nil)
 }
 
 // handleCatalog shows the crawler's most recent output (internal/crawler,
@@ -239,6 +274,34 @@ func (s *Server) loadVersionContents(r *http.Request, scope, name, version strin
 	}
 
 	return skills, mcpServers
+}
+
+// timeAgo renders a duration since t the way most package registries do
+// ("3 days ago") rather than an absolute timestamp — easier to scan in a
+// list of many entries.
+func timeAgo(t time.Time) string {
+	d := time.Since(t)
+	switch {
+	case d < time.Minute:
+		return "just now"
+	case d < time.Hour:
+		return agoUnit(int(d/time.Minute), "minute")
+	case d < 24*time.Hour:
+		return agoUnit(int(d/time.Hour), "hour")
+	case d < 30*24*time.Hour:
+		return agoUnit(int(d/(24*time.Hour)), "day")
+	case d < 365*24*time.Hour:
+		return agoUnit(int(d/(30*24*time.Hour)), "month")
+	default:
+		return agoUnit(int(d/(365*24*time.Hour)), "year")
+	}
+}
+
+func agoUnit(n int, unit string) string {
+	if n == 1 {
+		return fmt.Sprintf("1 %s ago", unit)
+	}
+	return fmt.Sprintf("%d %ss ago", n, unit)
 }
 
 func truncate(s string, n int) string {

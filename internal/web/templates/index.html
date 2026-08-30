@@ -1,19 +1,43 @@
 {{define "title"}}AgentReg{{if .Query}} — search: {{.Query}}{{end}}{{end}}
 {{define "content"}}
+{{if not .Query}}
+<div class="hero">
+  <h1>A registry for Agent Plugins</h1>
+  <p class="lede">Publish, discover, and install <a href="https://agent-plugins.org">Agent Plugins</a> — Skills and MCP servers bundled into one portable directory. Open to anyone with an account.</p>
+  <form class="search" method="get" action="/">
+    <input type="text" name="q" placeholder="Search plugins by name, description, or keyword&hellip;" value="{{.Query}}" autofocus>
+  </form>
+  <div class="hero-install"><span>install a plugin:</span> <code>apreg install @scope/name</code> <span>&middot;</span> <a href="/docs#publishing">learn to publish yours &rarr;</a></div>
+</div>
+
+<div class="stats">
+  <div class="stat"><span class="n">{{.Stats.Plugins}}</span><span class="l">plugins</span></div>
+  <div class="stat"><span class="n">{{.Stats.Scopes}}</span><span class="l">publishers</span></div>
+  <div class="stat"><span class="n">{{.Stats.Downloads}}</span><span class="l">downloads</span></div>
+</div>
+{{else}}
 <form class="search" method="get" action="/">
-  <input type="text" name="q" placeholder="Search plugins by name, description, or keyword&hellip;" value="{{.Query}}">
+  <input type="text" name="q" placeholder="Search plugins by name, description, or keyword&hellip;" value="{{.Query}}" autofocus>
 </form>
+{{end}}
 
 {{if not .Plugins}}
-  <p class="muted">{{if .Query}}No plugins match "{{.Query}}".{{else}}No plugins published yet. Be the first: <code>apreg publish</code>.{{end}}</p>
+  <p class="muted">{{if .Query}}No plugins match "{{.Query}}".{{else}}No plugins published yet. Be the first — see the <a href="/docs#publishing">publishing guide</a>.{{end}}</p>
+{{else}}
+  {{if .Query}}<p class="muted">{{len .Plugins}} result{{if ne (len .Plugins) 1}}s{{end}} for &ldquo;{{.Query}}&rdquo;</p>{{else}}<h2>Recently updated</h2>{{end}}
 {{end}}
 
 {{range .Plugins}}
 <div class="card">
   <h3><a href="/@{{.Scope}}/{{.Name}}">@{{.Scope}}/{{.Name}}</a></h3>
-  <p>{{.Description}}</p>
-  <p class="muted">latest: {{.LatestVersion}}</p>
+  <p class="desc">{{.Description}}</p>
   {{if .Keywords}}<p class="keywords">{{range .Keywords}}<span>{{.}}</span>{{end}}</p>{{end}}
+  <p class="card-stats">
+    <span><strong>{{.LatestVersion}}</strong></span>
+    <span>{{.TotalDownloads}} download{{if ne .TotalDownloads 1}}s{{end}}</span>
+    {{if .License}}<span>{{.License}}</span>{{end}}
+    <span>updated {{timeAgo .UpdatedAt}}</span>
+  </p>
 </div>
 {{end}}
 {{end}}
