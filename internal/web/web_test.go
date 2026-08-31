@@ -190,6 +190,7 @@ func TestDocsPage(t *testing.T) {
 	for _, want := range []string{
 		"Quickstart", "apreg publish", "apreg install", "Versioning", "permanent",
 		"CLI reference", "REST API reference", "PUT /v1/plugins/{scope}/{name}/{version}",
+		"apreg list", "apreg uninstall", "apreg-lock.json",
 	} {
 		if !strings.Contains(body, want) {
 			t.Errorf("expected docs page to contain %q, got:\n%s", want, body)

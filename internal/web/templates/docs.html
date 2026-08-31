@@ -60,6 +60,21 @@ apreg install @upstash/context7       # latest version
 apreg install @upstash/context7@1.0.0 # a specific version
 apreg install @upstash/context7 --dir vendor/context7</code></pre>
   <p>Searching, viewing, installing — none of that needs an account. Only publishing does.</p>
+  <p>
+    Every install is recorded in <code>apreg-lock.json</code> in whatever directory you ran it from —
+    the resolved version, checksum, source registry, and where it landed, regardless of
+    <code>--dir</code>. <code>apreg list</code> reads it back; <code>apreg uninstall</code> deletes both
+    the files and the entry. Reinstalling a plugin (e.g. to pick up a new version) replaces its
+    directory outright rather than unpacking on top of it, so a file a new version dropped can't be
+    left behind from the old one.
+  </p>
+  <pre><code>apreg list
+apreg uninstall @upstash/context7</code></pre>
+  <div class="callout">
+    There's no dependency resolution here on purpose — plugins don't declare dependencies on each
+    other, so there's nothing to resolve. This is the download-verify-unpack half of a package
+    manager, not a build system.
+  </div>
 </section>
 
 <section id="publishing">
@@ -130,6 +145,8 @@ apreg install @upstash/context7 --dir vendor/context7</code></pre>
     <tr><td><code>apreg login --registry &lt;url&gt;</code></td><td>log in and store an API token</td></tr>
     <tr><td><code>apreg publish [dir]</code></td><td>validate, pack, and upload under your scope</td></tr>
     <tr><td><code>apreg install @scope/name[@version]</code></td><td>fetch, verify, and unpack a plugin</td></tr>
+    <tr><td><code>apreg list</code></td><td>list plugins installed in this directory (reads apreg-lock.json)</td></tr>
+    <tr><td><code>apreg uninstall @scope/name</code></td><td>remove an installed plugin and untrack it</td></tr>
     <tr><td><code>apreg search &lt;query&gt;</code></td><td>search the registry</td></tr>
     <tr><td><code>apreg view @scope/name[@version]</code></td><td>print resolved metadata as JSON</td></tr>
     <tr><td><code>apreg verify-email &lt;token&gt;</code></td><td>confirm your account's email address</td></tr>
@@ -139,7 +156,12 @@ apreg install @upstash/context7 --dir vendor/context7</code></pre>
 
 <section id="api">
   <h2>REST API reference</h2>
-  <p class="muted">The CLI doesn't do anything you can't do yourself — it's just a thin wrapper around this API.</p>
+  <p class="muted">
+    Everything the CLI does against the registry — publish, install, search, view — you can do
+    yourself against this API directly. <code>apreg list</code> and <code>apreg uninstall</code> are the
+    exception: they only ever read and write <code>apreg-lock.json</code> on your own machine, no
+    network involved.
+  </p>
   <table>
     <tr><th>method &amp; path</th><th>auth</th><th>what it does</th></tr>
     <tr><td><code>POST /v1/users</code></td><td>&mdash;</td><td>create an account</td></tr>
