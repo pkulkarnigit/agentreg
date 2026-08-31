@@ -66,10 +66,24 @@ apreg verify-email <token>       # confirm your email — optional, not required
 apreg reset-password --registry <url>
 ```
 
-No mail server behind this yet (no domain to send from), so verification
-and reset links just get written to the server log instead of emailed. You
-can sign up and publish without ever touching this. Swapping in real SMTP
-later is a one-file change — see `internal/notify`.
+By default verification and reset links just get written to the server
+log instead of emailed — fine for local use, and you can sign up and
+publish without ever touching this. Point `APREG_SMTP_HOST` at a real mail
+provider to actually send them:
+
+```bash
+APREG_SMTP_HOST=smtp.sendgrid.net
+APREG_SMTP_PORT=587                              # default; works with SendGrid, SES, Mailgun, Postmark
+APREG_SMTP_USERNAME=apikey
+APREG_SMTP_PASSWORD=your-smtp-password-or-api-key
+APREG_SMTP_FROM="AgentReg <noreply@yourdomain.com>"
+```
+
+`internal/notify.SMTPSender` speaks plain SMTP with opportunistic STARTTLS
+and AUTH — the protocol nearly every transactional provider supports, so
+this isn't tied to one vendor's SDK. `APREG_SMTP_USERNAME` can be left
+empty to skip AUTH entirely, for an unauthenticated local relay. Leave
+`APREG_SMTP_HOST` unset and nothing changes from the log-only default.
 
 ## Production hardening
 
@@ -278,6 +292,16 @@ Same story for the Redis-backed rate limiter/lockout tests:
 ```bash
 docker run -d --rm -p 6379:6379 redis:7-alpine
 APREG_TEST_REDIS_ADDR="localhost:6379" go test ./...
+```
+
+And for `SMTPSender`, against [Mailpit](https://github.com/axllent/mailpit)
+(a real SMTP server with an API for inspecting what it received, so the
+test confirms an email actually arrived intact — not just that `Send`
+returned `nil`):
+
+```bash
+docker run -d --rm -p 1025:1025 -p 8025:8025 axllent/mailpit
+APREG_TEST_SMTP_ADDR="localhost:1025" APREG_TEST_SMTP_HTTP_ADDR="localhost:8025" go test ./...
 ```
 
 ## License

@@ -8,12 +8,14 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -22,6 +24,7 @@ import (
 	"github.com/pkulkarni/apreg/internal/api"
 	"github.com/pkulkarni/apreg/internal/api/middleware"
 	"github.com/pkulkarni/apreg/internal/auth"
+	"github.com/pkulkarni/apreg/internal/notify"
 	"github.com/pkulkarni/apreg/internal/registry"
 	"github.com/pkulkarni/apreg/internal/store"
 	"github.com/pkulkarni/apreg/internal/store/fsblob"
@@ -66,14 +69,10 @@ func main() {
 	}
 
 	reg := registry.New(meta, blob)
-	// No real mail provider is wired up (see internal/notify's doc
-	// comment): reg defaults to logging verification/reset links instead
-	// of emailing them. That's fine for local/Docker use, but anyone with
-	// read access to these logs can take over any account via those
-	// links — this MUST be swapped for a real notify.Sender
-	// (reg.SetSender(...)) before this server is ever exposed to
-	// untrusted users or the public internet.
-	log.Print("WARNING: no email provider configured — account verification/password-reset links are being written to this log, not emailed. Do not expose this server to untrusted users without configuring a real notify.Sender first.")
+	mailBackend, err := configureSender(reg)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	apiOpts, redisAddr := apiOptions()
 	apiHandler := api.NewHandler(reg, apiOpts...)
@@ -98,7 +97,7 @@ func main() {
 
 	serverErr := make(chan error, 1)
 	go func() {
-		log.Printf("apreg-server listening on %s (db driver: %s, blob driver: %s, rate limiting: %s, data dir: %s)", addr, driver, blobDriver, rateLimitBackend, dataDir)
+		log.Printf("apreg-server listening on %s (db driver: %s, blob driver: %s, rate limiting: %s, mail: %s, data dir: %s)", addr, driver, blobDriver, rateLimitBackend, mailBackend, dataDir)
 		serverErr <- srv.ListenAndServe()
 	}()
 
@@ -183,6 +182,35 @@ func openBlobStore(driver, dataDir string) (store.BlobStore, error) {
 	default:
 		return nil, errors.New("unknown APREG_BLOB_DRIVER " + driver + " (want \"fs\" or \"s3\")")
 	}
+}
+
+// configureSender wires up real SMTP delivery for account verification and
+// password-reset emails when APREG_SMTP_HOST is set, otherwise leaves
+// reg on its default notify.LogSender — which just writes the link to
+// this process's log instead of emailing it. That's fine for local/Docker
+// use, but anyone with read access to these logs can take over any
+// account via those links, so this MUST be configured with real SMTP
+// before this server is ever exposed to untrusted users or the public
+// internet. Returns a short description for the startup log line.
+func configureSender(reg *registry.Registry) (string, error) {
+	host := os.Getenv("APREG_SMTP_HOST")
+	if host == "" {
+		log.Print("WARNING: no email provider configured — account verification/password-reset links are being written to this log, not emailed. Do not expose this server to untrusted users without setting APREG_SMTP_HOST first.")
+		return "none (logging links)", nil
+	}
+
+	port, err := strconv.Atoi(envOr("APREG_SMTP_PORT", "587"))
+	if err != nil {
+		return "", fmt.Errorf("invalid APREG_SMTP_PORT: %w", err)
+	}
+	reg.SetSender(notify.SMTPSender{
+		Host:     host,
+		Port:     port,
+		Username: os.Getenv("APREG_SMTP_USERNAME"),
+		Password: os.Getenv("APREG_SMTP_PASSWORD"),
+		From:     os.Getenv("APREG_SMTP_FROM"),
+	})
+	return fmt.Sprintf("smtp (%s:%d)", host, port), nil
 }
 
 // apiOptions decides whether the API's rate limiting and login lockout run
