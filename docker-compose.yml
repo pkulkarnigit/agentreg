@@ -2,13 +2,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      # Local-dev-only credentials — fine here because postgres has no
-      # published port (below), so it's unreachable outside this
-      # compose network. Replace with real secrets (e.g. via an env
-      # file or secrets manager, not committed here) before any real
-      # deployment.
+      # POSTGRES_PASSWORD has no hardcoded fallback on purpose: postgres
+      # has no published port (below), so a weak password here is only
+      # "safe" as long as that stays true — one careless port mapping
+      # later and it's an internet-facing default password. The
+      # `:?...` form makes `docker compose up` refuse to start at all
+      # without a real one, rather than silently accepting a weak
+      # default. Copy .env.example to .env and fill it in.
       POSTGRES_USER: krate
-      POSTGRES_PASSWORD: krate
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD — copy .env.example to .env and fill it in}
       POSTGRES_DB: krate
     volumes:
       - krate-pgdata:/var/lib/postgresql/data
@@ -28,7 +30,7 @@ services:
       - "8080:8080"
     environment:
       KRATE_DB_DRIVER: postgres
-      KRATE_DB_DSN: postgres://krate:krate@postgres:5432/krate?sslmode=disable
+      KRATE_DB_DSN: postgres://krate:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD — copy .env.example to .env and fill it in}@postgres:5432/krate?sslmode=disable
     volumes:
       # Blob storage stays on local disk regardless of metadata backend —
       # this volume only ever holds data/blobs/ when KRATE_DB_DRIVER=postgres.

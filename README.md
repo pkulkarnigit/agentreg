@@ -13,12 +13,15 @@ same code either way.
 ## Run it locally
 
 ```bash
+cp .env.example .env   # fill in POSTGRES_PASSWORD — see the file for how
 docker compose up --build
 ```
 
 Spins up the real stack: `krate-server` behind Postgres in its own
 container, blobs on a persistent volume. Server's at `http://localhost:8080`
-— web UI on `/`, API under `/v1`.
+— web UI on `/`, API under `/v1`. `docker compose up` refuses to start
+without `POSTGRES_PASSWORD` set — no hardcoded default to accidentally
+carry into a real deployment.
 
 Don't want Docker? SQLite works fine with zero setup:
 

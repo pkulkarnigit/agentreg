@@ -4,3 +4,4 @@
 *.db
 server.log
 server.pid
+.env
