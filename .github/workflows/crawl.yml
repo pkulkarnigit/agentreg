@@ -40,4 +40,20 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add catalog/agent-plugins-catalog.json
           git commit -m "Refresh catalog (automated)"
-          git push
+
+          # main gets pushed to often enough (by hand and by other CI)
+          # that this checkout can be stale by the time we get here — a
+          # plain `git push` failed exactly this way on this workflow's
+          # first real run: rejected as non-fast-forward. Rebase onto
+          # whatever's newest and retry a few times rather than just
+          # failing the whole run over an ordinary race.
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              exit 0
+            fi
+            echo "push rejected (attempt $attempt/5) — fetching and rebasing onto origin/main"
+            git fetch origin main
+            git rebase origin/main
+          done
+          echo "::error::failed to push the catalog refresh after 5 attempts"
+          exit 1
