@@ -24,13 +24,14 @@ import (
 //go:embed templates/*.html
 var templateFS embed.FS
 
-// Inter (SIL Open Font License — see fonts/LICENSE.txt) is self-hosted
-// rather than pulled from Google Fonts' CDN at request time: this registry
-// pitches itself as free and self-hostable, and a page that still phones
-// home to a third-party CDN for something as basic as its typeface
-// undercuts that. One variable-weight woff2 covers every weight we use.
+// Inter and Space Grotesk (both SIL Open Font License — see fonts/LICENSE.txt
+// and fonts/SpaceGrotesk-LICENSE.txt) are self-hosted rather than pulled
+// from Google Fonts' CDN at request time: this registry pitches itself as
+// free and self-hostable, and a page that still phones home to a
+// third-party CDN for something as basic as its typeface undercuts that.
+// Each is a single variable-weight woff2 covering every weight we use.
 //
-//go:embed fonts/Inter-Variable.woff2
+//go:embed fonts/Inter-Variable.woff2 fonts/SpaceGrotesk-Variable.woff2
 var fontFS embed.FS
 
 var funcMap = template.FuncMap{
@@ -66,7 +67,8 @@ func NewHandler(reg *registry.Registry, catalogPath, mirrorScope string) http.Ha
 	mux.HandleFunc("GET /", s.handleIndex)
 	mux.HandleFunc("GET /catalog", s.handleCatalog)
 	mux.HandleFunc("GET /docs", s.handleDocs)
-	mux.HandleFunc("GET /fonts/Inter-Variable.woff2", handleFont)
+	mux.HandleFunc("GET /fonts/Inter-Variable.woff2", handleFont("fonts/Inter-Variable.woff2"))
+	mux.HandleFunc("GET /fonts/SpaceGrotesk-Variable.woff2", handleFont("fonts/SpaceGrotesk-Variable.woff2"))
 	// Go's ServeMux requires a wildcard to own its whole path segment, so
 	// "@scope" can't be split into a literal "@" + "{scope}" wildcard in
 	// the pattern; the leading "@" is stripped from {scopeAt} in the handler.
@@ -111,20 +113,22 @@ func (s *Server) handleDocs(w http.ResponseWriter, r *http.Request) {
 	render(w, docsTmpl, nil)
 }
 
-// handleFont serves the self-hosted Inter font. Content-addressed by the
-// filename in its own URL (Inter-Variable.woff2 never changes contents
-// without also changing name), so it's safe to cache aggressively —
-// this is what actually makes a self-hosted web font fast: one download,
-// cached for a year, no per-request cost afterward.
-func handleFont(w http.ResponseWriter, r *http.Request) {
-	data, err := fontFS.ReadFile("fonts/Inter-Variable.woff2")
-	if err != nil {
-		http.Error(w, "not found", http.StatusNotFound)
-		return
+// handleFont serves one of the self-hosted fonts. Content-addressed by the
+// filename in its own URL (a variable woff2 never changes contents without
+// also changing name), so it's safe to cache aggressively: this is what
+// actually makes a self-hosted web font fast, one download, cached for a
+// year, no per-request cost afterward.
+func handleFont(path string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		data, err := fontFS.ReadFile(path)
+		if err != nil {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "font/woff2")
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Write(data)
 	}
-	w.Header().Set("Content-Type", "font/woff2")
-	w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-	w.Write(data)
 }
 
 // handleCatalog shows the crawler's most recent output (internal/crawler,

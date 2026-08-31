@@ -1,11 +1,11 @@
-{{define "title"}}KrateAI{{if .Query}} — search: {{.Query}}{{end}}{{end}}
+{{define "title"}}KrateAI{{if .Query}} &middot; search: {{.Query}}{{end}}{{end}}
 {{define "content"}}
 {{if not .Query}}
 <div class="hero">
   <div class="hero-copy">
-    <span class="badge-pill"><span class="dot"></span> Free, open source, no catch</span>
-    <h1>The registry for <span class="grad-text">Agent Plugins</span></h1>
-    <p class="lede">Skills and MCP servers, packaged into one folder your agent can load. Publish your own, grab someone else's, or just browse — and if you'd rather not use ours, the whole thing is open source and yours to run.</p>
+    <span class="eyebrow-tag">Open source registry</span>
+    <h1>The registry for <em>Agent Plugins</em></h1>
+    <p class="lede">Skills and MCP servers, packaged into one folder your agent can load. Publish your own, grab someone else's, or just browse. If you'd rather not use ours, the whole thing is open source and yours to run.</p>
     <form class="search" method="get" action="/">
       <input type="text" name="q" placeholder="Search plugins by name, description, or keyword&hellip;" value="{{.Query}}" autofocus>
     </form>
@@ -19,11 +19,11 @@
       <div class="terminal-bar"><span></span><span></span><span></span><span class="t-title">zsh</span></div>
       <div class="terminal-body"><code>
 <span class="prompt">$</span> krate search postgres<br>
-<span class="out">✓ @neondatabase/agent-skills</span><br>
+<span class="out">found @neondatabase/agent-skills</span><br>
 <span class="prompt">$</span> krate install @neondatabase/agent-skills<br>
-<span class="ok">✓ verified sha256 &middot; unpacked to agent_plugins/</span><br>
+<span class="ok">verified sha256, unpacked to agent_plugins/</span><br>
 <span class="prompt">$</span> krate publish<br>
-<span class="ok">✓ published @you/my-plugin@1.0.0</span><br>
+<span class="ok">published @you/my-plugin@1.0.0</span><br>
 <span class="prompt">$</span> <span class="terminal-cursor"></span>
       </code></div>
     </div>
@@ -38,71 +38,69 @@
 
 <section class="features">
   <div class="section-head">
-    <span class="eyebrow reveal">Why KrateAI</span>
-    <h2 class="section-title reveal">Everything a package manager should be</h2>
-    <p class="section-sub reveal">Built for how agents actually load plugins &mdash; nothing more, nothing hidden.</p>
+    <h2 class="section-title reveal">Built for how agents load plugins</h2>
+    <p class="section-sub reveal">Nothing more, nothing hidden. Six things it actually does.</p>
   </div>
   <div class="feature-grid">
     <div class="feature-card reveal">
-      <div class="feature-icon icon-violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></div>
+      <div class="feature-index">01</div>
       <h3>One folder, any agent</h3>
-      <p>Skills and MCP servers packaged together in a single directory &mdash; <code>krate install</code> and your agent can load it, no glue code required.</p>
+      <p>Skills and MCP servers packaged together in a single directory. <code>krate install</code> and your agent can load it, no glue code required.</p>
     </div>
     <div class="feature-card reveal">
-      <div class="feature-icon icon-cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/><path d="M9 12l2 2 4-4"/></svg></div>
+      <div class="feature-index">02</div>
       <h3>Verified installs</h3>
       <p>Every download is checked against the sha256 recorded at publish time. Tamper-evident by design, not by promise.</p>
     </div>
     <div class="feature-card reveal">
-      <div class="feature-icon icon-pink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
+      <div class="feature-index">03</div>
       <h3>Your own namespace</h3>
-      <p>Publish under <code>@your-username</code>. The server checks your token's owner against the scope on every publish &mdash; no overrides, no squatting.</p>
+      <p>Publish under <code>@your-username</code>. The server checks your token's owner against the scope on every publish. No overrides, no squatting.</p>
     </div>
     <div class="feature-card reveal">
-      <div class="feature-icon icon-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v8h8"/><path d="M12 8v4l3 3"/></svg></div>
+      <div class="feature-index">04</div>
       <h3>Permanent versions</h3>
-      <p>Semver, npm-style. Publish <code>1.0.0</code> once and it's locked in forever &mdash; ship a fix by bumping the version, not by overwriting history.</p>
+      <p>Semver, npm-style. Publish <code>1.0.0</code> once and it's locked in forever. Ship a fix by bumping the version, not by overwriting history.</p>
     </div>
     <div class="feature-card reveal">
-      <div class="feature-icon icon-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><path d="M6 6.5h.01M6 17.5h.01"/></svg></div>
+      <div class="feature-index">05</div>
       <h3>Self-hostable</h3>
-      <p>Same code as the hosted instance. <code>docker compose up --build</code> and you have your own registry &mdash; your namespace, your users, your data.</p>
+      <p>Same code as the hosted instance. <code>docker compose up --build</code> and you have your own registry: your namespace, your users, your data.</p>
     </div>
     <div class="feature-card reveal">
-      <div class="feature-icon icon-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.6z"/></svg></div>
-      <h3>Free &amp; open source</h3>
-      <p>MIT licensed, no paid tier, no license key to enter. Use the hosted instance or run your own &mdash; it's the same code either way.</p>
+      <div class="feature-index">06</div>
+      <h3>Free and open source</h3>
+      <p>MIT licensed, no paid tier, no license key to enter. Use the hosted instance or run your own, it's the same code either way.</p>
     </div>
   </div>
 </section>
 
 <section class="how">
   <div class="section-head">
-    <span class="eyebrow reveal">How it works</span>
     <h2 class="section-title reveal">Up and running in three commands</h2>
-    <p class="section-sub reveal">No dependency resolution, no build system &mdash; just download, verify, unpack.</p>
+    <p class="section-sub reveal">No dependency resolution, no build system. Just download, verify, unpack.</p>
   </div>
   <div class="steps-row">
     <div class="step-card reveal">
-      <span class="step-n">1</span>
-      <h3>Scaffold</h3>
+      <span class="step-n">01 Scaffold</span>
+      <h3>Init and validate</h3>
       <pre><code>krate init my-plugin
 krate validate</code></pre>
-      <p>Generate the manifest, add a <code>skills/</code> folder or <code>mcp.json</code>, and validate it locally &mdash; no network involved.</p>
+      <p>Generate the manifest, add a <code>skills/</code> folder or <code>mcp.json</code>, and validate it locally. No network involved.</p>
     </div>
     <div class="step-card reveal">
-      <span class="step-n">2</span>
-      <h3>Publish</h3>
+      <span class="step-n">02 Publish</span>
+      <h3>Ship it under your scope</h3>
       <pre><code>krate login
 krate publish</code></pre>
       <p>Packs it into a <code>.tar.gz</code> and uploads it under your own <code>@scope</code>. The name and version come straight from <code>plugin.json</code>.</p>
     </div>
     <div class="step-card reveal">
-      <span class="step-n">3</span>
-      <h3>Install</h3>
+      <span class="step-n">03 Install</span>
+      <h3>Anyone can grab it</h3>
       <pre><code>krate search my-plugin
 krate install @you/my-plugin</code></pre>
-      <p>Anyone can find it and install it &mdash; checksum verified, unpacked, and tracked in <code>krate-lock.json</code>.</p>
+      <p>Checksum verified, unpacked, and tracked in <code>krate-lock.json</code>.</p>
     </div>
   </div>
 </section>
@@ -115,7 +113,7 @@ krate install @you/my-plugin</code></pre>
 {{end}}
 
 {{if not .Plugins}}
-  <p class="muted">{{if .Query}}Nothing matches "{{.Query}}".{{else}}Nobody's published anything yet. Could be you &mdash; here's the <a href="/docs#publishing">publishing guide</a>.{{end}}</p>
+  <p class="muted">{{if .Query}}Nothing matches "{{.Query}}".{{else}}Nobody's published anything yet. Could be you, here's the <a href="/docs#publishing">publishing guide</a>.{{end}}</p>
 {{else}}
   {{if .Query}}<p class="muted">{{len .Plugins}} result{{if ne (len .Plugins) 1}}s{{end}} for &ldquo;{{.Query}}&rdquo;</p>{{else}}<h2>Recently updated</h2>{{end}}
 {{end}}

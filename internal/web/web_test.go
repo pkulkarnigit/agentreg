@@ -112,11 +112,11 @@ func TestIndexPage_ShowsHeroAndStats(t *testing.T) {
 	defer resp.Body.Close()
 	body := readBody(t, resp)
 	for _, want := range []string{
-		"A registry for Agent Plugins", // hero headline
-		"krate install @scope/name",    // hero install snippet
-		`<span class="n">1</span>`,     // count shared by the 1-plugin and 1-publisher stats
-		"publishers",                   // stat label
-		"downloads",                    // stat label
+		"The registry for", // hero headline
+		"krate publish",    // hero terminal mockup
+		`data-count="1"`,   // count shared by the 1-plugin and 1-publisher stats
+		"publishers",       // stat label
+		"downloads",        // stat label
 	} {
 		if !strings.Contains(body, want) {
 			t.Errorf("expected homepage to contain %q, got:\n%s", want, body)
