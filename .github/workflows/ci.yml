@@ -40,6 +40,21 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Start MinIO
+        run: |
+          docker run -d --name minio -p 9000:9000 \
+            -e MINIO_ROOT_USER=apreg -e MINIO_ROOT_PASSWORD=apreg123 \
+            minio/minio server /data
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:9000/minio/health/live >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "minio did not become healthy in time" >&2
+          docker logs minio
+          exit 1
+
       - run: go vet ./...
 
       - run: go build ./...
@@ -48,4 +63,7 @@ jobs:
         env:
           APREG_TEST_POSTGRES_DSN: postgres://apreg:apreg@localhost:5432/apreg?sslmode=disable
           APREG_TEST_REDIS_ADDR: localhost:6379
+          APREG_TEST_S3_ENDPOINT: http://localhost:9000
+          AWS_ACCESS_KEY_ID: apreg
+          AWS_SECRET_ACCESS_KEY: apreg123
         run: go test ./... -v
