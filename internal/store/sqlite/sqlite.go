@@ -324,6 +324,24 @@ func (s *Store) UpsertPluginAndVersion(ctx context.Context, p store.NewPlugin, v
 	return tx.Commit()
 }
 
+func (s *Store) UpdateVersionPublishedAt(ctx context.Context, scope, name, version string, publishedAt time.Time) error {
+	res, err := s.db.ExecContext(ctx,
+		`UPDATE versions SET published_at = ? WHERE scope = ? AND name = ? AND version = ?`,
+		publishedAt.UTC().Format(time.RFC3339), scope, name, version,
+	)
+	if err != nil {
+		return err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return store.ErrNotFound
+	}
+	return nil
+}
+
 func (s *Store) GetPlugin(ctx context.Context, scope, name string) (*store.Plugin, error) {
 	row := s.db.QueryRowContext(ctx, `
 		SELECT p.scope, p.name, p.description, p.homepage, p.repository, p.license, p.latest_version,

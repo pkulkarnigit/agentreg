@@ -152,6 +152,7 @@ krate reset-password --token &lt;token&gt;             # already have the token,
     <tr><td><code>krate view @scope/name[@version]</code></td><td>print resolved metadata as JSON</td></tr>
     <tr><td><code>krate verify-email &lt;token&gt;</code></td><td>confirm your account's email address</td></tr>
     <tr><td><code>krate reset-password --registry &lt;url&gt;</code></td><td>reset a forgotten password (interactive)</td></tr>
+    <tr><td><code>krate admin-backfill-date @scope/name@version &lt;date&gt;</code></td><td>correct a published version's recorded date (admin only, see below)</td></tr>
   </table>
 </section>
 
@@ -175,6 +176,7 @@ krate reset-password --token &lt;token&gt;             # already have the token,
     <tr><td><code>GET /v1/plugins/{scope}/{name}/{version}</code></td><td>none</td><td>version metadata (<code>latest</code> is a valid alias)</td></tr>
     <tr><td><code>GET /v1/plugins/{scope}/{name}/{version}/download</code></td><td>none</td><td>stream the tarball</td></tr>
     <tr><td><code>GET /v1/search?q=</code></td><td>none</td><td>search plugins</td></tr>
+    <tr><td><code>PATCH /v1/admin/plugins/{scope}/{name}/{version}</code></td><td>Bearer token, admin only</td><td>correct a version's recorded <code>published_at</code> — body <code>{"published_at": "&lt;RFC3339&gt;"}</code>. The only field on an already-published version that can ever change; everything else (checksum, manifest) stays permanent. Requires being logged in as a username in the server's <code>KRATE_ADMIN_USERNAMES</code> allowlist — empty, meaning nobody, unless the operator sets it.</td></tr>
   </table>
   <p class="muted">Publish example, equivalent to <code>krate publish</code>:</p>
   <pre><code>curl -X PUT "{registry-url}/v1/plugins/you/my-plugin/1.0.0" \

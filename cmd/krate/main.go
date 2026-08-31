@@ -44,6 +44,8 @@ func main() {
 		err = cmdVerifyEmail(args)
 	case "reset-password":
 		err = cmdResetPassword(args)
+	case "admin-backfill-date":
+		err = cmdAdminBackfillDate(args)
 	case "-h", "--help", "help":
 		printUsage()
 		return
@@ -76,5 +78,7 @@ Usage:
   krate view @scope/name[@version]          print resolved metadata
   krate verify-email <token>                confirm your account's email address
   krate reset-password --registry <url>     reset a forgotten password (interactive)
+  krate admin-backfill-date @scope/name@version <RFC3339-date>
+                                             correct a published version's recorded date (admin only)
 `)
 }

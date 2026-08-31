@@ -112,6 +112,16 @@ type MetadataStore interface {
 	// Returns ErrConflict if scope+name+version already exists.
 	UpsertPluginAndVersion(ctx context.Context, p NewPlugin, v NewVersion) error
 
+	// UpdateVersionPublishedAt corrects an already-published version's
+	// recorded date — the one deliberate exception to "versions are
+	// immutable." Every other field (checksum, manifest) stays permanent;
+	// this exists specifically for backfilling mirrored content published
+	// before its real upstream date was known, or before this capability
+	// existed at all. Callers must gate this to trusted operators
+	// themselves — the store layer has no concept of who's allowed to
+	// call it. Returns ErrNotFound if scope+name+version doesn't exist.
+	UpdateVersionPublishedAt(ctx context.Context, scope, name, version string, publishedAt time.Time) error
+
 	GetPlugin(ctx context.Context, scope, name string) (*Plugin, error)
 	GetVersion(ctx context.Context, scope, name, version string) (*Version, error)
 	ListVersions(ctx context.Context, scope, name string) ([]Version, error)

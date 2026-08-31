@@ -294,6 +294,24 @@ against the registry itself, not GitHub, since its `published_at` was
 already recorded correctly the first time), and a `GITHUB_TOKEN` would
 raise the ceiling a lot — not wired up yet.
 
+Anything mirrored before this existed is stuck showing whatever date it
+was mirrored on — `published_at` is otherwise immutable, on purpose, so
+there's no ordinary way to fix it after the fact. `KRATE_ADMIN_USERNAMES`
+(comma-separated) grants exactly those accounts one narrow exception: a
+`PATCH /v1/admin/plugins/{scope}/{name}/{version}` that corrects a
+version's recorded date and nothing else — not the checksum, not the
+manifest. Nobody's an admin by default; the allowlist is empty unless you
+set it.
+
+```bash
+KRATE_ADMIN_USERNAMES=you,your-coadmin
+```
+
+```bash
+krate login --registry <url>   # as one of the allowlisted usernames
+krate admin-backfill-date @scope/name@version 2024-01-15T09:00:00Z
+```
+
 A scheduled workflow (`.github/workflows/crawl.yml`) re-runs the crawler
 daily and commits `catalog/agent-plugins-catalog.json` back to the repo if
 anything changed — discovery only, no `-publish`. GitHub's runners have no

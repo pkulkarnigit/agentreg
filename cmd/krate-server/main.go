@@ -16,6 +16,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -94,10 +95,14 @@ func main() {
 	if redisAddr != "" {
 		rateLimitBackend = "redis (" + redisAddr + ")"
 	}
+	admins := "none"
+	if raw := os.Getenv("KRATE_ADMIN_USERNAMES"); raw != "" {
+		admins = raw
+	}
 
 	serverErr := make(chan error, 1)
 	go func() {
-		log.Printf("krate-server listening on %s (db driver: %s, blob driver: %s, rate limiting: %s, mail: %s, data dir: %s)", addr, driver, blobDriver, rateLimitBackend, mailBackend, dataDir)
+		log.Printf("krate-server listening on %s (db driver: %s, blob driver: %s, rate limiting: %s, mail: %s, admins: %s, data dir: %s)", addr, driver, blobDriver, rateLimitBackend, mailBackend, admins, dataDir)
 		serverErr <- srv.ListenAndServe()
 	}()
 
@@ -215,25 +220,38 @@ func configureSender(reg *registry.Registry) (string, error) {
 
 // apiOptions decides whether the API's rate limiting and login lockout run
 // in-memory (single instance, the default) or against Redis (shared across
-// replicas, opt-in via KRATE_REDIS_ADDR). It reuses api's own tuning
-// constants so the Redis-backed path behaves identically to the in-memory
-// default it's replacing, just with shared state. Returns the redis addr
-// too (empty when unused) purely so the caller can log which backend is
+// replicas, opt-in via KRATE_REDIS_ADDR), and who (if anyone) can reach
+// the admin-only endpoints (KRATE_ADMIN_USERNAMES, comma-separated —
+// empty by default, meaning nobody). It reuses api's own tuning constants
+// so the Redis-backed path behaves identically to the in-memory default
+// it's replacing, just with shared state. Returns the redis addr too
+// (empty when unused) purely so the caller can log which backend is
 // active.
 func apiOptions() ([]api.Option, string) {
+	var opts []api.Option
+
+	if raw := os.Getenv("KRATE_ADMIN_USERNAMES"); raw != "" {
+		var admins []string
+		for _, u := range strings.Split(raw, ",") {
+			if u = strings.TrimSpace(u); u != "" {
+				admins = append(admins, u)
+			}
+		}
+		opts = append(opts, api.WithAdminUsernames(admins))
+	}
+
 	redisAddr := os.Getenv("KRATE_REDIS_ADDR")
 	if redisAddr == "" {
-		return nil, ""
+		return opts, ""
 	}
 
 	client := redis.NewClient(&redis.Options{Addr: redisAddr})
-
-	opts := []api.Option{
+	opts = append(opts,
 		api.WithLockout(auth.NewRedisLockout(client, "login", api.LoginLockoutMaxFailures, api.LoginLockoutWindow)),
 		api.WithLimiterFactory(func(name string, burst int, per time.Duration) middleware.Limiter {
 			return middleware.NewRedisLimiter(client, name, burst, per)
 		}),
-	}
+	)
 	return opts, redisAddr
 }
 

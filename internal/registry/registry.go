@@ -140,6 +140,24 @@ func (r *Registry) Publish(ctx context.Context, in PublishInput) (*store.Version
 	return r.meta.GetVersion(ctx, in.Scope, in.Name, in.Version)
 }
 
+// AdminSetPublishedAt corrects an already-published version's recorded
+// date — the one deliberate exception to "versions are immutable."
+// Everything else about a version (checksum, manifest) stays permanent;
+// this exists specifically for backfilling mirrored content published
+// before its real upstream date was known. Authorization is the caller's
+// job — this method itself trusts whoever calls it, the same way every
+// other store-touching method here trusts internal/api to have already
+// checked who's allowed to reach it.
+func (r *Registry) AdminSetPublishedAt(ctx context.Context, scope, name, version string, publishedAt time.Time) error {
+	if publishedAt.IsZero() {
+		return fmt.Errorf("%w: published_at is required", ErrInvalidInput)
+	}
+	if publishedAt.After(time.Now()) {
+		return fmt.Errorf("%w: published_at %s is in the future", ErrInvalidInput, publishedAt.Format(time.RFC3339))
+	}
+	return r.meta.UpdateVersionPublishedAt(ctx, scope, name, version, publishedAt)
+}
+
 func (r *Registry) GetPlugin(ctx context.Context, scope, name string) (*store.Plugin, error) {
 	return r.meta.GetPlugin(ctx, scope, name)
 }

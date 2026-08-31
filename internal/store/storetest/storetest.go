@@ -20,6 +20,7 @@ func RunConformanceSuite(t *testing.T, newStore func(t *testing.T) store.Metadat
 	t.Run("UsersAndTokens", func(t *testing.T) { testUsersAndTokens(t, newStore(t)) })
 	t.Run("PublishAndResolve", func(t *testing.T) { testPublishAndResolve(t, newStore(t)) })
 	t.Run("PublishedAtOverride", func(t *testing.T) { testPublishedAtOverride(t, newStore(t)) })
+	t.Run("UpdateVersionPublishedAt", func(t *testing.T) { testUpdateVersionPublishedAt(t, newStore(t)) })
 	t.Run("DownloadCount", func(t *testing.T) { testDownloadCount(t, newStore(t)) })
 	t.Run("SearchIncludesDownloadCount", func(t *testing.T) { testSearchIncludesDownloadCount(t, newStore(t)) })
 	t.Run("SearchEmptyQueryReturnsAll", func(t *testing.T) { testSearchEmptyQueryReturnsAll(t, newStore(t)) })
@@ -164,6 +165,45 @@ func testPublishedAtOverride(t *testing.T, s store.MetadataStore) {
 	}
 	if got2.PublishedAt.Before(before.Add(-time.Second)) || got2.PublishedAt.After(after.Add(time.Second)) {
 		t.Fatalf("expected published_at near now (%s..%s), got %s", before, after, got2.PublishedAt)
+	}
+}
+
+// testUpdateVersionPublishedAt covers the admin backfill capability's
+// storage layer: it must actually change the recorded date on an existing
+// version (the one deliberate exception to immutability), leave every
+// other field on that version untouched, and fail clearly against a
+// version that doesn't exist rather than silently doing nothing.
+func testUpdateVersionPublishedAt(t *testing.T, s store.MetadataStore) {
+	ctx := context.Background()
+
+	p := store.NewPlugin{Scope: "dave", Name: "backfill-me"}
+	v := store.NewVersion{
+		Scope: "dave", Name: "backfill-me", Version: "1.0.0",
+		Checksum: "original-checksum", ManifestJSON: `{"name":"backfill-me"}`,
+	}
+	if err := s.UpsertPluginAndVersion(ctx, p, v); err != nil {
+		t.Fatalf("UpsertPluginAndVersion: %v", err)
+	}
+
+	corrected := time.Date(2019, 3, 14, 9, 26, 53, 0, time.UTC)
+	if err := s.UpdateVersionPublishedAt(ctx, "dave", "backfill-me", "1.0.0", corrected); err != nil {
+		t.Fatalf("UpdateVersionPublishedAt: %v", err)
+	}
+
+	got, err := s.GetVersion(ctx, "dave", "backfill-me", "1.0.0")
+	if err != nil {
+		t.Fatalf("GetVersion: %v", err)
+	}
+	if !got.PublishedAt.Equal(corrected) {
+		t.Fatalf("expected published_at %s, got %s", corrected, got.PublishedAt)
+	}
+	// Nothing else about the version moved.
+	if got.Checksum != "original-checksum" {
+		t.Fatalf("expected checksum to stay untouched, got %q", got.Checksum)
+	}
+
+	if err := s.UpdateVersionPublishedAt(ctx, "dave", "backfill-me", "9.9.9", corrected); err != store.ErrNotFound {
+		t.Fatalf("expected ErrNotFound for a version that doesn't exist, got %v", err)
 	}
 }
 

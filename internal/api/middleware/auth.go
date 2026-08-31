@@ -47,3 +47,26 @@ func UserFromContext(ctx context.Context) (*store.User, bool) {
 	u, ok := ctx.Value(userCtxKey).(*store.User)
 	return u, ok
 }
+
+// RequireAdmin gates next to usernames in admins, an allowlist configured
+// by whoever operates this instance (see cmd/apreg-server's
+// KRATE_ADMIN_USERNAMES) — there's no admin flag on the user record
+// itself, no promotion flow, nothing stored. Must run downstream of
+// RequireAuth, which is what actually puts a user on the context; a
+// missing user here means RequireAdmin was wired up without it, not that
+// the request lacks a token, so that's a 500, not a 401. Responds 403 for
+// a real, authenticated user who's simply not on the list.
+func RequireAdmin(admins map[string]bool, next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user, ok := UserFromContext(r.Context())
+		if !ok {
+			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+			return
+		}
+		if !admins[user.Username] {
+			http.Error(w, `{"error":"forbidden: admin access required"}`, http.StatusForbidden)
+			return
+		}
+		next(w, r)
+	}
+}

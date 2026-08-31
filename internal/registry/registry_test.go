@@ -261,6 +261,75 @@ func isInvalidInputTestHelper(err error) (error, bool) {
 	return nil, false
 }
 
+func TestAdminSetPublishedAt(t *testing.T) {
+	ctx := context.Background()
+	r := newTestRegistry(t)
+	b := testBundle(t, "backfill-me", "1.0.0")
+	if _, err := r.Publish(ctx, PublishInput{
+		Scope: "alice", Name: "backfill-me", Version: "1.0.0",
+		Tarball: strings.NewReader("x"), Bundle: b, RequestorU: "alice",
+	}); err != nil {
+		t.Fatalf("Publish: %v", err)
+	}
+
+	corrected := time.Date(2019, 3, 14, 9, 26, 53, 0, time.UTC)
+	if err := r.AdminSetPublishedAt(ctx, "alice", "backfill-me", "1.0.0", corrected); err != nil {
+		t.Fatalf("AdminSetPublishedAt: %v", err)
+	}
+
+	v, err := r.ResolveVersion(ctx, "alice", "backfill-me", "1.0.0")
+	if err != nil {
+		t.Fatalf("ResolveVersion: %v", err)
+	}
+	if !v.PublishedAt.Equal(corrected) {
+		t.Fatalf("expected published_at %s, got %s", corrected, v.PublishedAt)
+	}
+}
+
+func TestAdminSetPublishedAt_FutureRejected(t *testing.T) {
+	ctx := context.Background()
+	r := newTestRegistry(t)
+	b := testBundle(t, "backfill-me", "1.0.0")
+	if _, err := r.Publish(ctx, PublishInput{
+		Scope: "alice", Name: "backfill-me", Version: "1.0.0",
+		Tarball: strings.NewReader("x"), Bundle: b, RequestorU: "alice",
+	}); err != nil {
+		t.Fatalf("Publish: %v", err)
+	}
+
+	err := r.AdminSetPublishedAt(ctx, "alice", "backfill-me", "1.0.0", time.Now().Add(24*time.Hour))
+	if _, ok := isInvalidInputTestHelper(err); !ok {
+		t.Fatalf("expected ErrInvalidInput for a future date, got %v", err)
+	}
+}
+
+func TestAdminSetPublishedAt_ZeroRejected(t *testing.T) {
+	ctx := context.Background()
+	r := newTestRegistry(t)
+	b := testBundle(t, "backfill-me", "1.0.0")
+	if _, err := r.Publish(ctx, PublishInput{
+		Scope: "alice", Name: "backfill-me", Version: "1.0.0",
+		Tarball: strings.NewReader("x"), Bundle: b, RequestorU: "alice",
+	}); err != nil {
+		t.Fatalf("Publish: %v", err)
+	}
+
+	err := r.AdminSetPublishedAt(ctx, "alice", "backfill-me", "1.0.0", time.Time{})
+	if _, ok := isInvalidInputTestHelper(err); !ok {
+		t.Fatalf("expected ErrInvalidInput for a zero-value date, got %v", err)
+	}
+}
+
+func TestAdminSetPublishedAt_NotFound(t *testing.T) {
+	ctx := context.Background()
+	r := newTestRegistry(t)
+
+	err := r.AdminSetPublishedAt(ctx, "alice", "never-published", "1.0.0", time.Now().Add(-time.Hour))
+	if err != ErrNotFound {
+		t.Fatalf("expected ErrNotFound, got %v", err)
+	}
+}
+
 func TestSearch(t *testing.T) {
 	ctx := context.Background()
 	r := newTestRegistry(t)

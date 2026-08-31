@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -531,5 +532,112 @@ func TestPublish_PublishedAtQueryParam(t *testing.T) {
 	readAll(resp3)
 	if resp3.StatusCode != http.StatusUnprocessableEntity {
 		t.Fatalf("expected 422 for a future published_at, got %d", resp3.StatusCode)
+	}
+}
+
+func TestAdminBackfillDate(t *testing.T) {
+	reg := newTestRegistry(t)
+	srv := httptest.NewServer(NewHandler(reg, WithAdminUsernames([]string{"admin-user"})))
+	defer srv.Close()
+	client := srv.Client()
+
+	// alice publishes normally — no admin involvement, an ordinary publish.
+	postJSON(t, client, srv.URL+"/v1/users", map[string]string{
+		"username": "alice", "email": "alice@example.com", "password": "hunter22222",
+	}).Body.Close()
+	aliceTokResp := postJSON(t, client, srv.URL+"/v1/tokens", map[string]string{"username": "alice", "password": "hunter22222"})
+	var aliceTok struct {
+		Token string `json:"token"`
+	}
+	json.NewDecoder(aliceTokResp.Body).Decode(&aliceTok)
+	aliceTokResp.Body.Close()
+
+	tarball := buildSampleTarball(t)
+	pubReq, _ := http.NewRequest("PUT", srv.URL+"/v1/plugins/alice/hello/1.0.0", bytes.NewReader(tarball))
+	pubReq.Header.Set("Authorization", "Bearer "+aliceTok.Token)
+	pubResp, err := client.Do(pubReq)
+	if err != nil {
+		t.Fatal(err)
+	}
+	readAll(pubResp)
+
+	// admin-user is on the allowlist; bob is an ordinary authenticated user who isn't.
+	for _, u := range []string{"admin-user", "bob"} {
+		postJSON(t, client, srv.URL+"/v1/users", map[string]string{
+			"username": u, "email": u + "@example.com", "password": "hunter22222",
+		}).Body.Close()
+	}
+	adminTokResp := postJSON(t, client, srv.URL+"/v1/tokens", map[string]string{"username": "admin-user", "password": "hunter22222"})
+	var adminTok struct {
+		Token string `json:"token"`
+	}
+	json.NewDecoder(adminTokResp.Body).Decode(&adminTok)
+	adminTokResp.Body.Close()
+	bobTokResp := postJSON(t, client, srv.URL+"/v1/tokens", map[string]string{"username": "bob", "password": "hunter22222"})
+	var bobTok struct {
+		Token string `json:"token"`
+	}
+	json.NewDecoder(bobTokResp.Body).Decode(&bobTok)
+	bobTokResp.Body.Close()
+
+	patch := func(token, path, body string) *http.Response {
+		req, _ := http.NewRequest("PATCH", srv.URL+path, strings.NewReader(body))
+		if token != "" {
+			req.Header.Set("Authorization", "Bearer "+token)
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return resp
+	}
+
+	// No token at all: 401, never reaches the admin check.
+	resp := patch("", "/v1/admin/plugins/alice/hello/1.0.0", `{"published_at":"2019-03-14T09:26:53Z"}`)
+	readAll(resp)
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("expected 401 with no token, got %d", resp.StatusCode)
+	}
+
+	// Authenticated but not on the allowlist: 403, not 401 — bob is a real
+	// user, just not an admin.
+	resp = patch(bobTok.Token, "/v1/admin/plugins/alice/hello/1.0.0", `{"published_at":"2019-03-14T09:26:53Z"}`)
+	body, _ := readAll(resp)
+	if resp.StatusCode != http.StatusForbidden {
+		t.Fatalf("expected 403 for a non-admin, got %d: %s", resp.StatusCode, body)
+	}
+
+	// The admin succeeds, on someone else's (alice's) plugin — this is the
+	// entire point: an admin fixing the mirror account's dates isn't the
+	// mirror account, so the normal token-owns-scope rule doesn't apply here.
+	resp = patch(adminTok.Token, "/v1/admin/plugins/alice/hello/1.0.0", `{"published_at":"2019-03-14T09:26:53Z"}`)
+	body, _ = readAll(resp)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200 for the admin, got %d: %s", resp.StatusCode, body)
+	}
+
+	getResp, _ := client.Get(srv.URL + "/v1/plugins/alice/hello/1.0.0")
+	getBody, _ := readAll(getResp)
+	var got struct {
+		PublishedAt time.Time `json:"published_at"`
+	}
+	json.Unmarshal(getBody, &got)
+	want := time.Date(2019, 3, 14, 9, 26, 53, 0, time.UTC)
+	if !got.PublishedAt.Equal(want) {
+		t.Fatalf("expected published_at %s after backfill, got %s", want, got.PublishedAt)
+	}
+
+	// A future date is still rejected, even for an admin.
+	resp = patch(adminTok.Token, "/v1/admin/plugins/alice/hello/1.0.0", `{"published_at":"2099-01-01T00:00:00Z"}`)
+	readAll(resp)
+	if resp.StatusCode != http.StatusUnprocessableEntity {
+		t.Fatalf("expected 422 for a future published_at, got %d", resp.StatusCode)
+	}
+
+	// A version that doesn't exist: 404, not a silent no-op success.
+	resp = patch(adminTok.Token, "/v1/admin/plugins/alice/hello/9.9.9", `{"published_at":"2019-03-14T09:26:53Z"}`)
+	readAll(resp)
+	if resp.StatusCode != http.StatusNotFound {
+		t.Fatalf("expected 404 for a nonexistent version, got %d", resp.StatusCode)
 	}
 }

@@ -191,6 +191,7 @@ func TestDocsPage(t *testing.T) {
 		"Quickstart", "krate publish", "krate install", "Versioning", "permanent",
 		"CLI reference", "REST API reference", "PUT /v1/plugins/{scope}/{name}/{version}",
 		"krate list", "krate uninstall", "krate-lock.json",
+		"krate admin-backfill-date", "PATCH /v1/admin/plugins/{scope}/{name}/{version}", "KRATE_ADMIN_USERNAMES",
 	} {
 		if !strings.Contains(body, want) {
 			t.Errorf("expected docs page to contain %q, got:\n%s", want, body)

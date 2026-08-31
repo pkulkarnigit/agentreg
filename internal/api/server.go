@@ -33,6 +33,7 @@ type Option func(*handlerConfig)
 type handlerConfig struct {
 	lockout    auth.Lockout
 	newLimiter limiterFactory
+	admins     map[string]bool
 }
 
 // WithLockout overrides the default in-memory login lockout.
@@ -44,6 +45,20 @@ func WithLockout(l auth.Lockout) Option {
 // are constructed.
 func WithLimiterFactory(f limiterFactory) Option {
 	return func(c *handlerConfig) { c.newLimiter = f }
+}
+
+// WithAdminUsernames grants admin-only endpoints (currently just backfilling
+// a version's published_at — see handleAdminSetPublishedAt) to exactly
+// these usernames. The zero value (no option passed) is an empty set:
+// admin endpoints exist but nobody can reach them, the safe default for
+// an instance that hasn't deliberately configured any admins.
+func WithAdminUsernames(usernames []string) Option {
+	return func(c *handlerConfig) {
+		c.admins = make(map[string]bool, len(usernames))
+		for _, u := range usernames {
+			c.admins[u] = true
+		}
+	}
 }
 
 // Rate limits, chosen per the project plan's "Abuse & auth hardening"
@@ -90,6 +105,8 @@ func NewHandler(reg *registry.Registry, opts ...Option) http.Handler {
 
 	mux.HandleFunc("PUT /v1/plugins/{scope}/{name}/{version}",
 		middleware.RequireAuth(reg, middleware.RateLimit(publishLimiter, middleware.ByAuthenticatedUser, s.handlePublish)))
+	mux.HandleFunc("PATCH /v1/admin/plugins/{scope}/{name}/{version}",
+		middleware.RequireAuth(reg, middleware.RequireAdmin(cfg.admins, s.handleAdminSetPublishedAt)))
 	mux.HandleFunc("GET /v1/plugins/{scope}/{name}", s.handleGetPlugin)
 	mux.HandleFunc("GET /v1/plugins/{scope}/{name}/{version}", s.handleGetVersion)
 	mux.HandleFunc("GET /v1/plugins/{scope}/{name}/{version}/download", s.handleDownload)

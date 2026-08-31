@@ -126,6 +126,53 @@ func writePublishError(w http.ResponseWriter, err error) {
 	}
 }
 
+// handleAdminSetPublishedAt backfills an already-published version's
+// recorded date — the one deliberate hole in "versions are immutable,"
+// reserved for correcting mirrored content published before its real
+// upstream date was known (or before this endpoint existed at all).
+// Nothing else about the version — checksum, manifest — can be touched
+// through this or any other endpoint. Gated by RequireAdmin, not the
+// normal token-owns-scope rule handlePublish uses: an admin fixing the
+// mirror account's dates isn't the mirror account.
+func (s *Server) handleAdminSetPublishedAt(w http.ResponseWriter, r *http.Request) {
+	scope := r.PathValue("scope")
+	name := r.PathValue("name")
+	version := r.PathValue("version")
+
+	var body struct {
+		PublishedAt time.Time `json:"published_at"`
+	}
+	if !decodeJSONBody(w, r, &body) {
+		return
+	}
+
+	if err := s.reg.AdminSetPublishedAt(r.Context(), scope, name, version, body.PublishedAt); err != nil {
+		switch {
+		case err == registry.ErrNotFound:
+			writeError(w, http.StatusNotFound, "no such scope/name/version")
+		default:
+			if _, ok := isInvalidInput(err); ok {
+				writeError(w, http.StatusUnprocessableEntity, err.Error())
+				return
+			}
+			writeError(w, http.StatusInternalServerError, "internal error")
+		}
+		return
+	}
+
+	v, err := s.reg.ResolveVersion(r.Context(), scope, name, version)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"scope":        v.Scope,
+		"name":         v.Name,
+		"version":      v.Version,
+		"published_at": v.PublishedAt,
+	})
+}
+
 func isInvalidInput(err error) (error, bool) {
 	if err == nil {
 		return nil, false
