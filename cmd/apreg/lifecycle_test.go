@@ -3,10 +3,12 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/pkulkarni/apreg/internal/api"
@@ -33,10 +35,21 @@ func TestInstallListUninstall(t *testing.T) {
 	t.Chdir(workDir)
 	t.Setenv("HOME", t.TempDir())
 
-	srv := newTestServer(t)
+	srv, _ := newTestServer(t)
 	defer srv.Close()
 
 	signupAndLogin(t, srv.URL, "alice", "alice@example.com")
+
+	// Before anything's installed, list must say so — not just be silent
+	// or error, since an empty apreg-lock.json (or none at all) is the
+	// normal starting state for any directory.
+	out, err := captureStdout(t, func() error { return cmdList(nil) })
+	if err != nil {
+		t.Fatalf("cmdList (empty): %v", err)
+	}
+	if !strings.Contains(out, "No plugins installed") {
+		t.Fatalf("expected empty-state message, got %q", out)
+	}
 
 	// v1: init + publish.
 	if err := cmdInit([]string{"plugin-src"}); err != nil {
@@ -66,6 +79,16 @@ func TestInstallListUninstall(t *testing.T) {
 	}
 	if entry.Dir != installDir {
 		t.Fatalf("expected locked dir %s, got %s", installDir, entry.Dir)
+	}
+
+	// cmdList itself — not just the lockfile data it reads — must report
+	// what's actually installed.
+	out, err = captureStdout(t, func() error { return cmdList(nil) })
+	if err != nil {
+		t.Fatalf("cmdList (after install): %v", err)
+	}
+	if !strings.Contains(out, "@alice/plugin-src@0.1.0") || !strings.Contains(out, installDir) {
+		t.Fatalf("expected cmdList output to mention the installed plugin and its dir, got %q", out)
 	}
 
 	// v2: rename the example skill, bump the version, republish.
@@ -102,6 +125,13 @@ func TestInstallListUninstall(t *testing.T) {
 	if _, ok := lf.Packages["@alice/plugin-src"]; ok {
 		t.Fatal("expected @alice/plugin-src to be gone from apreg-lock.json after uninstall")
 	}
+	out, err = captureStdout(t, func() error { return cmdList(nil) })
+	if err != nil {
+		t.Fatalf("cmdList (after uninstall): %v", err)
+	}
+	if !strings.Contains(out, "No plugins installed") {
+		t.Fatalf("expected empty-state message after uninstall, got %q", out)
+	}
 
 	// Uninstalling something never installed here should fail clearly,
 	// not silently succeed or panic.
@@ -110,7 +140,7 @@ func TestInstallListUninstall(t *testing.T) {
 	}
 }
 
-func newTestServer(t *testing.T) *httptest.Server {
+func newTestServer(t *testing.T) (*httptest.Server, *registry.Registry) {
 	t.Helper()
 	meta, err := sqlite.Open(filepath.Join(t.TempDir(), "test.db"))
 	if err != nil {
@@ -122,7 +152,33 @@ func newTestServer(t *testing.T) *httptest.Server {
 		t.Fatalf("fsblob.Open: %v", err)
 	}
 	reg := registry.New(meta, blob)
-	return httptest.NewServer(api.NewHandler(reg))
+	return httptest.NewServer(api.NewHandler(reg)), reg
+}
+
+// captureStdout runs fn with os.Stdout redirected to a pipe, returning
+// whatever it printed. Needed because cmdList/cmdInstall/etc. all write
+// straight to os.Stdout via fmt.Print*, so it's the only way to assert on
+// their actual output rather than just the side effects (files, lockfile
+// entries) they leave behind.
+func captureStdout(t *testing.T, fn func() error) (string, error) {
+	t.Helper()
+	old := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("os.Pipe: %v", err)
+	}
+	os.Stdout = w
+
+	fnErr := fn()
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	if _, err := io.Copy(&buf, r); err != nil {
+		t.Fatalf("read captured stdout: %v", err)
+	}
+	return buf.String(), fnErr
 }
 
 // signupAndLogin creates an account and stores a working ~/.apreg/config.json

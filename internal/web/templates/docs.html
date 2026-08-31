@@ -126,7 +126,8 @@ apreg uninstall @upstash/context7</code></pre>
   <p>Signup needs a username, email, and an 8+ character password. That's it — you don't need to verify your email to start publishing, though you can if you want to:</p>
   <pre><code>apreg verify-email {token}</code></pre>
   <p>Forgot your password:</p>
-  <pre><code>apreg reset-password --registry {registry-url}</code></pre>
+  <pre><code>apreg reset-password --registry {registry-url}   # prompts for username, then the token
+apreg reset-password --token &lt;token&gt;             # already have the token — skips straight to the new password prompt</code></pre>
   <p class="muted">
     Your API token shows up once, right after login, and gets saved to <code>~/.apreg/config.json</code>.
     Signup, login, and publish are all rate-limited per IP, and an account locks out after enough

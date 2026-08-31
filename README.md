@@ -81,7 +81,8 @@ registry convention, not part of the spec itself — `plugin.json`'s own
 
 ```bash
 apreg verify-email <token>       # confirm your email — optional, not required to publish
-apreg reset-password --registry <url>
+apreg reset-password --registry <url>          # interactive: prompts for username, then the token
+apreg reset-password --token <token>           # already have the token from the email/log — skips straight to the new password prompt
 ```
 
 By default verification and reset links just get written to the server
