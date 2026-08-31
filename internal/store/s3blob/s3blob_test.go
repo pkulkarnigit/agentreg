@@ -15,21 +15,21 @@ import (
 // TestConformance runs the exact same behavioral suite internal/store/fsblob
 // runs, against a real S3-compatible endpoint (a local MinIO in
 // development), proving both blob backends satisfy store.BlobStore
-// identically. Requires APREG_TEST_S3_ENDPOINT plus the standard AWS
+// identically. Requires KRATE_TEST_S3_ENDPOINT plus the standard AWS
 // credential env vars (AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY) —
 // config.LoadDefaultConfig picks those up on its own, no extra plumbing
 // needed. Skips cleanly without them so the rest of the suite still runs
 // with no S3-compatible store reachable.
 func TestConformance(t *testing.T) {
-	endpoint := os.Getenv("APREG_TEST_S3_ENDPOINT")
+	endpoint := os.Getenv("KRATE_TEST_S3_ENDPOINT")
 	if endpoint == "" || os.Getenv("AWS_ACCESS_KEY_ID") == "" {
-		t.Skip("APREG_TEST_S3_ENDPOINT/AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY not set; skipping S3 conformance suite")
+		t.Skip("KRATE_TEST_S3_ENDPOINT/AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY not set; skipping S3 conformance suite")
 	}
 
 	n := 0
 	blobtest.RunConformanceSuite(t, func(t *testing.T) store.BlobStore {
 		n++
-		bucket := fmt.Sprintf("apreg-test-%d", n)
+		bucket := fmt.Sprintf("krate-test-%d", n)
 
 		ctx := context.Background()
 		s, err := Open(ctx, Config{

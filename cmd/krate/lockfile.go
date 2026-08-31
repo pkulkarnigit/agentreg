@@ -7,11 +7,11 @@ import (
 )
 
 // lockfileName lives in the current directory, the same convention
-// package-lock.json follows: one file per project tracking what apreg
+// package-lock.json follows: one file per project tracking what krate
 // install has put on disk, regardless of any individual install's --dir,
-// so `apreg list` and `apreg uninstall` work no matter where a given
+// so `krate list` and `krate uninstall` work no matter where a given
 // plugin actually landed.
-const lockfileName = "apreg-lock.json"
+const lockfileName = "krate-lock.json"
 
 type lockEntry struct {
 	Version     string    `json:"version"`

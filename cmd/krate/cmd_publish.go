@@ -20,7 +20,7 @@ func cmdPublish(args []string) error {
 		return err
 	}
 	if cfg.Token == "" || cfg.Registry == "" {
-		return fmt.Errorf("not logged in — run `apreg login --registry <url>` first")
+		return fmt.Errorf("not logged in — run `krate login --registry <url>` first")
 	}
 
 	b, err := manifest.ValidateDir(dir)
@@ -28,7 +28,7 @@ func cmdPublish(args []string) error {
 		return fmt.Errorf("validation failed: %w", err)
 	}
 
-	tmpFile, err := os.CreateTemp("", "apreg-publish-*.tar.gz")
+	tmpFile, err := os.CreateTemp("", "krate-publish-*.tar.gz")
 	if err != nil {
 		return err
 	}

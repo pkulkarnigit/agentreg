@@ -1,4 +1,4 @@
-// Package api implements the AgentReg REST API (HTTP only: decode request,
+// Package api implements the KrateAI REST API (HTTP only: decode request,
 // call internal/registry, encode response). It never imports a concrete
 // store implementation directly.
 package api
@@ -26,8 +26,8 @@ type limiterFactory func(name string, burst int, per time.Duration) middleware.L
 // Option configures NewHandler's rate limiting and lockout backends. The
 // zero value (no options) is the single-instance, in-memory default;
 // WithLockout/WithLimiterFactory swap in Redis-backed implementations for
-// a horizontally scaled deployment. See cmd/apreg-server/main.go for how
-// APREG_REDIS_ADDR selects between them.
+// a horizontally scaled deployment. See cmd/krate-server/main.go for how
+// KRATE_REDIS_ADDR selects between them.
 type Option func(*handlerConfig)
 
 type handlerConfig struct {
@@ -49,7 +49,7 @@ func WithLimiterFactory(f limiterFactory) Option {
 // Rate limits, chosen per the project plan's "Abuse & auth hardening"
 // section: generous enough not to bother a real user, tight enough to
 // blunt scripted abuse against a single-instance server. Exported so
-// cmd/apreg-server can reuse the exact same tuning when constructing
+// cmd/krate-server can reuse the exact same tuning when constructing
 // Redis-backed limiters/lockout via the Option hooks above.
 const (
 	SignupBurst  = 5

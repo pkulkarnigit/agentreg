@@ -35,7 +35,7 @@ func cmdSignup(args []string) error {
 		return fmt.Errorf("signup failed: %w", err)
 	}
 
-	fmt.Printf("Account %q created. Run `apreg login --registry %s` to authenticate.\n", resp.Username, *registry)
+	fmt.Printf("Account %q created. Run `krate login --registry %s` to authenticate.\n", resp.Username, *registry)
 	return nil
 }
 
@@ -76,10 +76,10 @@ func cmdLogin(args []string) error {
 
 func cmdVerifyEmail(args []string) error {
 	fs := flag.NewFlagSet("verify-email", flag.ExitOnError)
-	registryFlag := fs.String("registry", "", "registry URL (defaults to the one from `apreg login`)")
+	registryFlag := fs.String("registry", "", "registry URL (defaults to the one from `krate login`)")
 	fs.Parse(args)
 	if fs.NArg() != 1 {
-		return fmt.Errorf("usage: apreg verify-email <token>")
+		return fmt.Errorf("usage: krate verify-email <token>")
 	}
 
 	base := *registryFlag
@@ -91,7 +91,7 @@ func cmdVerifyEmail(args []string) error {
 		base = cfg.Registry
 	}
 	if base == "" {
-		return fmt.Errorf("no registry configured — pass --registry <url> or run `apreg login` first")
+		return fmt.Errorf("no registry configured — pass --registry <url> or run `krate login` first")
 	}
 
 	if err := doJSON("POST", base+"/v1/users/verify", "", map[string]string{"token": fs.Arg(0)}, nil); err != nil {
@@ -103,7 +103,7 @@ func cmdVerifyEmail(args []string) error {
 
 func cmdResetPassword(args []string) error {
 	fs := flag.NewFlagSet("reset-password", flag.ExitOnError)
-	registryFlag := fs.String("registry", "", "registry URL (defaults to the one from `apreg login`)")
+	registryFlag := fs.String("registry", "", "registry URL (defaults to the one from `krate login`)")
 	tokenFlag := fs.String("token", "", "reset token from the email/log — skips the request step and prompts only for the new password")
 	fs.Parse(args)
 
@@ -116,7 +116,7 @@ func cmdResetPassword(args []string) error {
 		base = cfg.Registry
 	}
 	if base == "" {
-		return fmt.Errorf("no registry configured — pass --registry <url> or run `apreg login` first")
+		return fmt.Errorf("no registry configured — pass --registry <url> or run `krate login` first")
 	}
 
 	token := *tokenFlag
@@ -147,6 +147,6 @@ func cmdResetPassword(args []string) error {
 		return fmt.Errorf("reset failed: %w", err)
 	}
 
-	fmt.Println("Password reset. Run `apreg login` to authenticate with it.")
+	fmt.Println("Password reset. Run `krate login` to authenticate with it.")
 	return nil
 }

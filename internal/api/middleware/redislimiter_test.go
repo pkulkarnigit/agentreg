@@ -14,12 +14,12 @@ import (
 
 // TestRedisLimiter_Conformance runs the exact same behavioral suite
 // RateLimiter runs, against a real Redis, proving both Limiter
-// implementations behave identically. Requires APREG_TEST_REDIS_ADDR;
+// implementations behave identically. Requires KRATE_TEST_REDIS_ADDR;
 // skips cleanly without it.
 func TestRedisLimiter_Conformance(t *testing.T) {
-	addr := os.Getenv("APREG_TEST_REDIS_ADDR")
+	addr := os.Getenv("KRATE_TEST_REDIS_ADDR")
 	if addr == "" {
-		t.Skip("APREG_TEST_REDIS_ADDR not set; skipping Redis limiter conformance suite")
+		t.Skip("KRATE_TEST_REDIS_ADDR not set; skipping Redis limiter conformance suite")
 	}
 
 	client := redis.NewClient(&redis.Options{Addr: addr})
@@ -33,7 +33,7 @@ func TestRedisLimiter_Conformance(t *testing.T) {
 		n++
 		prefix := fmt.Sprintf("test-%d-%d", time.Now().UnixNano(), n)
 		t.Cleanup(func() {
-			keys, err := client.Keys(context.Background(), "apreg:ratelimit:"+prefix+":*").Result()
+			keys, err := client.Keys(context.Background(), "krate:ratelimit:"+prefix+":*").Result()
 			if err == nil && len(keys) > 0 {
 				client.Del(context.Background(), keys...)
 			}

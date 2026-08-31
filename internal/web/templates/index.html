@@ -1,4 +1,4 @@
-{{define "title"}}AgentReg{{if .Query}} — search: {{.Query}}{{end}}{{end}}
+{{define "title"}}KrateAI{{if .Query}} — search: {{.Query}}{{end}}{{end}}
 {{define "content"}}
 {{if not .Query}}
 <div class="hero">
@@ -8,7 +8,7 @@
   <form class="search" method="get" action="/">
     <input type="text" name="q" placeholder="Search plugins by name, description, or keyword&hellip;" value="{{.Query}}" autofocus>
   </form>
-  <div class="hero-install"><span>install a plugin:</span> <code>apreg install @scope/name</code> <span>&middot;</span> <a href="/docs#publishing">learn to publish yours &rarr;</a></div>
+  <div class="hero-install"><span>install a plugin:</span> <code>krate install @scope/name</code> <span>&middot;</span> <a href="/docs#publishing">learn to publish yours &rarr;</a></div>
 </div>
 
 <div class="stats">

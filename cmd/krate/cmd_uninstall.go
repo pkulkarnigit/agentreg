@@ -8,7 +8,7 @@ import (
 
 func cmdList(args []string) error {
 	if len(args) != 0 {
-		return fmt.Errorf("usage: apreg list")
+		return fmt.Errorf("usage: krate list")
 	}
 	lf, err := loadLockfile()
 	if err != nil {
@@ -33,7 +33,7 @@ func cmdList(args []string) error {
 
 func cmdUninstall(args []string) error {
 	if len(args) != 1 {
-		return fmt.Errorf("usage: apreg uninstall @scope/name")
+		return fmt.Errorf("usage: krate uninstall @scope/name")
 	}
 	ref := args[0]
 	if _, _, _, err := parseRef(ref); err != nil {

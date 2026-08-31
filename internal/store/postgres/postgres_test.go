@@ -11,14 +11,14 @@ import (
 
 // TestConformance runs the exact same behavioral suite internal/store/sqlite
 // runs, against real Postgres, proving both backends satisfy
-// store.MetadataStore identically. Requires APREG_TEST_POSTGRES_DSN
+// store.MetadataStore identically. Requires KRATE_TEST_POSTGRES_DSN
 // (pointing at an empty, disposable database); skips cleanly without it so
 // the rest of the suite still runs in environments with no Postgres
 // reachable (e.g. no Docker daemon).
 func TestConformance(t *testing.T) {
-	baseDSN := os.Getenv("APREG_TEST_POSTGRES_DSN")
+	baseDSN := os.Getenv("KRATE_TEST_POSTGRES_DSN")
 	if baseDSN == "" {
-		t.Skip("APREG_TEST_POSTGRES_DSN not set; skipping Postgres conformance suite")
+		t.Skip("KRATE_TEST_POSTGRES_DSN not set; skipping Postgres conformance suite")
 	}
 
 	n := 0
@@ -39,7 +39,7 @@ func TestConformance(t *testing.T) {
 
 		// Each sub-test gets isolated data via a unique schema, so the
 		// shared suite's fixed usernames/tokens don't collide across runs.
-		schema := fmt.Sprintf("apreg_test_%d", n)
+		schema := fmt.Sprintf("krate_test_%d", n)
 		if _, err := s.db.Exec(fmt.Sprintf(`CREATE SCHEMA IF NOT EXISTS %s`, schema)); err != nil {
 			t.Fatalf("create schema: %v", err)
 		}

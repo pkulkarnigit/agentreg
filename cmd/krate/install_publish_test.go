@@ -16,7 +16,7 @@ import (
 // pinned version into a custom --dir, against a server that also has a
 // newer version published — proving install doesn't just always grab
 // latest, and that --dir is actually honored (both by the files on disk
-// and by what gets recorded in apreg-lock.json).
+// and by what gets recorded in krate-lock.json).
 func TestInstall_ExplicitVersionAndDirFlag(t *testing.T) {
 	t.Chdir(t.TempDir())
 	t.Setenv("HOME", t.TempDir())
@@ -88,7 +88,7 @@ func TestInstall_NotFound(t *testing.T) {
 // TestInstall_ChecksumMismatch points install at a server that reports one
 // checksum in metadata but serves content that hashes to something else —
 // the situation the checksum verification exists to catch (a corrupted
-// download, a compromised or misbehaving mirror). A real apreg-server
+// download, a compromised or misbehaving mirror). A real krate-server
 // never produces this on its own, so this needs a hand-built fake one.
 // Confirms install fails *and* never touches disk — the checksum check
 // must happen strictly before any file is written, not after.

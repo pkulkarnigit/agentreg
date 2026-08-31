@@ -1,4 +1,4 @@
-{{define "title"}}Documentation — AgentReg{{end}}
+{{define "title"}}Documentation — KrateAI{{end}}
 {{define "content"}}
 <h1>Documentation</h1>
 <p class="muted">Everything you need to actually use this thing — installing, publishing, browsing, all of it.</p>
@@ -24,26 +24,26 @@
     <strong>1. Install the CLI</strong>
     <pre><code>git clone https://github.com/pkulkarnigit/agentreg.git
 cd agentreg
-go build -o apreg ./cmd/apreg</code></pre>
+go build -o krate ./cmd/krate</code></pre>
     <p class="muted">No <code>go install</code>-able release yet, so building from source is the only option for now.</p>
   </div>
   <div class="step">
     <strong>2. Create an account</strong>
-    <pre><code>apreg signup --registry {registry-url}
-apreg login  --registry {registry-url}</code></pre>
+    <pre><code>krate signup --registry {registry-url}
+krate login  --registry {registry-url}</code></pre>
     <p class="muted">Your username becomes your publishing scope: plugins you publish live at <code>@your-username/plugin-name</code>.</p>
   </div>
   <div class="step">
     <strong>3. Scaffold and publish a plugin</strong>
-    <pre><code>apreg init my-plugin
+    <pre><code>krate init my-plugin
 cd my-plugin
-apreg validate
-apreg publish</code></pre>
+krate validate
+krate publish</code></pre>
   </div>
   <div class="step">
     <strong>4. Install someone else's</strong>
-    <pre><code>apreg search postgres
-apreg install @neondatabase/agent-skills</code></pre>
+    <pre><code>krate search postgres
+krate install @neondatabase/agent-skills</code></pre>
   </div>
 </section>
 
@@ -54,22 +54,22 @@ apreg install @neondatabase/agent-skills</code></pre>
     the tarball, check its sha256 against what got recorded at publish time, and unpack into
     <code>agent_plugins/&lt;name&gt;</code> (or wherever you point <code>--dir</code>).
   </p>
-  <pre><code>apreg search context7
-apreg view @upstash/context7          # inspect metadata without installing
-apreg install @upstash/context7       # latest version
-apreg install @upstash/context7@1.0.0 # a specific version
-apreg install @upstash/context7 --dir vendor/context7</code></pre>
+  <pre><code>krate search context7
+krate view @upstash/context7          # inspect metadata without installing
+krate install @upstash/context7       # latest version
+krate install @upstash/context7@1.0.0 # a specific version
+krate install @upstash/context7 --dir vendor/context7</code></pre>
   <p>Searching, viewing, installing — none of that needs an account. Only publishing does.</p>
   <p>
-    Every install is recorded in <code>apreg-lock.json</code> in whatever directory you ran it from —
+    Every install is recorded in <code>krate-lock.json</code> in whatever directory you ran it from —
     the resolved version, checksum, source registry, and where it landed, regardless of
-    <code>--dir</code>. <code>apreg list</code> reads it back; <code>apreg uninstall</code> deletes both
+    <code>--dir</code>. <code>krate list</code> reads it back; <code>krate uninstall</code> deletes both
     the files and the entry. Reinstalling a plugin (e.g. to pick up a new version) replaces its
     directory outright rather than unpacking on top of it, so a file a new version dropped can't be
     left behind from the old one.
   </p>
-  <pre><code>apreg list
-apreg uninstall @upstash/context7</code></pre>
+  <pre><code>krate list
+krate uninstall @upstash/context7</code></pre>
   <div class="callout">
     There's no dependency resolution here on purpose — plugins don't declare dependencies on each
     other, so there's nothing to resolve. This is the download-verify-unpack half of a package
@@ -80,7 +80,7 @@ apreg uninstall @upstash/context7</code></pre>
 <section id="publishing">
   <h2>Publishing a plugin</h2>
   <p>
-    <code>apreg publish [dir]</code> checks the directory locally first (the server re-runs the same
+    <code>krate publish [dir]</code> checks the directory locally first (the server re-runs the same
     checks on its end too), packs it into a <code>.tar.gz</code>, and uploads it under whatever scope
     you're logged in as. The name and version come straight from <code>plugin.json</code> — you don't
     get to pick something different at publish time.
@@ -108,7 +108,7 @@ apreg uninstall @upstash/context7</code></pre>
     <tr><td><code>version</code></td><td>for publishing</td><td>must be valid <a href="https://semver.org">semver</a>. The spec technically allows leaving it out, but we require it here &mdash; it's how the registry tells releases apart</td></tr>
     <tr><td><code>description</code>, <code>homepage</code>, <code>repository</code>, <code>license</code>, <code>keywords</code></td><td>no</td><td>shown on the plugin's page and used by search</td></tr>
   </table>
-  <p class="muted">Run <code>apreg validate</code> in any plugin directory to check all of this locally before publishing.</p>
+  <p class="muted">Run <code>krate validate</code> in any plugin directory to check all of this locally before publishing.</p>
 </section>
 
 <section id="versioning">
@@ -117,19 +117,19 @@ apreg uninstall @upstash/context7</code></pre>
     Versions are <strong>permanent</strong>, same as npm. Publish <code>@scope/name@1.0.0</code> once,
     and that's it — try to publish that exact version again and it gets rejected. Want to ship a fix?
     Bump <code>version</code> in <code>plugin.json</code> and publish again. Leave the version off when
-    installing (<code>apreg install @scope/name</code>) and you get whatever's newest.
+    installing (<code>krate install @scope/name</code>) and you get whatever's newest.
   </p>
 </section>
 
 <section id="account">
   <h2>Accounts &amp; security</h2>
   <p>Signup needs a username, email, and an 8+ character password. That's it — you don't need to verify your email to start publishing, though you can if you want to:</p>
-  <pre><code>apreg verify-email {token}</code></pre>
+  <pre><code>krate verify-email {token}</code></pre>
   <p>Forgot your password:</p>
-  <pre><code>apreg reset-password --registry {registry-url}   # prompts for username, then the token
-apreg reset-password --token &lt;token&gt;             # already have the token — skips straight to the new password prompt</code></pre>
+  <pre><code>krate reset-password --registry {registry-url}   # prompts for username, then the token
+krate reset-password --token &lt;token&gt;             # already have the token — skips straight to the new password prompt</code></pre>
   <p class="muted">
-    Your API token shows up once, right after login, and gets saved to <code>~/.apreg/config.json</code>.
+    Your API token shows up once, right after login, and gets saved to <code>~/.krate/config.json</code>.
     Signup, login, and publish are all rate-limited per IP, and an account locks out after enough
     failed logins no matter where they're coming from.
   </p>
@@ -139,19 +139,19 @@ apreg reset-password --token &lt;token&gt;             # already have the token 
   <h2>CLI reference</h2>
   <table>
     <tr><th>command</th><th>what it does</th></tr>
-    <tr><td><code>apreg init [dir]</code></td><td>scaffold a new plugin</td></tr>
-    <tr><td><code>apreg validate [dir]</code></td><td>validate plugin.json/mcp.json/skills locally, no network</td></tr>
-    <tr><td><code>apreg pack [dir]</code></td><td>produce &lt;name&gt;-&lt;version&gt;.tar.gz without publishing</td></tr>
-    <tr><td><code>apreg signup --registry &lt;url&gt;</code></td><td>create an account (interactive)</td></tr>
-    <tr><td><code>apreg login --registry &lt;url&gt;</code></td><td>log in and store an API token</td></tr>
-    <tr><td><code>apreg publish [dir]</code></td><td>validate, pack, and upload under your scope</td></tr>
-    <tr><td><code>apreg install @scope/name[@version]</code></td><td>fetch, verify, and unpack a plugin</td></tr>
-    <tr><td><code>apreg list</code></td><td>list plugins installed in this directory (reads apreg-lock.json)</td></tr>
-    <tr><td><code>apreg uninstall @scope/name</code></td><td>remove an installed plugin and untrack it</td></tr>
-    <tr><td><code>apreg search &lt;query&gt;</code></td><td>search the registry</td></tr>
-    <tr><td><code>apreg view @scope/name[@version]</code></td><td>print resolved metadata as JSON</td></tr>
-    <tr><td><code>apreg verify-email &lt;token&gt;</code></td><td>confirm your account's email address</td></tr>
-    <tr><td><code>apreg reset-password --registry &lt;url&gt;</code></td><td>reset a forgotten password (interactive)</td></tr>
+    <tr><td><code>krate init [dir]</code></td><td>scaffold a new plugin</td></tr>
+    <tr><td><code>krate validate [dir]</code></td><td>validate plugin.json/mcp.json/skills locally, no network</td></tr>
+    <tr><td><code>krate pack [dir]</code></td><td>produce &lt;name&gt;-&lt;version&gt;.tar.gz without publishing</td></tr>
+    <tr><td><code>krate signup --registry &lt;url&gt;</code></td><td>create an account (interactive)</td></tr>
+    <tr><td><code>krate login --registry &lt;url&gt;</code></td><td>log in and store an API token</td></tr>
+    <tr><td><code>krate publish [dir]</code></td><td>validate, pack, and upload under your scope</td></tr>
+    <tr><td><code>krate install @scope/name[@version]</code></td><td>fetch, verify, and unpack a plugin</td></tr>
+    <tr><td><code>krate list</code></td><td>list plugins installed in this directory (reads krate-lock.json)</td></tr>
+    <tr><td><code>krate uninstall @scope/name</code></td><td>remove an installed plugin and untrack it</td></tr>
+    <tr><td><code>krate search &lt;query&gt;</code></td><td>search the registry</td></tr>
+    <tr><td><code>krate view @scope/name[@version]</code></td><td>print resolved metadata as JSON</td></tr>
+    <tr><td><code>krate verify-email &lt;token&gt;</code></td><td>confirm your account's email address</td></tr>
+    <tr><td><code>krate reset-password --registry &lt;url&gt;</code></td><td>reset a forgotten password (interactive)</td></tr>
   </table>
 </section>
 
@@ -159,8 +159,8 @@ apreg reset-password --token &lt;token&gt;             # already have the token 
   <h2>REST API reference</h2>
   <p class="muted">
     Everything the CLI does against the registry — publish, install, search, view — you can do
-    yourself against this API directly. <code>apreg list</code> and <code>apreg uninstall</code> are the
-    exception: they only ever read and write <code>apreg-lock.json</code> on your own machine, no
+    yourself against this API directly. <code>krate list</code> and <code>krate uninstall</code> are the
+    exception: they only ever read and write <code>krate-lock.json</code> on your own machine, no
     network involved.
   </p>
   <table>
@@ -176,7 +176,7 @@ apreg reset-password --token &lt;token&gt;             # already have the token 
     <tr><td><code>GET /v1/plugins/{scope}/{name}/{version}/download</code></td><td>&mdash;</td><td>stream the tarball</td></tr>
     <tr><td><code>GET /v1/search?q=</code></td><td>&mdash;</td><td>search plugins</td></tr>
   </table>
-  <p class="muted">Publish example, equivalent to <code>apreg publish</code>:</p>
+  <p class="muted">Publish example, equivalent to <code>krate publish</code>:</p>
   <pre><code>curl -X PUT "{registry-url}/v1/plugins/you/my-plugin/1.0.0" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/gzip" \

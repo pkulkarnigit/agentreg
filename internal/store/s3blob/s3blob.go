@@ -1,6 +1,6 @@
 // Package s3blob implements store.BlobStore on S3 or any S3-compatible
 // object store (MinIO, Cloudflare R2, DigitalOcean Spaces, ...) — the swap
-// that actually unblocks horizontal scaling: fsblob ties apreg-server to
+// that actually unblocks horizontal scaling: fsblob ties krate-server to
 // one machine's disk, so a second replica can't see what the first one
 // wrote. Once blobs live here, the server is fully stateless (metadata is
 // already on Postgres) and safe to run as N replicas behind a load
@@ -75,7 +75,7 @@ func (s *Store) Put(ctx context.Context, scope, name, version string, r io.Reade
 	// as fsblob.Put. This lets us know the exact size and checksum before
 	// talking to S3 at all, and gives PutObject a ReadSeeker (an *os.File)
 	// rather than an unsized stream.
-	tmp, err := os.CreateTemp("", "apreg-s3blob-*")
+	tmp, err := os.CreateTemp("", "krate-s3blob-*")
 	if err != nil {
 		return "", 0, err
 	}

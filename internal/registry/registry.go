@@ -1,4 +1,4 @@
-// Package registry holds all business rules for AgentReg: publishing,
+// Package registry holds all business rules for KrateAI: publishing,
 // version resolution, search, and publish authorization. It is the only
 // package that talks to internal/store; internal/api and internal/web call
 // only this package. See the project plan's "Modularity & scaling" section.
@@ -191,8 +191,8 @@ func (r *Registry) RequestEmailVerification(ctx context.Context, user *store.Use
 	if err := r.meta.CreateEmailVerification(ctx, user.ID, auth.HashToken(token), time.Now().Add(emailVerificationTTL)); err != nil {
 		return err
 	}
-	body := fmt.Sprintf("Confirm your AgentReg account:\n\n  apreg verify-email %s\n\nThis link expires in 24 hours.", token)
-	return r.sender.Send(ctx, user.Email, "Verify your AgentReg account", body)
+	body := fmt.Sprintf("Confirm your KrateAI account:\n\n  krate verify-email %s\n\nThis link expires in 24 hours.", token)
+	return r.sender.Send(ctx, user.Email, "Verify your KrateAI account", body)
 }
 
 // ConfirmEmailVerification consumes a verification token, marking its
@@ -223,8 +223,8 @@ func (r *Registry) RequestPasswordReset(ctx context.Context, username string) er
 	if err := r.meta.CreatePasswordReset(ctx, user.ID, auth.HashToken(token), time.Now().Add(passwordResetTTL)); err != nil {
 		return err
 	}
-	body := fmt.Sprintf("Reset your AgentReg password:\n\n  apreg reset-password --token %s\n\nThis link expires in 1 hour. If you didn't request this, ignore this message.", token)
-	return r.sender.Send(ctx, user.Email, "Reset your AgentReg password", body)
+	body := fmt.Sprintf("Reset your KrateAI password:\n\n  krate reset-password --token %s\n\nThis link expires in 1 hour. If you didn't request this, ignore this message.", token)
+	return r.sender.Send(ctx, user.Email, "Reset your KrateAI password", body)
 }
 
 // ConfirmPasswordReset consumes a reset token and sets a new password

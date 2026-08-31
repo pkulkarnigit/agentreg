@@ -17,7 +17,7 @@ func configPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".apreg", "config.json"), nil
+	return filepath.Join(home, ".krate", "config.json"), nil
 }
 
 func loadConfig() (*cliConfig, error) {

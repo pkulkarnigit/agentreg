@@ -1,5 +1,5 @@
 // Package sqlite implements store.MetadataStore on top of a local SQLite
-// file (via the pure-Go modernc.org/sqlite driver, so apreg-server ships as
+// file (via the pure-Go modernc.org/sqlite driver, so krate-server ships as
 // a single static binary with no cgo/libsqlite3 dependency).
 package sqlite
 

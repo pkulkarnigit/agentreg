@@ -1,4 +1,4 @@
-// Package web implements AgentReg's read-only, server-rendered browsing UI.
+// Package web implements KrateAI's read-only, server-rendered browsing UI.
 // Like internal/api, it calls only internal/registry — never a concrete
 // store implementation.
 package web
@@ -136,7 +136,7 @@ func handleFont(w http.ResponseWriter, r *http.Request) {
 // server restart.
 func (s *Server) handleCatalog(w http.ResponseWriter, r *http.Request) {
 	if s.catalogPath == "" {
-		http.Error(w, "no catalog configured (APREG_CATALOG_PATH not set)", http.StatusNotFound)
+		http.Error(w, "no catalog configured (KRATE_CATALOG_PATH not set)", http.StatusNotFound)
 		return
 	}
 	data, err := os.ReadFile(s.catalogPath)
@@ -239,7 +239,7 @@ func (s *Server) loadVersionContents(r *http.Request, scope, name, version strin
 	}
 	defer rc.Close()
 
-	tmpDir, err := os.MkdirTemp("", "apreg-web-*")
+	tmpDir, err := os.MkdirTemp("", "krate-web-*")
 	if err != nil {
 		return nil, nil
 	}

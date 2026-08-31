@@ -28,7 +28,7 @@ type SMTPSender struct {
 	Port     int    // e.g. 587
 	Username string // optional: leave empty to skip AUTH (e.g. an unauthenticated local relay)
 	Password string
-	From     string // header From, e.g. "AgentReg <noreply@yourdomain.com>"
+	From     string // header From, e.g. "KrateAI <noreply@yourdomain.com>"
 }
 
 func (s SMTPSender) Send(ctx context.Context, to, subject, body string) error {

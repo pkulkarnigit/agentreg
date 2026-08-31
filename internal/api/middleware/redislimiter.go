@@ -10,7 +10,7 @@ import (
 
 // tokenBucketScript is the same token-bucket algorithm RateLimiter runs
 // in-process, just executed atomically inside Redis instead of behind a
-// Go mutex — that atomicity is the whole point: several apreg-server
+// Go mutex — that atomicity is the whole point: several krate-server
 // replicas hitting the same key must still see one consistent bucket, not
 // one each. KEYS[1] is the bucket's Redis key; ARGV is rate (tokens/sec),
 // burst, and the current unix time in fractional seconds. Returns 1 if the
@@ -44,7 +44,7 @@ return allowed
 `
 
 // RedisLimiter is Limiter backed by Redis instead of an in-process map, so
-// every apreg-server replica shares the same buckets. It's the horizontal-
+// every krate-server replica shares the same buckets. It's the horizontal-
 // scaling counterpart to RateLimiter: same NewRateLimiter(burst, per)
 // semantics, same Allow(key) contract, different storage.
 //
@@ -78,7 +78,7 @@ func NewRedisLimiter(client *redis.Client, prefix string, burst int, per time.Du
 func (rl *RedisLimiter) Allow(key string) bool {
 	now := float64(time.Now().UnixNano()) / 1e9
 	res, err := rl.client.Eval(context.Background(), tokenBucketScript,
-		[]string{"apreg:ratelimit:" + rl.prefix + ":" + key},
+		[]string{"krate:ratelimit:" + rl.prefix + ":" + key},
 		rl.rate, rl.burst, now,
 	).Int64()
 	if err != nil {

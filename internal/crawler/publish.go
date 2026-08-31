@@ -14,10 +14,10 @@ import (
 
 // PublishConfig, when passed to Crawl, turns the discovery report into an
 // actual mirror: every valid entry is also packed and published into a
-// running AgentReg registry, all under one dedicated account's scope —
+// running KrateAI registry, all under one dedicated account's scope —
 // never under an arbitrary/spoofed scope, since the server independently
 // verifies Token's owner equals Scope on every publish, the same
-// authorization check a normal `apreg publish` goes through. This keeps
+// authorization check a normal `krate publish` goes through. This keeps
 // mirrored content clearly attributed to "the mirror account", never
 // impersonating the original author.
 type PublishConfig struct {
@@ -33,7 +33,7 @@ type PublishConfig struct {
 var errAlreadyPublished = errors.New("already published")
 
 func publishToRegistry(ctx context.Context, client *http.Client, cfg PublishConfig, pluginDir, name, version string) error {
-	tmpFile, err := os.CreateTemp("", "apreg-mirror-*.tar.gz")
+	tmpFile, err := os.CreateTemp("", "krate-mirror-*.tar.gz")
 	if err != nil {
 		return err
 	}

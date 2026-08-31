@@ -57,7 +57,7 @@ func NewAPIToken() (plaintext string, err error) {
 	if err != nil {
 		return "", err
 	}
-	return "apreg_" + tok, nil
+	return "krate_" + tok, nil
 }
 
 // HashToken returns the sha256 hash (hex) of a token's plaintext, for

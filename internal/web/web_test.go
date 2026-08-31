@@ -113,7 +113,7 @@ func TestIndexPage_ShowsHeroAndStats(t *testing.T) {
 	body := readBody(t, resp)
 	for _, want := range []string{
 		"A registry for Agent Plugins", // hero headline
-		"apreg install @scope/name",    // hero install snippet
+		"krate install @scope/name",    // hero install snippet
 		`<span class="n">1</span>`,     // count shared by the 1-plugin and 1-publisher stats
 		"publishers",                   // stat label
 		"downloads",                    // stat label
@@ -188,9 +188,9 @@ func TestDocsPage(t *testing.T) {
 	}
 	body := readBody(t, resp)
 	for _, want := range []string{
-		"Quickstart", "apreg publish", "apreg install", "Versioning", "permanent",
+		"Quickstart", "krate publish", "krate install", "Versioning", "permanent",
 		"CLI reference", "REST API reference", "PUT /v1/plugins/{scope}/{name}/{version}",
-		"apreg list", "apreg uninstall", "apreg-lock.json",
+		"krate list", "krate uninstall", "krate-lock.json",
 	} {
 		if !strings.Contains(body, want) {
 			t.Errorf("expected docs page to contain %q, got:\n%s", want, body)
@@ -214,7 +214,7 @@ func TestPluginPage(t *testing.T) {
 	body := readBody(t, resp)
 	for _, want := range []string{
 		"@alice/hello",
-		"apreg install @alice/hello@1.0.0",
+		"krate install @alice/hello@1.0.0",
 		"Greeter",
 		"Says hello",
 		"greeter-server",

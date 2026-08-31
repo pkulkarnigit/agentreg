@@ -135,7 +135,7 @@ func TestCmdLogin_WrongPassword(t *testing.T) {
 		t.Fatal("expected an error logging in with the wrong password")
 	}
 
-	// A failed login must not clobber ~/.apreg/config.json with a bad or
+	// A failed login must not clobber ~/.krate/config.json with a bad or
 	// empty token — saveConfig is only reached on the success path, so no
 	// config file should exist at all yet.
 	if _, err := loadConfig(); err != nil {

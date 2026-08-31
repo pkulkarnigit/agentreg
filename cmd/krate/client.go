@@ -41,7 +41,7 @@ func promptPassword(label string) (string, error) {
 	return promptLine("")
 }
 
-// apiError mirrors the {"error": "..."} JSON body every apreg-server error
+// apiError mirrors the {"error": "..."} JSON body every krate-server error
 // response uses.
 type apiError struct {
 	Error string `json:"error"`

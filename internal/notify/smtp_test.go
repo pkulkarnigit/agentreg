@@ -17,29 +17,29 @@ import (
 // (Mailpit, an SMTP test double with an HTTP API for inspecting what it
 // received) and confirms the message that actually arrived — not just that
 // Send() returned nil — has the right recipient, subject, and body.
-// Requires APREG_TEST_SMTP_ADDR (SMTP) and APREG_TEST_SMTP_HTTP_ADDR
+// Requires KRATE_TEST_SMTP_ADDR (SMTP) and KRATE_TEST_SMTP_HTTP_ADDR
 // (Mailpit's API); skips cleanly without them.
 func TestSMTPSender_Send(t *testing.T) {
-	smtpAddr := os.Getenv("APREG_TEST_SMTP_ADDR")
-	httpAddr := os.Getenv("APREG_TEST_SMTP_HTTP_ADDR")
+	smtpAddr := os.Getenv("KRATE_TEST_SMTP_ADDR")
+	httpAddr := os.Getenv("KRATE_TEST_SMTP_HTTP_ADDR")
 	if smtpAddr == "" || httpAddr == "" {
-		t.Skip("APREG_TEST_SMTP_ADDR/APREG_TEST_SMTP_HTTP_ADDR not set; skipping SMTP conformance test")
+		t.Skip("KRATE_TEST_SMTP_ADDR/KRATE_TEST_SMTP_HTTP_ADDR not set; skipping SMTP conformance test")
 	}
 
 	host, portStr, err := net.SplitHostPort(smtpAddr)
 	if err != nil {
-		t.Fatalf("parse APREG_TEST_SMTP_ADDR: %v", err)
+		t.Fatalf("parse KRATE_TEST_SMTP_ADDR: %v", err)
 	}
 	port, err := strconv.Atoi(portStr)
 	if err != nil {
 		t.Fatalf("parse port: %v", err)
 	}
 
-	sender := SMTPSender{Host: host, Port: port, From: "AgentReg <noreply@agentreg.test>"}
+	sender := SMTPSender{Host: host, Port: port, From: "KrateAI <noreply@krateai.test>"}
 
 	to := fmt.Sprintf("recipient-%d@example.com", time.Now().UnixNano())
-	subject := "Verify your AgentReg account"
-	body := "Confirm your AgentReg account:\n\n  apreg verify-email sometoken\n\nThis link expires in 24 hours."
+	subject := "Verify your KrateAI account"
+	body := "Confirm your KrateAI account:\n\n  krate verify-email sometoken\n\nThis link expires in 24 hours."
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -51,10 +51,10 @@ func TestSMTPSender_Send(t *testing.T) {
 	if msg.Subject != subject {
 		t.Fatalf("subject mismatch: got %q, want %q", msg.Subject, subject)
 	}
-	if !strings.Contains(msg.Text, "Confirm your AgentReg account") {
+	if !strings.Contains(msg.Text, "Confirm your KrateAI account") {
 		t.Fatalf("body not delivered correctly: got %q", msg.Text)
 	}
-	if msg.From.Address != "noreply@agentreg.test" {
+	if msg.From.Address != "noreply@krateai.test" {
 		t.Fatalf("From address mismatch: got %q", msg.From.Address)
 	}
 }

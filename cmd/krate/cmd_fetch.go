@@ -21,7 +21,7 @@ func registryURL() (string, error) {
 		return "", err
 	}
 	if cfg.Registry == "" {
-		return "", fmt.Errorf("no registry configured — run `apreg login --registry <url>` first")
+		return "", fmt.Errorf("no registry configured — run `krate login --registry <url>` first")
 	}
 	return cfg.Registry, nil
 }
@@ -31,7 +31,7 @@ func cmdInstall(args []string) error {
 	destDir := fs.String("dir", "", "target directory (default: agent_plugins/<name>)")
 	fs.Parse(args)
 	if fs.NArg() != 1 {
-		return fmt.Errorf("usage: apreg install @scope/name[@version]")
+		return fmt.Errorf("usage: krate install @scope/name[@version]")
 	}
 	scope, name, version, err := parseRef(fs.Arg(0))
 	if err != nil {
@@ -65,7 +65,7 @@ func cmdInstall(args []string) error {
 		return fmt.Errorf("download failed: HTTP %d", resp.StatusCode)
 	}
 
-	tmpFile, err := os.CreateTemp("", "apreg-install-*.tar.gz")
+	tmpFile, err := os.CreateTemp("", "krate-install-*.tar.gz")
 	if err != nil {
 		return err
 	}
@@ -123,7 +123,7 @@ func cmdInstall(args []string) error {
 
 func cmdSearch(args []string) error {
 	if len(args) != 1 {
-		return fmt.Errorf("usage: apreg search <query>")
+		return fmt.Errorf("usage: krate search <query>")
 	}
 	base, err := registryURL()
 	if err != nil {
@@ -156,7 +156,7 @@ func cmdSearch(args []string) error {
 
 func cmdView(args []string) error {
 	if len(args) != 1 {
-		return fmt.Errorf("usage: apreg view @scope/name[@version]")
+		return fmt.Errorf("usage: krate view @scope/name[@version]")
 	}
 	scope, name, version, err := parseRef(args[0])
 	if err != nil {

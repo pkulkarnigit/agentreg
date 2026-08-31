@@ -22,7 +22,7 @@ import (
 // same way a user actually would. It's the first end-to-end test on the
 // CLI side of this codebase (previously only pure functions like parseRef
 // were unit tested), covering the local package-tracking this turn adds:
-// apreg-lock.json, `apreg list`, and `apreg uninstall`.
+// krate-lock.json, `krate list`, and `krate uninstall`.
 //
 // It also pins the fix for a real bug found while building this: pack.Unpack
 // only ever writes files present in the tarball being unpacked, so
@@ -41,7 +41,7 @@ func TestInstallListUninstall(t *testing.T) {
 	signupAndLogin(t, srv.URL, "alice", "alice@example.com")
 
 	// Before anything's installed, list must say so — not just be silent
-	// or error, since an empty apreg-lock.json (or none at all) is the
+	// or error, since an empty krate-lock.json (or none at all) is the
 	// normal starting state for any directory.
 	out, err := captureStdout(t, func() error { return cmdList(nil) })
 	if err != nil {
@@ -72,7 +72,7 @@ func TestInstallListUninstall(t *testing.T) {
 	}
 	entry, ok := lf.Packages["@alice/plugin-src"]
 	if !ok {
-		t.Fatal("expected @alice/plugin-src in apreg-lock.json after install")
+		t.Fatal("expected @alice/plugin-src in krate-lock.json after install")
 	}
 	if entry.Version != "0.1.0" {
 		t.Fatalf("expected locked version 0.1.0, got %s", entry.Version)
@@ -123,7 +123,7 @@ func TestInstallListUninstall(t *testing.T) {
 		t.Fatalf("loadLockfile after uninstall: %v", err)
 	}
 	if _, ok := lf.Packages["@alice/plugin-src"]; ok {
-		t.Fatal("expected @alice/plugin-src to be gone from apreg-lock.json after uninstall")
+		t.Fatal("expected @alice/plugin-src to be gone from krate-lock.json after uninstall")
 	}
 	out, err = captureStdout(t, func() error { return cmdList(nil) })
 	if err != nil {
@@ -136,7 +136,7 @@ func TestInstallListUninstall(t *testing.T) {
 	// Uninstalling something never installed here should fail clearly,
 	// not silently succeed or panic.
 	if err := cmdUninstall([]string{"@alice/never-installed"}); err == nil {
-		t.Fatal("expected an error uninstalling a plugin apreg-lock.json never tracked")
+		t.Fatal("expected an error uninstalling a plugin krate-lock.json never tracked")
 	}
 }
 
@@ -181,7 +181,7 @@ func captureStdout(t *testing.T, fn func() error) (string, error) {
 	return buf.String(), fnErr
 }
 
-// signupAndLogin creates an account and stores a working ~/.apreg/config.json
+// signupAndLogin creates an account and stores a working ~/.krate/config.json
 // directly via the real HTTP endpoints, bypassing cmdSignup/cmdLogin's
 // interactive stdin prompts — those aren't what this test is about.
 func signupAndLogin(t *testing.T, registryURL, username, email string) {

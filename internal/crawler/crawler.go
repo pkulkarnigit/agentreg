@@ -58,7 +58,7 @@ func Crawl(ctx context.Context, logger *slog.Logger, entries []Entry, publish *P
 	}
 	client := &http.Client{Timeout: 60 * time.Second}
 
-	workDir, err := os.MkdirTemp("", "apreg-crawler-*")
+	workDir, err := os.MkdirTemp("", "krate-crawler-*")
 	if err != nil {
 		logger.Error("could not create work dir", "error", err)
 		return nil

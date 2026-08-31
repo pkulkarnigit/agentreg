@@ -114,7 +114,7 @@ type Store struct {
 // Connection pool limits. database/sql's own defaults are unbounded open
 // connections and only 2 idle — fine for one process talking to its own
 // database, but not for a store meant to run behind N horizontally scaled
-// apreg-server replicas: every replica holds this many connections
+// krate-server replicas: every replica holds this many connections
 // independently, so the total against one Postgres instance is
 // maxOpenConns × replica count, and it must stay comfortably under
 // Postgres's own max_connections (100 by default). At 10 per replica,

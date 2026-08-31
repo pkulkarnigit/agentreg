@@ -10,7 +10,7 @@ import (
 // Limiter is anything that can answer "may this key make one more request
 // right now." RateLimiter (below) is the in-memory, single-instance
 // implementation; RedisLimiter (redislimiter.go) is the same contract
-// backed by Redis, for when apreg-server runs as more than one replica and
+// backed by Redis, for when krate-server runs as more than one replica and
 // the buckets need to be shared rather than per-process.
 type Limiter interface {
 	Allow(key string) bool
@@ -18,7 +18,7 @@ type Limiter interface {
 
 // RateLimiter is an in-memory per-key token bucket. It's single-instance by
 // design — each process has its own buckets, invisible to any other
-// replica. Fine for a single apreg-server instance; swap in RedisLimiter
+// replica. Fine for a single krate-server instance; swap in RedisLimiter
 // once there's more than one.
 type RateLimiter struct {
 	mu      sync.Mutex
@@ -86,7 +86,7 @@ func RateLimit(rl Limiter, keyFunc func(*http.Request) string, next http.Handler
 }
 
 // ByIP keys on the request's remote address (no reverse proxy sits in
-// front of apreg-server in v1, so RemoteAddr is trustworthy — this
+// front of krate-server in v1, so RemoteAddr is trustworthy — this
 // assumption must be revisited, e.g. switching to X-Forwarded-For with a
 // trusted-proxy allowlist, the moment a reverse proxy/ALB is added in
 // front at actual deploy time).

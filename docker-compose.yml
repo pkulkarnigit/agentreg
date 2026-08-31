@@ -7,41 +7,41 @@ services:
       # compose network. Replace with real secrets (e.g. via an env
       # file or secrets manager, not committed here) before any real
       # deployment.
-      POSTGRES_USER: apreg
-      POSTGRES_PASSWORD: apreg
-      POSTGRES_DB: apreg
+      POSTGRES_USER: krate
+      POSTGRES_PASSWORD: krate
+      POSTGRES_DB: krate
     volumes:
-      - apreg-pgdata:/var/lib/postgresql/data
+      - krate-pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U apreg"]
+      test: ["CMD-SHELL", "pg_isready -U krate"]
       interval: 2s
       timeout: 3s
       retries: 15
     restart: unless-stopped
-    # No published port: only apreg-server (on the compose network) needs
-    # to reach this. Use `docker compose exec postgres psql -U apreg` for
+    # No published port: only krate-server (on the compose network) needs
+    # to reach this. Use `docker compose exec postgres psql -U krate` for
     # direct access instead of exposing it to the host.
 
-  apreg-server:
+  krate-server:
     build: .
     ports:
       - "8080:8080"
     environment:
-      APREG_DB_DRIVER: postgres
-      APREG_DB_DSN: postgres://apreg:apreg@postgres:5432/apreg?sslmode=disable
+      KRATE_DB_DRIVER: postgres
+      KRATE_DB_DSN: postgres://krate:krate@postgres:5432/krate?sslmode=disable
     volumes:
       # Blob storage stays on local disk regardless of metadata backend —
-      # this volume only ever holds data/blobs/ when APREG_DB_DRIVER=postgres.
-      - apreg-blobs:/home/apreg/data
+      # this volume only ever holds data/blobs/ when KRATE_DB_DRIVER=postgres.
+      - krate-blobs:/home/krate/data
     depends_on:
       postgres:
         condition: service_healthy
     restart: unless-stopped
 
   # Opt-in: an S3-compatible target for trying the s3blob backend locally
-  # (`APREG_BLOB_DRIVER=s3`), instead of the local-disk blobs volume above.
+  # (`KRATE_BLOB_DRIVER=s3`), instead of the local-disk blobs volume above.
   # Not started by a plain `docker compose up` — bring it up explicitly
-  # with `docker compose --profile s3 up -d minio`, then point apreg-server
+  # with `docker compose --profile s3 up -d minio`, then point krate-server
   # at it (see README).
   minio:
     image: minio/minio
@@ -54,7 +54,7 @@ services:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - apreg-miniodata:/data
+      - krate-miniodata:/data
     healthcheck:
       test: ["CMD", "mc", "ready", "local"]
       interval: 2s
@@ -63,11 +63,11 @@ services:
     restart: unless-stopped
 
   # Opt-in: a shared target for rate limiting/login lockout
-  # (`APREG_REDIS_ADDR`), so several apreg-server replicas can share one
+  # (`KRATE_REDIS_ADDR`), so several krate-server replicas can share one
   # set of buckets/failure counts instead of each keeping its own
   # in-memory copy. Not started by a plain `docker compose up` — bring it
   # up explicitly with `docker compose --profile redis up -d redis`, then
-  # point apreg-server at it (see README).
+  # point krate-server at it (see README).
   redis:
     image: redis:7-alpine
     profiles: ["redis"]
@@ -81,6 +81,6 @@ services:
     restart: unless-stopped
 
 volumes:
-  apreg-pgdata:
-  apreg-blobs:
-  apreg-miniodata:
+  krate-pgdata:
+  krate-blobs:
+  krate-miniodata:

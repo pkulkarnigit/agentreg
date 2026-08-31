@@ -9,7 +9,7 @@ import (
 // IP — a per-IP rate limiter alone doesn't stop a distributed brute force
 // against one account from many addresses. LoginLockout (below) is the
 // in-memory, single-instance implementation; RedisLockout (redislockout.go)
-// is the same contract backed by Redis, for when apreg-server runs as more
+// is the same contract backed by Redis, for when krate-server runs as more
 // than one replica and failure counts need to be shared rather than
 // per-process.
 type Lockout interface {
@@ -19,7 +19,7 @@ type Lockout interface {
 }
 
 // LoginLockout is an in-memory, single-instance Lockout. Fine for a single
-// apreg-server instance; swap in RedisLockout once there's more than one.
+// krate-server instance; swap in RedisLockout once there's more than one.
 type LoginLockout struct {
 	mu          sync.Mutex
 	failures    map[string][]time.Time

@@ -1,4 +1,4 @@
-// Package notify defines how AgentReg delivers account-recovery messages
+// Package notify defines how KrateAI delivers account-recovery messages
 // (email verification, password reset links). Real delivery needs an
 // SMTP/SES provider and a domain, neither of which exist for local/Docker
 // use — so the interface is built now and a real implementation is a new
@@ -18,7 +18,7 @@ type Sender interface {
 }
 
 // LogSender "delivers" by writing the message to the server log. This is
-// what AgentReg uses today: there's no mail provider or domain wired up
+// what KrateAI uses today: there's no mail provider or domain wired up
 // yet, so this is what makes email verification / password reset usable in
 // local/Docker dev without one — the link is right there in the logs.
 // Swapping in real SMTP/SES delivery later means implementing Sender in a

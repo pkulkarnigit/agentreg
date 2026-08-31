@@ -1,6 +1,6 @@
-// Command apreg-server runs the AgentReg HTTP server: the /v1 REST API
+// Command krate-server runs the KrateAI HTTP server: the /v1 REST API
 // (internal/api) and the read-only browsing UI (internal/web), backed by a
-// SQLite (default) or Postgres (APREG_DB_DRIVER=postgres) metadata store
+// SQLite (default) or Postgres (KRATE_DB_DRIVER=postgres) metadata store
 // and local-filesystem blob storage.
 package main
 
@@ -40,12 +40,12 @@ func main() {
 	backupPath := flag.String("backup", "", "write a consistent database backup to this path and exit (sqlite driver only; use pg_dump for postgres)")
 	flag.Parse()
 
-	dataDir := envOr("APREG_DATA_DIR", "./data")
-	addr := envOr("APREG_ADDR", ":8080")
-	driver := envOr("APREG_DB_DRIVER", "sqlite")
-	dsn := os.Getenv("APREG_DB_DSN")
-	catalogPath := envOr("APREG_CATALOG_PATH", "catalog/agent-plugins-catalog.json")
-	mirrorScope := envOr("APREG_MIRROR_SCOPE", "github-mirror")
+	dataDir := envOr("KRATE_DATA_DIR", "./data")
+	addr := envOr("KRATE_ADDR", ":8080")
+	driver := envOr("KRATE_DB_DRIVER", "sqlite")
+	dsn := os.Getenv("KRATE_DB_DSN")
+	catalogPath := envOr("KRATE_CATALOG_PATH", "catalog/agent-plugins-catalog.json")
+	mirrorScope := envOr("KRATE_MIRROR_SCOPE", "github-mirror")
 
 	if err := os.MkdirAll(dataDir, 0o755); err != nil {
 		log.Fatalf("create data dir %s: %v", dataDir, err)
@@ -62,7 +62,7 @@ func main() {
 	}
 	defer meta.Close()
 
-	blobDriver := envOr("APREG_BLOB_DRIVER", "fs")
+	blobDriver := envOr("KRATE_BLOB_DRIVER", "fs")
 	blob, err := openBlobStore(blobDriver, dataDir)
 	if err != nil {
 		log.Fatal(err)
@@ -97,7 +97,7 @@ func main() {
 
 	serverErr := make(chan error, 1)
 	go func() {
-		log.Printf("apreg-server listening on %s (db driver: %s, blob driver: %s, rate limiting: %s, mail: %s, data dir: %s)", addr, driver, blobDriver, rateLimitBackend, mailBackend, dataDir)
+		log.Printf("krate-server listening on %s (db driver: %s, blob driver: %s, rate limiting: %s, mail: %s, data dir: %s)", addr, driver, blobDriver, rateLimitBackend, mailBackend, dataDir)
 		serverErr <- srv.ListenAndServe()
 	}()
 
@@ -126,7 +126,7 @@ func openMetadataStore(driver, dsn, dataDir, backupPath string) (store.MetadataS
 	case "sqlite":
 		path := dsn
 		if path == "" {
-			path = filepath.Join(dataDir, "apreg.db")
+			path = filepath.Join(dataDir, "krate.db")
 		}
 		s, err := sqlite.Open(path)
 		if err != nil {
@@ -148,19 +148,19 @@ func openMetadataStore(driver, dsn, dataDir, backupPath string) (store.MetadataS
 			return nil, errors.New("-backup only supports the sqlite driver; use pg_dump for Postgres backups")
 		}
 		if dsn == "" {
-			return nil, errors.New("APREG_DB_DSN is required when APREG_DB_DRIVER=postgres")
+			return nil, errors.New("KRATE_DB_DSN is required when KRATE_DB_DRIVER=postgres")
 		}
 		return postgres.Open(dsn)
 
 	default:
-		return nil, errors.New("unknown APREG_DB_DRIVER " + driver + " (want \"sqlite\" or \"postgres\")")
+		return nil, errors.New("unknown KRATE_DB_DRIVER " + driver + " (want \"sqlite\" or \"postgres\")")
 	}
 }
 
 // openBlobStore opens the configured blob backend. "fs" (default) stores
 // tarballs under dataDir/blobs on local disk, tying the server to one
 // machine. "s3" stores them in an S3-compatible bucket instead — the swap
-// that makes apreg-server safe to run as multiple replicas, since every
+// that makes krate-server safe to run as multiple replicas, since every
 // instance can see every blob.
 func openBlobStore(driver, dataDir string) (store.BlobStore, error) {
 	switch driver {
@@ -168,24 +168,24 @@ func openBlobStore(driver, dataDir string) (store.BlobStore, error) {
 		return fsblob.Open(filepath.Join(dataDir, "blobs"))
 
 	case "s3":
-		bucket := os.Getenv("APREG_S3_BUCKET")
+		bucket := os.Getenv("KRATE_S3_BUCKET")
 		if bucket == "" {
-			return nil, errors.New("APREG_S3_BUCKET is required when APREG_BLOB_DRIVER=s3")
+			return nil, errors.New("KRATE_S3_BUCKET is required when KRATE_BLOB_DRIVER=s3")
 		}
 		return s3blob.Open(context.Background(), s3blob.Config{
 			Bucket:         bucket,
-			Region:         os.Getenv("APREG_S3_REGION"),
-			Endpoint:       os.Getenv("APREG_S3_ENDPOINT"),
-			ForcePathStyle: os.Getenv("APREG_S3_FORCE_PATH_STYLE") == "true",
+			Region:         os.Getenv("KRATE_S3_REGION"),
+			Endpoint:       os.Getenv("KRATE_S3_ENDPOINT"),
+			ForcePathStyle: os.Getenv("KRATE_S3_FORCE_PATH_STYLE") == "true",
 		})
 
 	default:
-		return nil, errors.New("unknown APREG_BLOB_DRIVER " + driver + " (want \"fs\" or \"s3\")")
+		return nil, errors.New("unknown KRATE_BLOB_DRIVER " + driver + " (want \"fs\" or \"s3\")")
 	}
 }
 
 // configureSender wires up real SMTP delivery for account verification and
-// password-reset emails when APREG_SMTP_HOST is set, otherwise leaves
+// password-reset emails when KRATE_SMTP_HOST is set, otherwise leaves
 // reg on its default notify.LogSender — which just writes the link to
 // this process's log instead of emailing it. That's fine for local/Docker
 // use, but anyone with read access to these logs can take over any
@@ -193,35 +193,35 @@ func openBlobStore(driver, dataDir string) (store.BlobStore, error) {
 // before this server is ever exposed to untrusted users or the public
 // internet. Returns a short description for the startup log line.
 func configureSender(reg *registry.Registry) (string, error) {
-	host := os.Getenv("APREG_SMTP_HOST")
+	host := os.Getenv("KRATE_SMTP_HOST")
 	if host == "" {
-		log.Print("WARNING: no email provider configured — account verification/password-reset links are being written to this log, not emailed. Do not expose this server to untrusted users without setting APREG_SMTP_HOST first.")
+		log.Print("WARNING: no email provider configured — account verification/password-reset links are being written to this log, not emailed. Do not expose this server to untrusted users without setting KRATE_SMTP_HOST first.")
 		return "none (logging links)", nil
 	}
 
-	port, err := strconv.Atoi(envOr("APREG_SMTP_PORT", "587"))
+	port, err := strconv.Atoi(envOr("KRATE_SMTP_PORT", "587"))
 	if err != nil {
-		return "", fmt.Errorf("invalid APREG_SMTP_PORT: %w", err)
+		return "", fmt.Errorf("invalid KRATE_SMTP_PORT: %w", err)
 	}
 	reg.SetSender(notify.SMTPSender{
 		Host:     host,
 		Port:     port,
-		Username: os.Getenv("APREG_SMTP_USERNAME"),
-		Password: os.Getenv("APREG_SMTP_PASSWORD"),
-		From:     os.Getenv("APREG_SMTP_FROM"),
+		Username: os.Getenv("KRATE_SMTP_USERNAME"),
+		Password: os.Getenv("KRATE_SMTP_PASSWORD"),
+		From:     os.Getenv("KRATE_SMTP_FROM"),
 	})
 	return fmt.Sprintf("smtp (%s:%d)", host, port), nil
 }
 
 // apiOptions decides whether the API's rate limiting and login lockout run
 // in-memory (single instance, the default) or against Redis (shared across
-// replicas, opt-in via APREG_REDIS_ADDR). It reuses api's own tuning
+// replicas, opt-in via KRATE_REDIS_ADDR). It reuses api's own tuning
 // constants so the Redis-backed path behaves identically to the in-memory
 // default it's replacing, just with shared state. Returns the redis addr
 // too (empty when unused) purely so the caller can log which backend is
 // active.
 func apiOptions() ([]api.Option, string) {
-	redisAddr := os.Getenv("APREG_REDIS_ADDR")
+	redisAddr := os.Getenv("KRATE_REDIS_ADDR")
 	if redisAddr == "" {
 		return nil, ""
 	}

@@ -18,7 +18,7 @@ const maxTarballBytes = 64 << 20 // 64MiB, generous for a plugin bundle
 
 // handlePublish accepts a raw tar.gz body (Content-Type: application/gzip),
 // re-validates it server-side (defense in depth on top of client-side
-// `apreg validate`), and stores it.
+// `krate validate`), and stores it.
 func (s *Server) handlePublish(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.UserFromContext(r.Context())
 	if !ok {
@@ -30,7 +30,7 @@ func (s *Server) handlePublish(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
 	version := r.PathValue("version")
 
-	tmpDir, err := os.MkdirTemp("", "apreg-publish-*")
+	tmpDir, err := os.MkdirTemp("", "krate-publish-*")
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error")
 		return

@@ -11,7 +11,7 @@ import (
 )
 
 // RedisLockout is Lockout backed by Redis instead of an in-process map, so
-// every apreg-server replica shares the same failure counts — a per-process
+// every krate-server replica shares the same failure counts — a per-process
 // LoginLockout can't stop a distributed brute force spread across
 // requests that land on different replicas.
 //
@@ -39,7 +39,7 @@ func NewRedisLockout(client *redis.Client, prefix string, maxFailures int, windo
 }
 
 func (l *RedisLockout) key(username string) string {
-	return "apreg:lockout:" + l.prefix + ":" + username
+	return "krate:lockout:" + l.prefix + ":" + username
 }
 
 func (l *RedisLockout) Locked(username string) bool {
