@@ -53,7 +53,25 @@ apreg publish
 # Find something, install it
 apreg search my-plugin
 apreg install @yourusername/my-plugin
+
+# See what's installed here, remove something
+apreg list
+apreg uninstall @yourusername/my-plugin
 ```
+
+`apreg install` writes an `apreg-lock.json` in whatever directory you ran
+it from — the same convention `package-lock.json` follows — recording
+what's installed and at which resolved version, regardless of any given
+install's `--dir`. `apreg list` reads it back; `apreg uninstall` deletes
+both the installed files and its entry. Reinstalling `@scope/name` (e.g.
+to pick up a new version) replaces the install directory outright rather
+than unpacking on top of it — otherwise a file the new version dropped
+would silently survive from the old one.
+
+There's deliberately no dependency resolution here: Agent Plugins don't
+declare dependencies on each other, so there's nothing to resolve — this
+is the download-verify-unpack half of a package manager, not a build
+system.
 
 Plugins live at `@scope/name`, where scope is your username. That's a
 registry convention, not part of the spec itself — `plugin.json`'s own

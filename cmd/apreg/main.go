@@ -1,6 +1,7 @@
 // Command apreg is the AgentReg CLI: init/validate/pack a plugin directory
-// locally, and signup/login/publish/install/search/view against a registry
-// server.
+// locally, signup/login/publish/install/search/view against a registry
+// server, and list/uninstall against apreg-lock.json — the record, kept
+// in the current directory, of what install has put on disk.
 package main
 
 import (
@@ -31,6 +32,10 @@ func main() {
 		err = cmdPublish(args)
 	case "install":
 		err = cmdInstall(args)
+	case "list":
+		err = cmdList(args)
+	case "uninstall":
+		err = cmdUninstall(args)
 	case "search":
 		err = cmdSearch(args)
 	case "view":
@@ -65,6 +70,8 @@ Usage:
   apreg login --registry <url>              log in and store an API token
   apreg publish [dir]                       validate, pack, and upload
   apreg install @scope/name[@version]       fetch and unpack into agent_plugins/<name>
+  apreg list                                list plugins installed in this directory
+  apreg uninstall @scope/name               remove an installed plugin and untrack it
   apreg search <query>                      search the registry
   apreg view @scope/name[@version]          print resolved metadata
   apreg verify-email <token>                confirm your account's email address

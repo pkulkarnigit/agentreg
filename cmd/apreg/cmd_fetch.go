@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/pkulkarni/apreg/internal/pack"
 )
@@ -84,6 +85,16 @@ func cmdInstall(args []string) error {
 	if dest == "" {
 		dest = filepath.Join("agent_plugins", name)
 	}
+	// Remove any previous install at dest first: pack.Unpack only ever
+	// writes files present in the new tarball, so unpacking a new version
+	// directly on top of an old one leaves behind any file the new
+	// version dropped (a removed skill, a renamed mcp.json, ...). Safe to
+	// do only now, after the checksum above confirmed the new download is
+	// good — never destroy a working install before the replacement is
+	// verified.
+	if err := os.RemoveAll(dest); err != nil {
+		return fmt.Errorf("remove previous install at %s: %w", dest, err)
+	}
 	if err := os.MkdirAll(dest, 0o755); err != nil {
 		return err
 	}
@@ -92,6 +103,21 @@ func cmdInstall(args []string) error {
 	}
 
 	fmt.Printf("Installed @%s/%s@%s into %s (sha256:%s verified)\n", scope, name, meta.Version, dest, checksum)
+
+	lf, err := loadLockfile()
+	if err != nil {
+		return fmt.Errorf("update %s: %w", lockfileName, err)
+	}
+	lf.Packages[fmt.Sprintf("@%s/%s", scope, name)] = lockEntry{
+		Version:     meta.Version,
+		Checksum:    checksum,
+		Registry:    base,
+		Dir:         dest,
+		InstalledAt: time.Now().UTC(),
+	}
+	if err := saveLockfile(lf); err != nil {
+		return fmt.Errorf("update %s: %w", lockfileName, err)
+	}
 	return nil
 }
 
