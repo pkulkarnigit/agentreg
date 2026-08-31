@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/pkulkarni/apreg/internal/pack"
 )
@@ -32,7 +34,28 @@ type PublishConfig struct {
 // against unchanged upstream content is expected to hit this every time.
 var errAlreadyPublished = errors.New("already published")
 
-func publishToRegistry(ctx context.Context, client *http.Client, cfg PublishConfig, pluginDir, name, version string) error {
+// versionAlreadyPublished checks the registry itself — not GitHub — for
+// whether scope/name/version already exists. Used to skip the GitHub
+// commit-date lookup (LastCommitDate) for versions that are already
+// mirrored: on an ordinary re-run almost everything falls in this
+// category, and this check costs nothing against GitHub's unauthenticated
+// rate limit (the crawler's actual documented bottleneck), only a request
+// to whatever registry is being mirrored into.
+func versionAlreadyPublished(ctx context.Context, client *http.Client, cfg PublishConfig, name, version string) (bool, error) {
+	checkURL := fmt.Sprintf("%s/v1/plugins/%s/%s/%s", strings.TrimRight(cfg.RegistryURL, "/"), cfg.Scope, name, version)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, checkURL, nil)
+	if err != nil {
+		return false, err
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+	return resp.StatusCode == http.StatusOK, nil
+}
+
+func publishToRegistry(ctx context.Context, client *http.Client, cfg PublishConfig, pluginDir, name, version string, publishedAt time.Time) error {
 	tmpFile, err := os.CreateTemp("", "krate-mirror-*.tar.gz")
 	if err != nil {
 		return err
@@ -51,8 +74,11 @@ func publishToRegistry(ctx context.Context, client *http.Client, cfg PublishConf
 	}
 	defer f.Close()
 
-	url := fmt.Sprintf("%s/v1/plugins/%s/%s/%s", strings.TrimRight(cfg.RegistryURL, "/"), cfg.Scope, name, version)
-	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, f)
+	publishURL := fmt.Sprintf("%s/v1/plugins/%s/%s/%s", strings.TrimRight(cfg.RegistryURL, "/"), cfg.Scope, name, version)
+	if !publishedAt.IsZero() {
+		publishURL += "?" + url.Values{"published_at": {publishedAt.UTC().Format(time.RFC3339)}}.Encode()
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, publishURL, f)
 	if err != nil {
 		return err
 	}

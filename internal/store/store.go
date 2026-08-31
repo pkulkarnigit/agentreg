@@ -88,6 +88,12 @@ type NewVersion struct {
 	Version      string
 	Checksum     string
 	ManifestJSON string
+	// PublishedAt overrides the recorded publish timestamp — for mirrored
+	// content, where the meaningful date is when the plugin actually
+	// shipped upstream, not the moment our crawler happened to copy it in.
+	// Zero value means "use the current server time," the same as every
+	// version has always recorded before this field existed.
+	PublishedAt time.Time
 }
 
 // MetadataStore persists users, tokens, plugins, and versions. It does not

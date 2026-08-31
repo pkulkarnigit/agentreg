@@ -19,6 +19,7 @@ import (
 func RunConformanceSuite(t *testing.T, newStore func(t *testing.T) store.MetadataStore) {
 	t.Run("UsersAndTokens", func(t *testing.T) { testUsersAndTokens(t, newStore(t)) })
 	t.Run("PublishAndResolve", func(t *testing.T) { testPublishAndResolve(t, newStore(t)) })
+	t.Run("PublishedAtOverride", func(t *testing.T) { testPublishedAtOverride(t, newStore(t)) })
 	t.Run("DownloadCount", func(t *testing.T) { testDownloadCount(t, newStore(t)) })
 	t.Run("SearchIncludesDownloadCount", func(t *testing.T) { testSearchIncludesDownloadCount(t, newStore(t)) })
 	t.Run("SearchEmptyQueryReturnsAll", func(t *testing.T) { testSearchEmptyQueryReturnsAll(t, newStore(t)) })
@@ -121,6 +122,48 @@ func testPublishAndResolve(t *testing.T, s store.MetadataStore) {
 
 	if _, err := s.GetVersion(ctx, "alice", "hello", "9.9.9"); err != store.ErrNotFound {
 		t.Fatalf("expected ErrNotFound for missing version, got %v", err)
+	}
+}
+
+// testPublishedAtOverride covers mirrored content's real reason for
+// existing: a version's recorded publish date should reflect when it
+// actually shipped upstream, not the moment a crawler happened to copy it
+// in — so an explicit NewVersion.PublishedAt must be honored exactly, and
+// the zero value (the ordinary, non-mirrored publish path) must still fall
+// back to "now," not some zero-time artifact.
+func testPublishedAtOverride(t *testing.T, s store.MetadataStore) {
+	ctx := context.Background()
+
+	upstream := time.Date(2019, 3, 14, 9, 26, 53, 0, time.UTC)
+	p1 := store.NewPlugin{Scope: "carol", Name: "vintage-plugin"}
+	v1 := store.NewVersion{
+		Scope: "carol", Name: "vintage-plugin", Version: "1.0.0",
+		Checksum: "abc", ManifestJSON: "{}", PublishedAt: upstream,
+	}
+	if err := s.UpsertPluginAndVersion(ctx, p1, v1); err != nil {
+		t.Fatalf("UpsertPluginAndVersion with explicit PublishedAt: %v", err)
+	}
+	got, err := s.GetVersion(ctx, "carol", "vintage-plugin", "1.0.0")
+	if err != nil {
+		t.Fatalf("GetVersion: %v", err)
+	}
+	if !got.PublishedAt.Equal(upstream) {
+		t.Fatalf("expected published_at %s, got %s", upstream, got.PublishedAt)
+	}
+
+	before := time.Now()
+	p2 := store.NewPlugin{Scope: "carol", Name: "fresh-plugin"}
+	v2 := store.NewVersion{Scope: "carol", Name: "fresh-plugin", Version: "1.0.0", Checksum: "def", ManifestJSON: "{}"}
+	if err := s.UpsertPluginAndVersion(ctx, p2, v2); err != nil {
+		t.Fatalf("UpsertPluginAndVersion with zero-value PublishedAt: %v", err)
+	}
+	after := time.Now()
+	got2, err := s.GetVersion(ctx, "carol", "fresh-plugin", "1.0.0")
+	if err != nil {
+		t.Fatalf("GetVersion: %v", err)
+	}
+	if got2.PublishedAt.Before(before.Add(-time.Second)) || got2.PublishedAt.After(after.Add(time.Second)) {
+		t.Fatalf("expected published_at near now (%s..%s), got %s", before, after, got2.PublishedAt)
 	}
 }
 

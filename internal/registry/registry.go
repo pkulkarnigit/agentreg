@@ -57,6 +57,16 @@ type PublishInput struct {
 	Bundle      *manifest.Bundle // already validated by manifest.ValidateDir
 	RequestorID int64            // authenticated user's ID
 	RequestorU  string           // authenticated user's username
+	// PublishedAt, if set, records the version under this timestamp
+	// instead of the current server time — for mirrored content, where
+	// the meaningful date is when the plugin actually shipped upstream.
+	// Self-reported, the same way a git commit's author date is: not
+	// independently verified against anything, just trusted the way this
+	// registry already trusts every other manifest field a publisher
+	// provides. Rejected outright if it's in the future — that's not a
+	// legitimate "upstream" date under any interpretation, just a
+	// malformed or malicious one.
+	PublishedAt time.Time
 }
 
 // Publish validates that the requesting user owns {scope}, that the
@@ -75,6 +85,9 @@ func (r *Registry) Publish(ctx context.Context, in PublishInput) (*store.Version
 	}
 	if !semver.IsValid("v" + in.Version) {
 		return nil, fmt.Errorf("%w: version %q is not valid semver", ErrInvalidInput, in.Version)
+	}
+	if !in.PublishedAt.IsZero() && in.PublishedAt.After(time.Now()) {
+		return nil, fmt.Errorf("%w: published_at %s is in the future", ErrInvalidInput, in.PublishedAt.Format(time.RFC3339))
 	}
 
 	// Check immutability BEFORE writing to blob storage. Versions are
@@ -117,6 +130,7 @@ func (r *Registry) Publish(ctx context.Context, in PublishInput) (*store.Version
 		Version:      in.Version,
 		Checksum:     checksum,
 		ManifestJSON: manifestJSON,
+		PublishedAt:  in.PublishedAt,
 	}
 
 	if err := r.meta.UpsertPluginAndVersion(ctx, np, nv); err != nil {

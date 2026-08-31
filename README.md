@@ -273,10 +273,26 @@ anything — an unchanged version just comes back as "already published"
 (409, not treated as an error). Anything missing a valid semver version
 gets skipped with a reason instead of a guess.
 
+Mirrored versions are recorded under the date they actually shipped
+upstream (the last commit that touched that specific plugin's path), not
+the moment the crawler happened to copy them in — a mirror showing
+"published today" for something that's existed for a year is actively
+misleading. `PUT /v1/plugins/{scope}/{name}/{version}` takes this as an
+optional `?published_at=<RFC3339>` query param; self-reported, the same
+way a git commit's author date is, and rejected outright if it's in the
+future. The normal `krate publish` path never sets it, so ordinary
+publishes are unaffected — the server time at actual publish already *is*
+the right answer there.
+
 One catch: resolving the default branch for entries that don't pin one
-costs a GitHub API call, and unauthenticated that's capped at 60/hour. Run
-the crawler a few times back to back and those entries start timing out
-until the limit resets. A `GITHUB_TOKEN` would fix this — not wired up yet.
+costs a GitHub API call, and unauthenticated that's capped at 60/hour —
+mirroring's own upstream-date lookup costs one more per newly-published
+entry. Run the crawler a few times back to back and those entries start
+timing out until the limit resets. Two things blunt this: an
+already-mirrored version skips the date lookup entirely (a cheap check
+against the registry itself, not GitHub, since its `published_at` was
+already recorded correctly the first time), and a `GITHUB_TOKEN` would
+raise the ceiling a lot — not wired up yet.
 
 A scheduled workflow (`.github/workflows/crawl.yml`) re-runs the crawler
 daily and commits `catalog/agent-plugins-catalog.json` back to the repo if

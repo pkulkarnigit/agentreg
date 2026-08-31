@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/pkulkarni/apreg/internal/api/middleware"
 	"github.com/pkulkarni/apreg/internal/manifest"
@@ -29,6 +30,16 @@ func (s *Server) handlePublish(w http.ResponseWriter, r *http.Request) {
 	scope := r.PathValue("scope")
 	name := r.PathValue("name")
 	version := r.PathValue("version")
+
+	var publishedAt time.Time
+	if raw := r.URL.Query().Get("published_at"); raw != "" {
+		var err error
+		publishedAt, err = time.Parse(time.RFC3339, raw)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "published_at must be RFC3339, e.g. 2024-01-15T09:00:00Z")
+			return
+		}
+	}
 
 	tmpDir, err := os.MkdirTemp("", "krate-publish-*")
 	if err != nil {
@@ -78,12 +89,13 @@ func (s *Server) handlePublish(w http.ResponseWriter, r *http.Request) {
 	defer tarballFile.Close()
 
 	v, err := s.reg.Publish(r.Context(), registry.PublishInput{
-		Scope:      scope,
-		Name:       name,
-		Version:    version,
-		Tarball:    tarballFile,
-		Bundle:     bundle,
-		RequestorU: user.Username,
+		Scope:       scope,
+		Name:        name,
+		Version:     version,
+		Tarball:     tarballFile,
+		Bundle:      bundle,
+		RequestorU:  user.Username,
+		PublishedAt: publishedAt,
 	})
 	if err != nil {
 		writePublishError(w, err)

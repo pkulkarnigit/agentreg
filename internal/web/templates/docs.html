@@ -170,7 +170,7 @@ krate reset-password --token &lt;token&gt;             # already have the token,
     <tr><td><code>POST /v1/tokens</code></td><td>username+password</td><td>exchange credentials for an API token</td></tr>
     <tr><td><code>POST /v1/password-reset/request</code></td><td>none</td><td>request a reset token</td></tr>
     <tr><td><code>POST /v1/password-reset/confirm</code></td><td>none</td><td>consume a reset token, set a new password</td></tr>
-    <tr><td><code>PUT /v1/plugins/{scope}/{name}/{version}</code></td><td>Bearer token</td><td>publish (raw <code>.tar.gz</code> body)</td></tr>
+    <tr><td><code>PUT /v1/plugins/{scope}/{name}/{version}?published_at=</code></td><td>Bearer token</td><td>publish (raw <code>.tar.gz</code> body); <code>published_at</code> is an optional RFC3339 timestamp for recording a version under a real historical date — used by the mirror to record when a plugin actually shipped upstream, not when it was mirrored. Self-reported and rejected if it's in the future; omit it and the server records the actual publish time, as normal.</td></tr>
     <tr><td><code>GET /v1/plugins/{scope}/{name}</code></td><td>none</td><td>plugin metadata + version list</td></tr>
     <tr><td><code>GET /v1/plugins/{scope}/{name}/{version}</code></td><td>none</td><td>version metadata (<code>latest</code> is a valid alias)</td></tr>
     <tr><td><code>GET /v1/plugins/{scope}/{name}/{version}/download</code></td><td>none</td><td>stream the tarball</td></tr>

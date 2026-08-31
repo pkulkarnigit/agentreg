@@ -309,10 +309,14 @@ func (s *Store) UpsertPluginAndVersion(ctx context.Context, p store.NewPlugin, v
 		}
 	}
 
+	publishedAt := now
+	if !v.PublishedAt.IsZero() {
+		publishedAt = v.PublishedAt.UTC().Format(time.RFC3339)
+	}
 	if _, err := tx.ExecContext(ctx, `
 		INSERT INTO versions (scope, name, version, checksum, manifest_json, published_at)
 		VALUES (?, ?, ?, ?, ?, ?)`,
-		v.Scope, v.Name, v.Version, v.Checksum, v.ManifestJSON, now,
+		v.Scope, v.Name, v.Version, v.Checksum, v.ManifestJSON, publishedAt,
 	); err != nil {
 		return err
 	}

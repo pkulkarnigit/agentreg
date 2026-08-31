@@ -37,6 +37,17 @@ type Result struct {
 	// when Crawl was called with a non-nil PublishConfig.
 	Published    bool   `json:",omitempty"`
 	PublishError string `json:",omitempty"`
+
+	// UpstreamPublishedAt is when this version's content actually last
+	// changed upstream (the commit that touched it), recorded as the
+	// mirror's own published_at instead of the moment this crawl run
+	// happened to copy it in. Only populated for entries that were newly
+	// published this run — a version already mirrored on a previous run
+	// skips the GitHub lookup entirely (see versionAlreadyPublished) since
+	// its published_at was already set correctly back when it was first
+	// published, and re-fetching would just spend GitHub API budget for
+	// a value that's already recorded.
+	UpstreamPublishedAt *time.Time `json:"upstream_published_at,omitempty"`
 }
 
 // Catalog is the persisted output of a crawl run.
@@ -141,16 +152,38 @@ func Crawl(ctx context.Context, logger *slog.Logger, entries []Entry, publish *P
 				// real (not exceptional) case, not a bug.
 				r.PublishError = "cannot mirror: plugin.json has no version field"
 			default:
-				pubErr := publishToRegistry(ctx, client, *publish, pluginDir, bundle.Plugin.Name, bundle.Plugin.Version)
+				alreadyPublished, err := versionAlreadyPublished(ctx, client, *publish, bundle.Plugin.Name, bundle.Plugin.Version)
 				switch {
-				case pubErr == nil:
-					r.Published = true
-					logger.Info("published", "plugin", bundle.Plugin.Name, "version", bundle.Plugin.Version)
-				case errors.Is(pubErr, errAlreadyPublished):
+				case err != nil:
+					r.PublishError = sanitizePath(fmt.Sprintf("check existing publish: %v", err), workDir)
+					logger.Warn("could not check existing publish", "name", e.Name, "plugin", bundle.Plugin.Name, "version", bundle.Plugin.Version, "error", err)
+				case alreadyPublished:
 					r.Published = true
 				default:
-					r.PublishError = sanitizePath(pubErr.Error(), workDir)
-					logger.Warn("publish failed", "name", e.Name, "plugin", bundle.Plugin.Name, "version", bundle.Plugin.Version, "error", pubErr)
+					// Only spend a GitHub API call on the real upstream
+					// date for versions actually being published this
+					// run — see UpstreamPublishedAt's doc comment.
+					commitDate, dateErr := LastCommitDate(ctx, client, owner, repo, ref, subpath)
+					if dateErr != nil {
+						r.PublishError = sanitizePath(fmt.Sprintf("resolve upstream publish date: %v", dateErr), workDir)
+						logger.Warn("could not resolve upstream publish date", "name", e.Name, "plugin", bundle.Plugin.Name, "version", bundle.Plugin.Version, "error", dateErr)
+						break
+					}
+					pubErr := publishToRegistry(ctx, client, *publish, pluginDir, bundle.Plugin.Name, bundle.Plugin.Version, commitDate)
+					switch {
+					case pubErr == nil:
+						r.Published = true
+						r.UpstreamPublishedAt = &commitDate
+						logger.Info("published", "plugin", bundle.Plugin.Name, "version", bundle.Plugin.Version, "upstream_published_at", commitDate)
+					case errors.Is(pubErr, errAlreadyPublished):
+						// Raced with something else publishing it between
+						// the check above and this call — rare, but the
+						// pre-check isn't a lock, just an optimization.
+						r.Published = true
+					default:
+						r.PublishError = sanitizePath(pubErr.Error(), workDir)
+						logger.Warn("publish failed", "name", e.Name, "plugin", bundle.Plugin.Name, "version", bundle.Plugin.Version, "error", pubErr)
+					}
 				}
 			}
 		}

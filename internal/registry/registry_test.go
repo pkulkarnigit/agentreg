@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/pkulkarni/apreg/internal/manifest"
 	"github.com/pkulkarni/apreg/internal/store"
@@ -204,6 +205,60 @@ func TestPublish_InvalidSemver(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for non-semver version")
 	}
+}
+
+func TestPublish_PublishedAtOverride(t *testing.T) {
+	ctx := context.Background()
+	r := newTestRegistry(t)
+	b := testBundle(t, "vintage-plugin", "1.0.0")
+
+	upstream := time.Date(2019, 3, 14, 9, 26, 53, 0, time.UTC)
+	v, err := r.Publish(ctx, PublishInput{
+		Scope: "alice", Name: "vintage-plugin", Version: "1.0.0",
+		Tarball: strings.NewReader("fake-tarball-bytes"),
+		Bundle:  b, RequestorU: "alice", PublishedAt: upstream,
+	})
+	if err != nil {
+		t.Fatalf("Publish: %v", err)
+	}
+	if !v.PublishedAt.Equal(upstream) {
+		t.Fatalf("expected published_at %s, got %s", upstream, v.PublishedAt)
+	}
+}
+
+func TestPublish_FuturePublishedAtRejected(t *testing.T) {
+	ctx := context.Background()
+	r := newTestRegistry(t)
+	b := testBundle(t, "time-traveler", "1.0.0")
+
+	_, err := r.Publish(ctx, PublishInput{
+		Scope: "alice", Name: "time-traveler", Version: "1.0.0",
+		Tarball: strings.NewReader("fake-tarball-bytes"),
+		Bundle:  b, RequestorU: "alice", PublishedAt: time.Now().Add(24 * time.Hour),
+	})
+	if err == nil {
+		t.Fatal("expected an error publishing with a future published_at")
+	}
+	if _, ok := isInvalidInputTestHelper(err); !ok {
+		t.Fatalf("expected ErrInvalidInput, got %v", err)
+	}
+}
+
+// isInvalidInputTestHelper mirrors internal/api's own unwrap check — kept
+// local rather than exported since it's only ever needed by tests
+// asserting on this specific sentinel.
+func isInvalidInputTestHelper(err error) (error, bool) {
+	for e := err; e != nil; {
+		if e == ErrInvalidInput {
+			return e, true
+		}
+		u, ok := e.(interface{ Unwrap() error })
+		if !ok {
+			break
+		}
+		e = u.Unwrap()
+	}
+	return nil, false
 }
 
 func TestSearch(t *testing.T) {

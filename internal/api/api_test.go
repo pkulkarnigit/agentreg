@@ -477,3 +477,59 @@ func TestPasswordReset_UnknownUsernameStillReturns200(t *testing.T) {
 		t.Fatalf("expected 200 even for an unknown username (must not leak account existence), got %d", resp.StatusCode)
 	}
 }
+
+func TestPublish_PublishedAtQueryParam(t *testing.T) {
+	srv := newTestServer(t)
+	defer srv.Close()
+	client := srv.Client()
+
+	postJSON(t, client, srv.URL+"/v1/users", map[string]string{
+		"username": "alice", "email": "alice@example.com", "password": "hunter22222",
+	}).Body.Close()
+	tokResp := postJSON(t, client, srv.URL+"/v1/tokens", map[string]string{"username": "alice", "password": "hunter22222"})
+	var tok struct {
+		Token string `json:"token"`
+	}
+	json.NewDecoder(tokResp.Body).Decode(&tok)
+	tokResp.Body.Close()
+
+	tarball := buildSampleTarball(t)
+	put := func(url string) *http.Response {
+		req, _ := http.NewRequest("PUT", url, bytes.NewReader(tarball))
+		req.Header.Set("Authorization", "Bearer "+tok.Token)
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return resp
+	}
+
+	// A real upstream date is honored exactly, not just accepted.
+	resp := put(srv.URL + "/v1/plugins/alice/hello/1.0.0?published_at=2019-03-14T09:26:53Z")
+	body, _ := readAll(resp)
+	if resp.StatusCode != http.StatusCreated {
+		t.Fatalf("expected 201 with a valid published_at, got %d: %s", resp.StatusCode, body)
+	}
+	var created struct {
+		PublishedAt time.Time `json:"published_at"`
+	}
+	json.Unmarshal(body, &created)
+	want := time.Date(2019, 3, 14, 9, 26, 53, 0, time.UTC)
+	if !created.PublishedAt.Equal(want) {
+		t.Fatalf("expected published_at %s, got %s", want, created.PublishedAt)
+	}
+
+	// A malformed value is a client error, not a silent fallback to "now."
+	resp2 := put(srv.URL + "/v1/plugins/alice/hello/1.0.1?published_at=not-a-real-date")
+	readAll(resp2)
+	if resp2.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected 400 for a malformed published_at, got %d", resp2.StatusCode)
+	}
+
+	// A future date is rejected, not accepted as some kind of pre-announcement.
+	resp3 := put(srv.URL + "/v1/plugins/alice/hello/1.0.2?published_at=2099-01-01T00:00:00Z")
+	readAll(resp3)
+	if resp3.StatusCode != http.StatusUnprocessableEntity {
+		t.Fatalf("expected 422 for a future published_at, got %d", resp3.StatusCode)
+	}
+}
