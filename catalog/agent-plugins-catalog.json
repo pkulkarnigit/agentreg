@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-30T12:14:04.381132Z",
+  "generated_at": "2026-08-31T06:05:24.356069738Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -20,8 +20,7 @@
       "Skills": [
         "migrate-agent-plugin"
       ],
-      "HasMCP": false,
-      "Published": true
+      "HasMCP": false
     },
     {
       "Name": "agent-plugins-spec",
@@ -108,8 +107,7 @@
         "b2c-slas-auth-patterns",
         "b2c-webservices"
       ],
-      "HasMCP": false,
-      "Published": true
+      "HasMCP": false
     },
     {
       "Name": "csharp-dotnet-development",
@@ -163,8 +161,7 @@
         "model-integration",
         "self-review"
       ],
-      "HasMCP": false,
-      "PublishError": "cannot mirror: plugin.json has no version field"
+      "HasMCP": false
     },
     {
       "Name": "magpie",
@@ -254,8 +251,7 @@
         "workflow-security-audit",
         "write-skill"
       ],
-      "HasMCP": false,
-      "PublishError": "publish failed: HTTP 422: {\"error\":\"invalid input: version \\\"0.2.0.dev0\\\" is not valid semver\"}"
+      "HasMCP": false
     },
     {
       "Name": "swiftui-expert",
@@ -275,8 +271,7 @@
       "Skills": [
         "swiftui-expert-skill"
       ],
-      "HasMCP": false,
-      "Published": true
+      "HasMCP": false
     },
     {
       "Name": "testing-automation",
@@ -309,8 +304,7 @@
       "Valid": true,
       "PluginName": "vuetify-mcp",
       "PluginVersion": "1.0.0",
-      "HasMCP": true,
-      "Published": true
+      "HasMCP": true
     },
     {
       "Name": "dak",
@@ -357,8 +351,7 @@
         "ml-best-practices",
         "notebook-guidance"
       ],
-      "HasMCP": true,
-      "Published": true
+      "HasMCP": true
     },
     {
       "Name": "database-data-management",
@@ -394,8 +387,7 @@
       "Skills": [
         "hindsight-memory"
       ],
-      "HasMCP": true,
-      "Published": true
+      "HasMCP": true
     },
     {
       "Name": "neon-postgres",
@@ -421,8 +413,7 @@
         "neon-postgres-branches",
         "neon-postgres-egress-optimizer"
       ],
-      "HasMCP": true,
-      "Published": true
+      "HasMCP": true
     },
     {
       "Name": "open-knowledge",
@@ -439,8 +430,7 @@
       "Valid": true,
       "PluginName": "open-knowledge",
       "PluginVersion": "0.1.0",
-      "HasMCP": true,
-      "Published": true
+      "HasMCP": true
     },
     {
       "Name": "qdrant",
@@ -460,8 +450,7 @@
       "Skills": [
         "setup"
       ],
-      "HasMCP": true,
-      "Published": true
+      "HasMCP": true
     },
     {
       "Name": "upstash",
@@ -491,8 +480,7 @@
         "upstash-vector-js",
         "upstash-workflow-js"
       ],
-      "HasMCP": false,
-      "Published": true
+      "HasMCP": false
     },
     {
       "Name": "zillapi",
@@ -512,8 +500,7 @@
       "Skills": [
         "zillow"
       ],
-      "HasMCP": true,
-      "Published": true
+      "HasMCP": true
     },
     {
       "Name": "context7",
@@ -533,8 +520,7 @@
       "Skills": [
         "context7-mcp"
       ],
-      "HasMCP": true,
-      "Published": true
+      "HasMCP": true
     },
     {
       "Name": "exa",
@@ -555,8 +541,7 @@
         "exa-agent",
         "search"
       ],
-      "HasMCP": true,
-      "Published": true
+      "HasMCP": true
     },
     {
       "Name": "scientific-agent-skills",
@@ -592,8 +577,7 @@
       "Skills": [
         "stays"
       ],
-      "HasMCP": true,
-      "Published": true
+      "HasMCP": true
     },
     {
       "Name": "chromium-control-canvas",
@@ -631,8 +615,7 @@
         "visual-recap",
         "visualize-repo"
       ],
-      "HasMCP": true,
-      "Published": true
+      "HasMCP": true
     },
     {
       "Name": "backlog-swipe-triage",
@@ -723,8 +706,7 @@
         "kubernetes-architect",
         "terraform-specialist"
       ],
-      "HasMCP": false,
-      "Published": true
+      "HasMCP": false
     },
     {
       "Name": "aws-agents",
@@ -751,8 +733,7 @@
         "agents-optimize",
         "agents-pay"
       ],
-      "HasMCP": true,
-      "Published": true
+      "HasMCP": true
     },
     {
       "Name": "aws-cloud-development",
@@ -811,8 +792,7 @@
         "launch-with-aws",
         "signing-in-to-aws"
       ],
-      "HasMCP": true,
-      "Published": true
+      "HasMCP": true
     },
     {
       "Name": "devops-oncall",
@@ -845,8 +825,7 @@
       "Valid": true,
       "PluginName": "sentry",
       "PluginVersion": "0.0.0",
-      "HasMCP": true,
-      "Published": true
+      "HasMCP": true
     },
     {
       "Name": "remotion",
@@ -890,11 +869,15 @@
       "Tag": "production",
       "Owner": "ZeroPointRepo",
       "Repo": "youtube-mcp",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
-      "Valid": false,
-      "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/ZeroPointRepo/youtube-mcp: HTTP 403"
+      "Valid": true,
+      "PluginName": "transcriptapi",
+      "PluginVersion": "1.0.0",
+      "Skills": [
+        "youtube"
+      ],
+      "HasMCP": true
     },
     {
       "Name": "crowdstrike-falcon-fusion",
@@ -906,11 +889,21 @@
       "Tag": "production",
       "Owner": "CrowdStrike",
       "Repo": "fusion-skills",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
-      "Valid": false,
-      "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/CrowdStrike/fusion-skills: HTTP 403"
+      "Valid": true,
+      "PluginName": "crowdstrike-falcon-fusion",
+      "PluginVersion": "1.1.0",
+      "Skills": [
+        "authoring",
+        "deployment",
+        "execution",
+        "foundry-redirect",
+        "lookup-files",
+        "setup",
+        "workflows"
+      ],
+      "HasMCP": false
     },
     {
       "Name": "gitguardian",
@@ -954,11 +947,11 @@
       "Tag": "production",
       "Owner": "squirrelscan",
       "Repo": "squirrelscan",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/squirrelscan/squirrelscan: HTTP 403"
+      "ValidationError": "mcp.json failed schema validation: jsonschema: '' does not validate with https://agent-plugins.org/schemas/1.0.0/mcp.schema.json#/required: missing properties: '$schema'"
     },
     {
       "Name": "dodopayments",
@@ -970,11 +963,31 @@
       "Tag": "production",
       "Owner": "dodopayments",
       "Repo": "dodo-agent-plugin",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
-      "Valid": false,
-      "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/dodopayments/dodo-agent-plugin: HTTP 403"
+      "Valid": true,
+      "PluginName": "dodopayments",
+      "PluginVersion": "0.5.1",
+      "Skills": [
+        "better-auth-integration",
+        "billing-sdk",
+        "checkout-integration",
+        "credit-based-billing",
+        "customer-management",
+        "discounts-and-promotions",
+        "dodo-best-practices",
+        "framework-adapters",
+        "license-keys",
+        "localized-pricing",
+        "mobile-checkout",
+        "product-catalog-management",
+        "refunds-and-disputes",
+        "subscription-integration",
+        "testing-and-go-live",
+        "usage-based-billing",
+        "webhook-integration"
+      ],
+      "HasMCP": true
     },
     {
       "Name": "open-market-data",
@@ -986,11 +999,15 @@
       "Tag": "production",
       "Owner": "anotb",
       "Repo": "open-market-data",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
-      "Valid": false,
-      "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/anotb/open-market-data: HTTP 403"
+      "Valid": true,
+      "PluginName": "open-market-data",
+      "PluginVersion": "0.2.0",
+      "Skills": [
+        "open-market-data"
+      ],
+      "HasMCP": true
     },
     {
       "Name": "ahujasid/blender-mcp",
@@ -1002,11 +1019,11 @@
       "Tag": "mcp",
       "Owner": "ahujasid",
       "Repo": "blender-mcp",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/ahujasid/blender-mcp: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-32/plugin.json: no such file or directory"
     },
     {
       "Name": "anthropics/skills",
@@ -1018,11 +1035,11 @@
       "Tag": "skills",
       "Owner": "anthropics",
       "Repo": "skills",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/anthropics/skills: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-33/plugin.json: no such file or directory"
     },
     {
       "Name": "browserbase/skills",
@@ -1034,11 +1051,11 @@
       "Tag": "mcp",
       "Owner": "browserbase",
       "Repo": "skills",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/browserbase/skills: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-34/plugin.json: no such file or directory"
     },
     {
       "Name": "cloudflare/mcp-server-cloudflare",
@@ -1050,11 +1067,11 @@
       "Tag": "mcp",
       "Owner": "cloudflare",
       "Repo": "mcp-server-cloudflare",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/cloudflare/mcp-server-cloudflare: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-35/plugin.json: no such file or directory"
     },
     {
       "Name": "grafana/mcp-grafana",
@@ -1066,11 +1083,11 @@
       "Tag": "mcp",
       "Owner": "grafana",
       "Repo": "mcp-grafana",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/grafana/mcp-grafana: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-36/plugin.json: no such file or directory"
     },
     {
       "Name": "microsoft/playwright-mcp",
@@ -1082,11 +1099,11 @@
       "Tag": "mcp",
       "Owner": "microsoft",
       "Repo": "playwright-mcp",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/microsoft/playwright-mcp: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-37/plugin.json: no such file or directory"
     },
     {
       "Name": "modelcontextprotocol/servers",
@@ -1098,11 +1115,11 @@
       "Tag": "mcp",
       "Owner": "modelcontextprotocol",
       "Repo": "servers",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/modelcontextprotocol/servers: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-38/plugin.json: no such file or directory"
     }
   ]
 }
