@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-31T06:05:24.356069738Z",
+  "generated_at": "2026-09-01T06:05:45.552911448Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -69,6 +69,27 @@
       "Valid": false,
       "HasMCP": false,
       "ValidationError": "read plugin.json: open repo-3/plugin.json: no such file or directory"
+    },
+    {
+      "Name": "AtomLane",
+      "Category": "Dev \u0026 Coding",
+      "RepoURL": "https://github.com/cloudguo123/atomlane",
+      "Author": "cloudguo123",
+      "AuthorURL": "https://github.com/cloudguo123",
+      "Description": "proven-safe atomic planning and resource-aware local concurrency for coding agents on macOS.",
+      "Tag": "beta",
+      "Owner": "cloudguo123",
+      "Repo": "atomlane",
+      "Ref": "main",
+      "Subpath": "",
+      "Valid": true,
+      "PluginName": "mac-parallel-accelerator",
+      "PluginVersion": "0.11.0",
+      "Skills": [
+        "accelerate-local-work",
+        "optimize-python-parallelism"
+      ],
+      "HasMCP": true
     },
     {
       "Name": "b2c",
@@ -254,6 +275,23 @@
       "HasMCP": false
     },
     {
+      "Name": "sandbase-harness",
+      "Category": "Dev \u0026 Coding",
+      "RepoURL": "https://github.com/sandbaseai/sandbase-harness/tree/main/agent-plugin",
+      "Author": "SandBase AI",
+      "AuthorURL": "https://github.com/sandbaseai",
+      "Description": "stdio MCP bridge to a self-hosted SandBase Harness runtime, with durable sessions, sandboxed execution, artifacts and replay.",
+      "Tag": "beta",
+      "Owner": "sandbaseai",
+      "Repo": "sandbase-harness",
+      "Ref": "main",
+      "Subpath": "agent-plugin",
+      "Valid": true,
+      "PluginName": "sandbase-harness",
+      "PluginVersion": "0.1.1",
+      "HasMCP": true
+    },
+    {
       "Name": "swiftui-expert",
       "Category": "Dev \u0026 Coding",
       "RepoURL": "https://github.com/AvdLee/SwiftUI-Agent-Skill",
@@ -320,7 +358,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "dak",
-      "PluginVersion": "0.8.0",
+      "PluginVersion": "0.10.0",
       "Skills": [
         "accidental-data-loss-prevention",
         "bigquery-ai-ml",
@@ -335,7 +373,6 @@
         "discovering-gcp-data-assets",
         "enforcing-resource-attribution",
         "federate-lakehouse-catalog",
-        "gcloud-auth-verification",
         "gcp-composer-troubleshooting",
         "gcp-data-pipelines",
         "gcp-dataflow",
@@ -346,10 +383,12 @@
         "gcp-pipeline-resource-provisioning",
         "gcp-spark",
         "gcs-security-assessment",
+        "google-cloud-auth-verification",
         "google-cloud-storage-basics",
         "managing-python-dependencies",
         "ml-best-practices",
-        "notebook-guidance"
+        "notebook-guidance",
+        "schema-mapping"
       ],
       "HasMCP": true
     },
@@ -618,6 +657,26 @@
       "HasMCP": true
     },
     {
+      "Name": "agentcouch",
+      "Category": "Productivity",
+      "RepoURL": "https://github.com/stoyan-stoyanov/agentcouch-plugins",
+      "Author": "AgentCouch",
+      "AuthorURL": "https://agentcouch.dev",
+      "Description": "persistent messaging rooms for agents across different owners, clients and machines.",
+      "Tag": "production",
+      "Owner": "stoyan-stoyanov",
+      "Repo": "agentcouch-plugins",
+      "Ref": "main",
+      "Subpath": "",
+      "Valid": true,
+      "PluginName": "agentcouch",
+      "PluginVersion": "1.2.1",
+      "Skills": [
+        "agentcouch-chat"
+      ],
+      "HasMCP": true
+    },
+    {
       "Name": "backlog-swipe-triage",
       "Category": "Productivity",
       "RepoURL": "https://github.com/github/awesome-copilot/tree/main/plugins/backlog-swipe-triage",
@@ -695,7 +754,7 @@
       "Subpath": "plugins/agentic-bundle-devops-cloud",
       "Valid": true,
       "PluginName": "agentic-bundle-devops-cloud",
-      "PluginVersion": "16.4.0",
+      "PluginVersion": "16.5.0",
       "Skills": [
         "aws-serverless",
         "bash-linux",
@@ -1023,7 +1082,7 @@
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open repo-32/plugin.json: no such file or directory"
+      "ValidationError": "read plugin.json: open repo-35/plugin.json: no such file or directory"
     },
     {
       "Name": "anthropics/skills",
@@ -1039,7 +1098,7 @@
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open repo-33/plugin.json: no such file or directory"
+      "ValidationError": "read plugin.json: open repo-36/plugin.json: no such file or directory"
     },
     {
       "Name": "browserbase/skills",
@@ -1055,7 +1114,7 @@
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open repo-34/plugin.json: no such file or directory"
+      "ValidationError": "read plugin.json: open repo-37/plugin.json: no such file or directory"
     },
     {
       "Name": "cloudflare/mcp-server-cloudflare",
@@ -1071,7 +1130,7 @@
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open repo-35/plugin.json: no such file or directory"
+      "ValidationError": "read plugin.json: open repo-38/plugin.json: no such file or directory"
     },
     {
       "Name": "grafana/mcp-grafana",
@@ -1087,7 +1146,7 @@
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open repo-36/plugin.json: no such file or directory"
+      "ValidationError": "read plugin.json: open repo-39/plugin.json: no such file or directory"
     },
     {
       "Name": "microsoft/playwright-mcp",
@@ -1103,7 +1162,7 @@
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open repo-37/plugin.json: no such file or directory"
+      "ValidationError": "read plugin.json: open repo-40/plugin.json: no such file or directory"
     },
     {
       "Name": "modelcontextprotocol/servers",
@@ -1119,7 +1178,7 @@
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open repo-38/plugin.json: no such file or directory"
+      "ValidationError": "read plugin.json: open repo-41/plugin.json: no such file or directory"
     }
   ]
 }
