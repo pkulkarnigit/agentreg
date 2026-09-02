@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-01T06:05:45.552911448Z",
+  "generated_at": "2026-09-02T06:05:42.326498507Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -83,8 +83,8 @@
       "Ref": "main",
       "Subpath": "",
       "Valid": true,
-      "PluginName": "mac-parallel-accelerator",
-      "PluginVersion": "0.11.0",
+      "PluginName": "atomlane",
+      "PluginVersion": "0.13.0",
       "Skills": [
         "accelerate-local-work",
         "optimize-python-parallelism"
@@ -442,7 +442,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "neon-postgres",
-      "PluginVersion": "1.1.2",
+      "PluginVersion": "1.2.0",
       "Skills": [
         "neon",
         "neon-ai-gateway",
@@ -508,6 +508,7 @@
       "PluginVersion": "1.0.0",
       "Skills": [
         "upstash",
+        "upstash-box-cli",
         "upstash-box-js",
         "upstash-box-py",
         "upstash-cli",
