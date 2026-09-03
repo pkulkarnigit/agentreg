@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-02T06:05:42.326498507Z",
+  "generated_at": "2026-09-03T06:07:54.755763666Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -82,14 +82,9 @@
       "Repo": "atomlane",
       "Ref": "main",
       "Subpath": "",
-      "Valid": true,
-      "PluginName": "atomlane",
-      "PluginVersion": "0.13.0",
-      "Skills": [
-        "accelerate-local-work",
-        "optimize-python-parallelism"
-      ],
-      "HasMCP": true
+      "Valid": false,
+      "HasMCP": false,
+      "ValidationError": "read plugin.json: open repo-4/plugin.json: no such file or directory"
     },
     {
       "Name": "b2c",
@@ -755,7 +750,7 @@
       "Subpath": "plugins/agentic-bundle-devops-cloud",
       "Valid": true,
       "PluginName": "agentic-bundle-devops-cloud",
-      "PluginVersion": "16.5.0",
+      "PluginVersion": "16.6.0",
       "Skills": [
         "aws-serverless",
         "bash-linux",
