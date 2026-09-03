@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -86,7 +87,7 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("q")
 	plugins, err := s.reg.Search(r.Context(), q)
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		writeInternalError(w, r, err)
 		return
 	}
 
@@ -149,11 +150,12 @@ func (s *Server) handleCatalog(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "no catalog has been generated yet — run cmd/crawler", http.StatusNotFound)
 			return
 		}
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		writeInternalError(w, r, err)
 		return
 	}
 	var cat crawler.Catalog
 	if err := json.Unmarshal(data, &cat); err != nil {
+		slog.Error("catalog file is not valid JSON", "path", s.catalogPath, "error", err)
 		http.Error(w, "catalog file is not valid JSON: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -201,12 +203,12 @@ func (s *Server) handlePlugin(w http.ResponseWriter, r *http.Request) {
 			http.NotFound(w, r)
 			return
 		}
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		writeInternalError(w, r, err)
 		return
 	}
 	versions, err := s.reg.ListVersions(r.Context(), scope, name)
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		writeInternalError(w, r, err)
 		return
 	}
 
@@ -216,7 +218,7 @@ func (s *Server) handlePlugin(w http.ResponseWriter, r *http.Request) {
 			http.NotFound(w, r)
 			return
 		}
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		writeInternalError(w, r, err)
 		return
 	}
 
@@ -344,6 +346,16 @@ func truncate(s string, n int) string {
 func render(w http.ResponseWriter, t *template.Template, data any) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if err := t.ExecuteTemplate(w, "layout", data); err != nil {
+		slog.Error("template render failed", "template", t.Name(), "error", err)
 		http.Error(w, "template error: "+err.Error(), http.StatusInternalServerError)
 	}
+}
+
+// writeInternalError logs the real error at ERROR level before writing the
+// generic response — mirrors internal/api's helper of the same name, so a
+// 500 from the web UI is just as diagnosable server-side as one from the
+// REST API.
+func writeInternalError(w http.ResponseWriter, r *http.Request, err error) {
+	slog.Error("request failed", "method", r.Method, "path", r.URL.Path, "error", err)
+	http.Error(w, "internal error", http.StatusInternalServerError)
 }

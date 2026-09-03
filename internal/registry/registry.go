@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"time"
 
 	"golang.org/x/mod/semver"
@@ -75,6 +76,7 @@ type PublishInput struct {
 // version returns ErrConflict.
 func (r *Registry) Publish(ctx context.Context, in PublishInput) (*store.Version, error) {
 	if in.RequestorU != in.Scope {
+		slog.Warn("publish rejected: requestor does not own scope", "requestor", in.RequestorU, "scope", in.Scope)
 		return nil, ErrForbidden
 	}
 	if in.Bundle.Plugin.Name != in.Name {
@@ -99,6 +101,7 @@ func (r *Registry) Publish(ctx context.Context, in PublishInput) (*store.Version
 	// *first* publish stays unchanged, corrupting every future download
 	// of a version the caller was told already existed unchanged.
 	if _, err := r.meta.GetVersion(ctx, in.Scope, in.Name, in.Version); err == nil {
+		slog.Debug("publish rejected: version already exists", "scope", in.Scope, "name", in.Name, "version", in.Version)
 		return nil, ErrConflict
 	} else if err != store.ErrNotFound {
 		return nil, err
@@ -244,6 +247,7 @@ func (r *Registry) RequestPasswordReset(ctx context.Context, username string) er
 	user, err := r.meta.GetUserByUsername(ctx, username)
 	if err != nil {
 		if err == store.ErrNotFound {
+			slog.Debug("password reset requested for unknown username", "username", username)
 			return nil
 		}
 		return err

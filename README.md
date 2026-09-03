@@ -34,7 +34,30 @@ go build -o bin/krate ./cmd/krate
 Env vars if you need them: `KRATE_DATA_DIR` (default `./data`), `KRATE_ADDR`
 (default `:8080`), `KRATE_DB_DRIVER` (`sqlite` or `postgres`),
 `KRATE_DB_DSN` (a file path, or a `postgres://` URL), `KRATE_BLOB_DRIVER`
-(`fs` or `s3` — see "Production hardening" below).
+(`fs` or `s3` — see "Production hardening" below), `KRATE_LOG_LEVEL`
+(`info` by default; `debug`, `warn`, `error`, or `trace` — see below).
+
+### Log levels
+
+`krate-server` and `cmd/crawler` both log via the standard `log/slog`
+package, gated by `KRATE_LOG_LEVEL`. Default is `info`: routine request
+logs, startup/shutdown, and anything an operator watching the service
+normally wants to see. `warn` and `error` narrow that further. `debug`
+adds the detail you'd want while diagnosing something — config values
+resolved at startup, individual publish/search/download steps, SMTP send
+attempts — none of it shown by default so normal operation stays quiet.
+`trace` exists as infrastructure for the rare spot that needs even finer
+detail, but most of the codebase never emits at that level.
+
+```bash
+KRATE_LOG_LEVEL=debug ./bin/krate-server
+```
+
+A request's log level also scales with its outcome: a 5xx logs at
+`error`, a 4xx at `warn`, everything else at `info` — except `/healthz`,
+which logs at `debug` so routine health checks don't drown out real
+traffic. Every 500 response is backed by a logged `error` line with the
+real cause; nothing is a silent "internal error" server-side.
 
 ## Using the CLI
 

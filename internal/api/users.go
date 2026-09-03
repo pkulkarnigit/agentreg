@@ -37,7 +37,7 @@ func (s *Server) handleSignup(w http.ResponseWriter, r *http.Request) {
 
 	hash, err := auth.HashPassword(req.Password)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "internal error")
+		writeInternalError(w, r, err)
 		return
 	}
 
@@ -47,7 +47,7 @@ func (s *Server) handleSignup(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusConflict, "username or email already taken")
 			return
 		}
-		writeError(w, http.StatusInternalServerError, "internal error")
+		writeInternalError(w, r, err)
 		return
 	}
 
@@ -56,6 +56,7 @@ func (s *Server) handleSignup(w http.ResponseWriter, r *http.Request) {
 		// comment) — don't fail account creation over it, just log.
 		slog.Warn("failed to send verification email", "username", u.Username, "error", err)
 	}
+	slog.Info("account created", "username", u.Username)
 
 	writeJSON(w, http.StatusCreated, map[string]any{
 		"username":   u.Username,
@@ -77,6 +78,7 @@ func (s *Server) handleCreateToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.lockout.Locked(req.Username) {
+		slog.Warn("login blocked by lockout", "username", req.Username)
 		writeError(w, http.StatusTooManyRequests, "too many failed login attempts for this account, try again later")
 		return
 	}
@@ -84,6 +86,7 @@ func (s *Server) handleCreateToken(w http.ResponseWriter, r *http.Request) {
 	u, err := s.reg.UserByUsername(r.Context(), req.Username)
 	if err != nil || !auth.CheckPassword(u.PasswordHash, req.Password) {
 		s.lockout.RecordFailure(req.Username)
+		slog.Warn("failed login attempt", "username", req.Username)
 		writeError(w, http.StatusUnauthorized, "invalid username or password")
 		return
 	}
@@ -91,7 +94,7 @@ func (s *Server) handleCreateToken(w http.ResponseWriter, r *http.Request) {
 
 	plaintext, err := auth.NewAPIToken()
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "internal error")
+		writeInternalError(w, r, err)
 		return
 	}
 	label := req.Label
@@ -99,9 +102,10 @@ func (s *Server) handleCreateToken(w http.ResponseWriter, r *http.Request) {
 		label = "cli"
 	}
 	if _, err := s.reg.IssueToken(r.Context(), u.ID, auth.HashToken(plaintext), label); err != nil {
-		writeError(w, http.StatusInternalServerError, "internal error")
+		writeInternalError(w, r, err)
 		return
 	}
+	slog.Debug("token issued", "username", u.Username, "label", label)
 
 	writeJSON(w, http.StatusCreated, map[string]any{
 		"token":    plaintext,
@@ -127,9 +131,10 @@ func (s *Server) handleVerifyEmail(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusBadRequest, "token invalid, expired, or already used")
 			return
 		}
-		writeError(w, http.StatusInternalServerError, "internal error")
+		writeInternalError(w, r, err)
 		return
 	}
+	slog.Debug("email verified")
 	writeJSON(w, http.StatusOK, map[string]any{"verified": true})
 }
 
@@ -147,9 +152,10 @@ func (s *Server) handleRequestPasswordReset(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	if err := s.reg.RequestPasswordReset(r.Context(), req.Username); err != nil {
-		writeError(w, http.StatusInternalServerError, "internal error")
+		writeInternalError(w, r, err)
 		return
 	}
+	slog.Debug("password reset requested", "username", req.Username)
 	// Always the same response, whether or not the username exists — see
 	// registry.RequestPasswordReset's doc comment on why.
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -178,7 +184,7 @@ func (s *Server) handleConfirmPasswordReset(w http.ResponseWriter, r *http.Reque
 
 	hash, err := auth.HashPassword(req.NewPassword)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "internal error")
+		writeInternalError(w, r, err)
 		return
 	}
 
@@ -187,9 +193,10 @@ func (s *Server) handleConfirmPasswordReset(w http.ResponseWriter, r *http.Reque
 			writeError(w, http.StatusBadRequest, "token invalid, expired, or already used")
 			return
 		}
-		writeError(w, http.StatusInternalServerError, "internal error")
+		writeInternalError(w, r, err)
 		return
 	}
+	slog.Info("password reset completed")
 	writeJSON(w, http.StatusOK, map[string]any{"reset": true})
 }
 

@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"log/slog"
 	"sync"
 	"time"
 )
@@ -53,7 +54,11 @@ func (l *LoginLockout) Locked(username string) bool {
 func (l *LoginLockout) RecordFailure(username string) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	l.failures[username] = append(l.prune(username), time.Now())
+	failures := append(l.prune(username), time.Now())
+	l.failures[username] = failures
+	if len(failures) == l.maxFailures {
+		slog.Warn("account locked out after repeated failed logins", "username", username, "failures", len(failures), "window", l.window)
+	}
 }
 
 // Reset clears a username's failure history, e.g. after a successful login.

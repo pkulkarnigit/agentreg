@@ -4,6 +4,7 @@ package middleware
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -31,9 +32,11 @@ func RequireAuth(reg *registry.Registry, next http.HandlerFunc) http.HandlerFunc
 		user, err := reg.Authenticate(r.Context(), auth.HashToken(token))
 		if err != nil {
 			if err == store.ErrNotFound {
+				slog.Warn("rejected request with invalid bearer token", "path", r.URL.Path)
 				http.Error(w, `{"error":"invalid token"}`, http.StatusUnauthorized)
 				return
 			}
+			slog.Error("authenticate failed", "path", r.URL.Path, "error", err)
 			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
 			return
 		}
@@ -60,10 +63,12 @@ func RequireAdmin(admins map[string]bool, next http.HandlerFunc) http.HandlerFun
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, ok := UserFromContext(r.Context())
 		if !ok {
+			slog.Error("RequireAdmin wired up without RequireAuth upstream", "path", r.URL.Path)
 			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
 			return
 		}
 		if !admins[user.Username] {
+			slog.Warn("rejected non-admin request to admin endpoint", "username", user.Username, "path", r.URL.Path)
 			http.Error(w, `{"error":"forbidden: admin access required"}`, http.StatusForbidden)
 			return
 		}

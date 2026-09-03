@@ -5,6 +5,7 @@ package api
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -148,6 +149,18 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 
 func writeError(w http.ResponseWriter, status int, msg string) {
 	writeJSON(w, status, map[string]string{"error": msg})
+}
+
+// writeInternalError logs the real error at ERROR level — every 500 this
+// API returns comes through here specifically so that whatever actually
+// went wrong (a DB error, a filesystem error, whatever) is never just
+// discarded in favor of the generic message the client sees. Without
+// this, a 500 in production tells an operator nothing beyond "something
+// failed" — which is exactly what every "internal error" response used
+// to do before this existed.
+func writeInternalError(w http.ResponseWriter, r *http.Request, err error) {
+	slog.Error("request failed", "method", r.Method, "path", r.URL.Path, "error", err)
+	writeError(w, http.StatusInternalServerError, "internal error")
 }
 
 func rawJSON(s string) json.RawMessage {

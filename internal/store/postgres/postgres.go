@@ -12,6 +12,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -153,6 +154,8 @@ func Open(dsn string) (*Store, error) {
 		db.Close()
 		return nil, fmt.Errorf("migrate search index: %w", err)
 	}
+	// Never log dsn itself — it embeds the database password.
+	slog.Debug("postgres store opened", "max_open_conns", maxOpenConns, "max_idle_conns", maxIdleConns)
 	return &Store{db: db}, nil
 }
 

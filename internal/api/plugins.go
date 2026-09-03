@@ -30,6 +30,7 @@ func (s *Server) handlePublish(w http.ResponseWriter, r *http.Request) {
 	scope := r.PathValue("scope")
 	name := r.PathValue("name")
 	version := r.PathValue("version")
+	slog.Debug("publish requested", "requestor", user.Username, "scope", scope, "name", name, "version", version)
 
 	var publishedAt time.Time
 	if raw := r.URL.Query().Get("published_at"); raw != "" {
@@ -43,7 +44,7 @@ func (s *Server) handlePublish(w http.ResponseWriter, r *http.Request) {
 
 	tmpDir, err := os.MkdirTemp("", "krate-publish-*")
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "internal error")
+		writeInternalError(w, r, err)
 		return
 	}
 	defer os.RemoveAll(tmpDir)
@@ -51,7 +52,7 @@ func (s *Server) handlePublish(w http.ResponseWriter, r *http.Request) {
 	tarballPath := filepath.Join(tmpDir, "upload.tar.gz")
 	tarballFile, err := os.Create(tarballPath)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "internal error")
+		writeInternalError(w, r, err)
 		return
 	}
 	n, err := io.Copy(tarballFile, io.LimitReader(r.Body, maxTarballBytes+1))
@@ -64,10 +65,11 @@ func (s *Server) handlePublish(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusRequestEntityTooLarge, "tarball exceeds 64MiB limit")
 		return
 	}
+	slog.Debug("tarball received", "scope", scope, "name", name, "version", version, "bytes", n)
 
 	extractDir := filepath.Join(tmpDir, "extracted")
 	if err := os.MkdirAll(extractDir, 0o755); err != nil {
-		writeError(w, http.StatusInternalServerError, "internal error")
+		writeInternalError(w, r, err)
 		return
 	}
 	if err := pack.Unpack(tarballPath, extractDir); err != nil {
@@ -83,7 +85,7 @@ func (s *Server) handlePublish(w http.ResponseWriter, r *http.Request) {
 
 	tarballFile, err = os.Open(tarballPath)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "internal error")
+		writeInternalError(w, r, err)
 		return
 	}
 	defer tarballFile.Close()
@@ -98,9 +100,10 @@ func (s *Server) handlePublish(w http.ResponseWriter, r *http.Request) {
 		PublishedAt: publishedAt,
 	})
 	if err != nil {
-		writePublishError(w, err)
+		writePublishError(w, r, err)
 		return
 	}
+	slog.Info("published", "scope", v.Scope, "name", v.Name, "version", v.Version)
 
 	writeJSON(w, http.StatusCreated, map[string]any{
 		"scope":        v.Scope,
@@ -111,7 +114,7 @@ func (s *Server) handlePublish(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func writePublishError(w http.ResponseWriter, err error) {
+func writePublishError(w http.ResponseWriter, r *http.Request, err error) {
 	switch err {
 	case registry.ErrForbidden:
 		writeError(w, http.StatusForbidden, err.Error())
@@ -122,7 +125,7 @@ func writePublishError(w http.ResponseWriter, err error) {
 			writeError(w, http.StatusUnprocessableEntity, err.Error())
 			return
 		}
-		writeError(w, http.StatusInternalServerError, "internal error")
+		writeInternalError(w, r, err)
 	}
 }
 
@@ -155,14 +158,15 @@ func (s *Server) handleAdminSetPublishedAt(w http.ResponseWriter, r *http.Reques
 				writeError(w, http.StatusUnprocessableEntity, err.Error())
 				return
 			}
-			writeError(w, http.StatusInternalServerError, "internal error")
+			writeInternalError(w, r, err)
 		}
 		return
 	}
+	slog.Info("published_at backfilled", "scope", scope, "name", name, "version", version, "published_at", body.PublishedAt)
 
 	v, err := s.reg.ResolveVersion(r.Context(), scope, name, version)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "internal error")
+		writeInternalError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -194,12 +198,12 @@ func (s *Server) handleGetPlugin(w http.ResponseWriter, r *http.Request) {
 	scope, name := r.PathValue("scope"), r.PathValue("name")
 	p, err := s.reg.GetPlugin(r.Context(), scope, name)
 	if err != nil {
-		writeStoreError(w, err)
+		writeStoreError(w, r, err)
 		return
 	}
 	versions, err := s.reg.ListVersions(r.Context(), scope, name)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "internal error")
+		writeInternalError(w, r, err)
 		return
 	}
 	versionStrings := make([]string, len(versions))
@@ -227,7 +231,7 @@ func (s *Server) handleGetVersion(w http.ResponseWriter, r *http.Request) {
 	scope, name, version := r.PathValue("scope"), r.PathValue("name"), r.PathValue("version")
 	v, err := s.reg.ResolveVersion(r.Context(), scope, name, version)
 	if err != nil {
-		writeStoreError(w, err)
+		writeStoreError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -246,12 +250,12 @@ func (s *Server) handleDownload(w http.ResponseWriter, r *http.Request) {
 	scope, name, version := r.PathValue("scope"), r.PathValue("name"), r.PathValue("version")
 	resolved, err := s.reg.ResolveVersion(r.Context(), scope, name, version)
 	if err != nil {
-		writeStoreError(w, err)
+		writeStoreError(w, r, err)
 		return
 	}
 	rc, err := s.reg.OpenTarball(r.Context(), scope, name, resolved.Version)
 	if err != nil {
-		writeStoreError(w, err)
+		writeStoreError(w, r, err)
 		return
 	}
 	defer rc.Close()
@@ -259,6 +263,7 @@ func (s *Server) handleDownload(w http.ResponseWriter, r *http.Request) {
 	if err := s.reg.IncrementDownloadCount(r.Context(), scope, name, resolved.Version); err != nil {
 		slog.Warn("failed to increment download count", "scope", scope, "name", name, "version", resolved.Version, "error", err)
 	}
+	slog.Debug("download served", "scope", scope, "name", name, "version", resolved.Version)
 
 	w.Header().Set("Content-Type", "application/gzip")
 	w.Header().Set("X-Checksum-Sha256", resolved.Checksum)
@@ -270,9 +275,10 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("q")
 	results, err := s.reg.Search(r.Context(), q)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "internal error")
+		writeInternalError(w, r, err)
 		return
 	}
+	slog.Debug("search executed", "query", q, "results", len(results))
 	out := make([]map[string]any, len(results))
 	for i, p := range results {
 		out[i] = map[string]any{
@@ -286,10 +292,10 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"results": out})
 }
 
-func writeStoreError(w http.ResponseWriter, err error) {
+func writeStoreError(w http.ResponseWriter, r *http.Request, err error) {
 	if err == store.ErrNotFound {
 		writeError(w, http.StatusNotFound, "not found")
 		return
 	}
-	writeError(w, http.StatusInternalServerError, "internal error")
+	writeInternalError(w, r, err)
 }

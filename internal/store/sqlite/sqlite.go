@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -141,6 +142,7 @@ func Open(path string) (*Store, error) {
 		db.Close()
 		return nil, fmt.Errorf("backfill search index: %w", err)
 	}
+	slog.Debug("sqlite store opened", "path", path)
 	return &Store{db: db}, nil
 }
 
@@ -171,6 +173,7 @@ func runBackfillFTS(db *sql.DB) error {
 	if err != nil || n == 0 {
 		return err // already backfilled in a previous Open()
 	}
+	slog.Info("rebuilding search index for pre-existing rows", "migration", backfillFTSMigration)
 	_, err = db.Exec(`INSERT INTO plugins_fts(plugins_fts) VALUES ('rebuild')`)
 	return err
 }

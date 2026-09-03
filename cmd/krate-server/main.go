@@ -9,7 +9,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -25,6 +24,7 @@ import (
 	"github.com/pkulkarni/apreg/internal/api"
 	"github.com/pkulkarni/apreg/internal/api/middleware"
 	"github.com/pkulkarni/apreg/internal/auth"
+	"github.com/pkulkarni/apreg/internal/logging"
 	"github.com/pkulkarni/apreg/internal/notify"
 	"github.com/pkulkarni/apreg/internal/registry"
 	"github.com/pkulkarni/apreg/internal/store"
@@ -41,20 +41,35 @@ func main() {
 	backupPath := flag.String("backup", "", "write a consistent database backup to this path and exit (sqlite driver only; use pg_dump for postgres)")
 	flag.Parse()
 
+	// Built and installed as the default logger before anything else runs,
+	// so every slog.Info/Warn/Error/Debug call anywhere in this binary —
+	// including the ones scattered through internal/api, internal/auth,
+	// internal/notify that just call the package-level slog functions —
+	// picks up the configured level and format automatically, with no
+	// logger to thread through every function signature. KRATE_LOG_LEVEL
+	// unset (or unrecognized) means "info": DEBUG and TRACE exist in the
+	// code unconditionally, they just don't print until an operator asks
+	// for them.
+	logger := logging.New(os.Getenv("KRATE_LOG_LEVEL"), os.Stderr)
+	slog.SetDefault(logger)
+
 	dataDir := envOr("KRATE_DATA_DIR", "./data")
 	addr := envOr("KRATE_ADDR", ":8080")
 	driver := envOr("KRATE_DB_DRIVER", "sqlite")
 	dsn := os.Getenv("KRATE_DB_DSN")
 	catalogPath := envOr("KRATE_CATALOG_PATH", "catalog/agent-plugins-catalog.json")
 	mirrorScope := envOr("KRATE_MIRROR_SCOPE", "github-mirror")
+	logger.Debug("config resolved", "data_dir", dataDir, "addr", addr, "db_driver", driver, "catalog_path", catalogPath, "mirror_scope", mirrorScope)
 
 	if err := os.MkdirAll(dataDir, 0o755); err != nil {
-		log.Fatalf("create data dir %s: %v", dataDir, err)
+		logger.Error("create data dir", "dir", dataDir, "error", err)
+		os.Exit(1)
 	}
 
 	meta, err := openMetadataStore(driver, dsn, dataDir, *backupPath)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error("open metadata store", "driver", driver, "error", err)
+		os.Exit(1)
 	}
 	if meta == nil {
 		// Backup mode: openMetadataStore already did the work and closed
@@ -66,13 +81,15 @@ func main() {
 	blobDriver := envOr("KRATE_BLOB_DRIVER", "fs")
 	blob, err := openBlobStore(blobDriver, dataDir)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error("open blob store", "driver", blobDriver, "error", err)
+		os.Exit(1)
 	}
 
 	reg := registry.New(meta, blob)
 	mailBackend, err := configureSender(reg)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error("configure mail sender", "error", err)
+		os.Exit(1)
 	}
 
 	apiOpts, redisAddr := apiOptions()
@@ -83,7 +100,6 @@ func main() {
 	mux.Handle("/healthz", apiHandler)
 	mux.Handle("/", web.NewHandler(reg, catalogPath, mirrorScope))
 
-	logger := slog.Default()
 	handler := middleware.Logging(logger, mux)
 
 	srv := &http.Server{Addr: addr, Handler: handler}
@@ -102,23 +118,27 @@ func main() {
 
 	serverErr := make(chan error, 1)
 	go func() {
-		log.Printf("krate-server listening on %s (db driver: %s, blob driver: %s, rate limiting: %s, mail: %s, admins: %s, data dir: %s)", addr, driver, blobDriver, rateLimitBackend, mailBackend, admins, dataDir)
+		logger.Info("krate-server listening",
+			"addr", addr, "db_driver", driver, "blob_driver", blobDriver,
+			"rate_limiting", rateLimitBackend, "mail", mailBackend, "admins", admins, "data_dir", dataDir,
+		)
 		serverErr <- srv.ListenAndServe()
 	}()
 
 	select {
 	case err := <-serverErr:
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("server error: %v", err)
+			logger.Error("server error", "error", err)
+			os.Exit(1)
 		}
 	case <-ctx.Done():
-		log.Print("shutting down (signal received)...")
+		logger.Info("shutting down (signal received)")
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer cancel()
 		if err := srv.Shutdown(shutdownCtx); err != nil {
-			log.Printf("graceful shutdown failed: %v", err)
+			logger.Warn("graceful shutdown failed", "error", err)
 		} else {
-			log.Print("shutdown complete")
+			logger.Info("shutdown complete")
 		}
 	}
 }
@@ -143,7 +163,7 @@ func openMetadataStore(driver, dsn, dataDir, backupPath string) (store.MetadataS
 			if err != nil {
 				return nil, err
 			}
-			log.Printf("backup written to %s", backupPath)
+			slog.Info("backup written", "path", backupPath)
 			return nil, nil
 		}
 		return s, nil
@@ -200,7 +220,7 @@ func openBlobStore(driver, dataDir string) (store.BlobStore, error) {
 func configureSender(reg *registry.Registry) (string, error) {
 	host := os.Getenv("KRATE_SMTP_HOST")
 	if host == "" {
-		log.Print("WARNING: no email provider configured — account verification/password-reset links are being written to this log, not emailed. Do not expose this server to untrusted users without setting KRATE_SMTP_HOST first.")
+		slog.Warn("no email provider configured — account verification/password-reset links are being written to this log, not emailed. Do not expose this server to untrusted users without setting KRATE_SMTP_HOST first.")
 		return "none (logging links)", nil
 	}
 
@@ -208,13 +228,17 @@ func configureSender(reg *registry.Registry) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("invalid KRATE_SMTP_PORT: %w", err)
 	}
+	username := os.Getenv("KRATE_SMTP_USERNAME")
 	reg.SetSender(notify.SMTPSender{
 		Host:     host,
 		Port:     port,
-		Username: os.Getenv("KRATE_SMTP_USERNAME"),
+		Username: username,
 		Password: os.Getenv("KRATE_SMTP_PASSWORD"),
 		From:     os.Getenv("KRATE_SMTP_FROM"),
 	})
+	// Username only — the password never gets logged at any level, on
+	// purpose.
+	slog.Debug("smtp sender configured", "host", host, "port", port, "username", username, "auth", username != "")
 	return fmt.Sprintf("smtp (%s:%d)", host, port), nil
 }
 
@@ -237,6 +261,7 @@ func apiOptions() ([]api.Option, string) {
 				admins = append(admins, u)
 			}
 		}
+		slog.Debug("admin usernames configured", "usernames", admins)
 		opts = append(opts, api.WithAdminUsernames(admins))
 	}
 
@@ -245,6 +270,7 @@ func apiOptions() ([]api.Option, string) {
 		return opts, ""
 	}
 
+	slog.Debug("rate limiting/lockout backed by redis", "addr", redisAddr)
 	client := redis.NewClient(&redis.Options{Addr: redisAddr})
 	opts = append(opts,
 		api.WithLockout(auth.NewRedisLockout(client, "login", api.LoginLockoutMaxFailures, api.LoginLockoutWindow)),

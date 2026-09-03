@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/mail"
 	"net/smtp"
@@ -32,6 +33,9 @@ type SMTPSender struct {
 }
 
 func (s SMTPSender) Send(ctx context.Context, to, subject, body string) error {
+	// Never log body — it carries the verification/reset token.
+	slog.Debug("smtp: sending", "host", s.Host, "port", s.Port, "to", to, "subject", subject)
+
 	fromHeader := s.From
 	if fromHeader == "" {
 		fromHeader = s.Username
@@ -100,7 +104,11 @@ func (s SMTPSender) Send(ctx context.Context, to, subject, body string) error {
 	if err := w.Close(); err != nil {
 		return fmt.Errorf("notify: close message: %w", err)
 	}
-	return client.Quit()
+	if err := client.Quit(); err != nil {
+		return err
+	}
+	slog.Debug("smtp: sent", "host", s.Host, "to", to)
+	return nil
 }
 
 var _ Sender = SMTPSender{}

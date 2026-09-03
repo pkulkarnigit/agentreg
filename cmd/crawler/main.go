@@ -13,13 +13,13 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/pkulkarni/apreg/internal/crawler"
+	"github.com/pkulkarni/apreg/internal/logging"
 )
 
 func main() {
@@ -30,7 +30,8 @@ func main() {
 	scope := flag.String("scope", "github-mirror", "the mirror account's username to publish under (required with -publish)")
 	flag.Parse()
 
-	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
+	logger := logging.New(os.Getenv("KRATE_LOG_LEVEL"), os.Stderr)
+	logger.Debug("config resolved", "out", *out, "source", *sourceURL, "publish", *publish, "registry", *registryURL, "scope", *scope)
 
 	var publishCfg *crawler.PublishConfig
 	if *publish {

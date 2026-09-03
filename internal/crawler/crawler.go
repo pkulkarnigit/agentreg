@@ -118,6 +118,8 @@ func Crawl(ctx context.Context, logger *slog.Logger, entries []Entry, publish *P
 				cached = cacheEntry{dir: dir, err: fetchErr}
 			}
 			repoCache[cacheKey] = cached
+		} else {
+			logger.Debug("reusing cached repo checkout", "owner", owner, "repo", repo, "ref", ref)
 		}
 		if cached.err != nil {
 			r.FetchError = sanitizePath(cached.err.Error(), workDir)
@@ -135,6 +137,7 @@ func Crawl(ctx context.Context, logger *slog.Logger, entries []Entry, publish *P
 		if err != nil {
 			r.ValidationError = sanitizePath(err.Error(), workDir)
 			results[i] = r
+			logger.Debug("manifest validation failed", "name", e.Name, "owner", owner, "repo", repo, "error", err)
 			continue
 		}
 
