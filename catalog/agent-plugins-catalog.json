@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-03T06:07:54.755763666Z",
+  "generated_at": "2026-09-04T06:05:18.865225236Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -500,7 +500,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "upstash",
-      "PluginVersion": "1.0.0",
+      "PluginVersion": "1.1.0",
       "Skills": [
         "upstash",
         "upstash-box-cli",
@@ -515,7 +515,7 @@
         "upstash-vector-js",
         "upstash-workflow-js"
       ],
-      "HasMCP": false
+      "HasMCP": true
     },
     {
       "Name": "zillapi",
