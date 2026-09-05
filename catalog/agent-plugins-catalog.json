@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-04T06:05:18.865225236Z",
+  "generated_at": "2026-09-05T06:05:26.484541045Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -353,7 +353,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "dak",
-      "PluginVersion": "0.10.0",
+      "PluginVersion": "0.10.1",
       "Skills": [
         "accidental-data-loss-prevention",
         "bigquery-ai-ml",
@@ -361,6 +361,7 @@
         "bigquery-data-transfer-service",
         "bigquery-graph",
         "bigquery-sql",
+        "bigtable-basics",
         "building-data-apps",
         "data-autocleaning",
         "dataform-bigquery",
@@ -380,9 +381,12 @@
         "gcs-security-assessment",
         "google-cloud-auth-verification",
         "google-cloud-storage-basics",
+        "google-cloud-storage-bucket-architect",
+        "google-cloud-storage-fuse",
         "managing-python-dependencies",
         "ml-best-practices",
         "notebook-guidance",
+        "resolving-mcp-region-configs",
         "schema-mapping"
       ],
       "HasMCP": true
@@ -500,7 +504,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "upstash",
-      "PluginVersion": "1.1.0",
+      "PluginVersion": "1.2.0",
       "Skills": [
         "upstash",
         "upstash-box-cli",
@@ -750,7 +754,7 @@
       "Subpath": "plugins/agentic-bundle-devops-cloud",
       "Valid": true,
       "PluginName": "agentic-bundle-devops-cloud",
-      "PluginVersion": "16.6.0",
+      "PluginVersion": "16.7.0",
       "Skills": [
         "aws-serverless",
         "bash-linux",
