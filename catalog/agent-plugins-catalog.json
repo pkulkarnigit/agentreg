@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-08T06:05:22.016154928Z",
+  "generated_at": "2026-09-09T06:05:34.416226983Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -193,7 +193,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "magpie",
-      "PluginVersion": "0.2.0.dev202609080121",
+      "PluginVersion": "0.2.0.dev202609090002",
       "Skills": [
         "audit-finding-fix",
         "ci-runner-audit",
@@ -758,7 +758,7 @@
       "Subpath": "plugins/agentic-bundle-devops-cloud",
       "Valid": true,
       "PluginName": "agentic-bundle-devops-cloud",
-      "PluginVersion": "16.9.1",
+      "PluginVersion": "17.0.0",
       "Skills": [
         "aws-serverless",
         "bash-linux",
@@ -956,7 +956,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "crowdstrike-falcon-fusion",
-      "PluginVersion": "1.1.0",
+      "PluginVersion": "1.2.0",
       "Skills": [
         "authoring",
         "deployment",
