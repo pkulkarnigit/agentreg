@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-10T06:06:10.257384681Z",
+  "generated_at": "2026-09-11T06:05:21.521778291Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -193,7 +193,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "magpie",
-      "PluginVersion": "0.2.0.dev202609092258",
+      "PluginVersion": "0.2.0.dev202609110041",
       "Skills": [
         "audit-finding-fix",
         "ci-runner-audit",
