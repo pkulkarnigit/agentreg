@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-11T06:05:21.521778291Z",
+  "generated_at": "2026-09-12T06:05:20.43137563Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -356,7 +356,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "dak",
-      "PluginVersion": "0.10.1",
+      "PluginVersion": "0.11.0",
       "Skills": [
         "accidental-data-loss-prevention",
         "bigquery-ai-ml",
@@ -514,6 +514,7 @@
         "upstash-box-cli",
         "upstash-box-js",
         "upstash-box-py",
+        "upstash-box-remote-work",
         "upstash-cli",
         "upstash-qstash-js",
         "upstash-ratelimit-js",
