@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-14T06:06:15.302295212Z",
+  "generated_at": "2026-09-15T06:05:32.2311878Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -226,7 +226,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "swiftui-expert",
-      "PluginVersion": "4.2.0",
+      "PluginVersion": "5.0.0",
       "Skills": [
         "swiftui-expert-skill"
       ],
