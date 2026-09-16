@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-15T06:05:32.2311878Z",
+  "generated_at": "2026-09-16T06:05:34.319406928Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -100,7 +100,7 @@
       "Subpath": "skills/b2c",
       "Valid": true,
       "PluginName": "b2c",
-      "PluginVersion": "1.8.5",
+      "PluginVersion": "1.9.0",
       "Skills": [
         "b2c-business-manager-extensions",
         "b2c-controllers",
@@ -682,7 +682,7 @@
       "Subpath": "plugins/agentic-bundle-devops-cloud",
       "Valid": true,
       "PluginName": "agentic-bundle-devops-cloud",
-      "PluginVersion": "17.2.0",
+      "PluginVersion": "17.3.0",
       "Skills": [
         "aws-serverless",
         "bash-linux",
