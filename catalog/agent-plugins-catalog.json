@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-16T06:05:34.319406928Z",
+  "generated_at": "2026-09-17T06:05:42.654207872Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -430,7 +430,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "upstash",
-      "PluginVersion": "1.2.2",
+      "PluginVersion": "1.2.4",
       "Skills": [
         "upstash",
         "upstash-blob-js",
@@ -682,7 +682,7 @@
       "Subpath": "plugins/agentic-bundle-devops-cloud",
       "Valid": true,
       "PluginName": "agentic-bundle-devops-cloud",
-      "PluginVersion": "17.3.0",
+      "PluginVersion": "17.4.0",
       "Skills": [
         "aws-serverless",
         "bash-linux",
