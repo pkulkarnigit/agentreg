@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-18T06:05:25.749437205Z",
+  "generated_at": "2026-09-19T06:05:20.676507317Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -226,7 +226,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "swiftui-expert",
-      "PluginVersion": "5.0.0",
+      "PluginVersion": "5.1.0",
       "Skills": [
         "swiftui-expert-skill"
       ],
@@ -367,7 +367,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "neon-postgres",
-      "PluginVersion": "2.0.0",
+      "PluginVersion": "2.0.1",
       "Skills": [
         "neon",
         "neon-ai-gateway",
@@ -431,7 +431,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "upstash",
-      "PluginVersion": "1.2.4",
+      "PluginVersion": "1.2.5",
       "Skills": [
         "upstash",
         "upstash-blob-js",
