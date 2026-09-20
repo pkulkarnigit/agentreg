@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-19T06:05:20.676507317Z",
+  "generated_at": "2026-09-20T06:05:21.570397228Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -577,7 +577,7 @@
       "Subpath": ".agents/plugins/agent-native-visual-plans",
       "Valid": true,
       "PluginName": "agent-native-visual-plans",
-      "PluginVersion": "1.0.0+codex.93102d6bf147",
+      "PluginVersion": "1.0.0+codex.43a0c3067088",
       "Skills": [
         "visual-plan",
         "visual-recap",
@@ -683,7 +683,7 @@
       "Subpath": "plugins/agentic-bundle-devops-cloud",
       "Valid": true,
       "PluginName": "agentic-bundle-devops-cloud",
-      "PluginVersion": "17.5.0",
+      "PluginVersion": "17.7.0",
       "Skills": [
         "aws-serverless",
         "bash-linux",
