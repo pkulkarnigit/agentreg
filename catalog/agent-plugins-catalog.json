@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-21T06:06:06.866394128Z",
+  "generated_at": "2026-09-22T06:05:33.662415141Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -683,7 +683,7 @@
       "Subpath": "plugins/agentic-bundle-devops-cloud",
       "Valid": true,
       "PluginName": "agentic-bundle-devops-cloud",
-      "PluginVersion": "17.8.4",
+      "PluginVersion": "18.1.0",
       "Skills": [
         "aws-serverless",
         "bash-linux",
@@ -777,6 +777,7 @@
         "aws-security",
         "aws-serverless",
         "aws-storage",
+        "aws-well-architected-review",
         "launch-with-aws",
         "signing-in-to-aws"
       ],
@@ -998,15 +999,15 @@
       "HasMCP": true
     },
     {
-      "Name": "ahujasid/blender-mcp",
+      "Name": "ahujasid/mcp-for-blender",
       "Category": "Agent Skills and MCP servers ready to be packaged as plugins",
-      "RepoURL": "https://github.com/ahujasid/blender-mcp",
+      "RepoURL": "https://github.com/ahujasid/mcp-for-blender",
       "Author": "ahujasid",
       "AuthorURL": "https://github.com/ahujasid",
       "Description": "control Blender 3D from any LLM.",
       "Tag": "mcp",
       "Owner": "ahujasid",
-      "Repo": "blender-mcp",
+      "Repo": "mcp-for-blender",
       "Ref": "main",
       "Subpath": "",
       "Valid": false,
