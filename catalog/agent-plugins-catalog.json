@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-22T06:05:33.662415141Z",
+  "generated_at": "2026-09-23T06:05:37.686425617Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -683,7 +683,7 @@
       "Subpath": "plugins/agentic-bundle-devops-cloud",
       "Valid": true,
       "PluginName": "agentic-bundle-devops-cloud",
-      "PluginVersion": "18.1.0",
+      "PluginVersion": "18.2.0",
       "Skills": [
         "aws-serverless",
         "bash-linux",
