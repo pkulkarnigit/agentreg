@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-25T06:05:34.685068627Z",
+  "generated_at": "2026-09-26T06:06:08.069121658Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -431,7 +431,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "upstash",
-      "PluginVersion": "1.2.5",
+      "PluginVersion": "1.2.6",
       "Skills": [
         "upstash",
         "upstash-blob-js",
