@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-01T12:03:12.276339846Z",
+  "generated_at": "2026-10-02T11:34:30.678470449Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -371,7 +371,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "neon-postgres",
-      "PluginVersion": "2.0.1",
+      "PluginVersion": "2.1.0",
       "Skills": [
         "neon",
         "neon-ai-gateway",
@@ -687,7 +687,7 @@
       "Subpath": "plugins/agentic-bundle-devops-cloud",
       "Valid": true,
       "PluginName": "agentic-bundle-devops-cloud",
-      "PluginVersion": "18.11.0",
+      "PluginVersion": "18.12.0",
       "Skills": [
         "aws-serverless",
         "bash-linux",
@@ -886,7 +886,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "crowdstrike-falcon-fusion",
-      "PluginVersion": "1.2.0",
+      "PluginVersion": "1.3.0",
       "Skills": [
         "authoring",
         "deployment",
