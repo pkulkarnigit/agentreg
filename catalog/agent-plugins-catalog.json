@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-02T11:34:30.678470449Z",
+  "generated_at": "2026-10-03T10:48:43.67770163Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -226,7 +226,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "swiftui-expert",
-      "PluginVersion": "5.2.0",
+      "PluginVersion": "5.2.1",
       "Skills": [
         "swiftui-expert-skill"
       ],
@@ -603,7 +603,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "agentcouch",
-      "PluginVersion": "1.2.1",
+      "PluginVersion": "1.5.2",
       "Skills": [
         "agentcouch-chat"
       ],
@@ -687,7 +687,7 @@
       "Subpath": "plugins/agentic-bundle-devops-cloud",
       "Valid": true,
       "PluginName": "agentic-bundle-devops-cloud",
-      "PluginVersion": "18.12.0",
+      "PluginVersion": "18.13.0",
       "Skills": [
         "aws-serverless",
         "bash-linux",
