@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-03T10:48:43.67770163Z",
+  "generated_at": "2026-10-04T11:31:01.346625739Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -371,7 +371,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "neon-postgres",
-      "PluginVersion": "2.1.0",
+      "PluginVersion": "2.1.1",
       "Skills": [
         "neon",
         "neon-ai-gateway",
@@ -687,7 +687,7 @@
       "Subpath": "plugins/agentic-bundle-devops-cloud",
       "Valid": true,
       "PluginName": "agentic-bundle-devops-cloud",
-      "PluginVersion": "18.13.0",
+      "PluginVersion": "18.14.0",
       "Skills": [
         "aws-serverless",
         "bash-linux",
