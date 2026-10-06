@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-05T12:59:54.544809196Z",
+  "generated_at": "2026-10-06T12:25:26.377999299Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -100,7 +100,7 @@
       "Subpath": "skills/b2c",
       "Valid": true,
       "PluginName": "b2c",
-      "PluginVersion": "1.10.3",
+      "PluginVersion": "1.11.0",
       "Skills": [
         "b2c-business-manager-extensions",
         "b2c-controllers",
@@ -508,7 +508,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "exa",
-      "PluginVersion": "3.4.1",
+      "PluginVersion": "3.4.2",
       "Skills": [
         "exa-agent",
         "search"
@@ -687,7 +687,7 @@
       "Subpath": "plugins/agentic-bundle-devops-cloud",
       "Valid": true,
       "PluginName": "agentic-bundle-devops-cloud",
-      "PluginVersion": "18.15.0",
+      "PluginVersion": "19.0.0",
       "Skills": [
         "aws-serverless",
         "bash-linux",
