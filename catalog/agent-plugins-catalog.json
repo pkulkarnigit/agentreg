@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-07T12:18:06.168951096Z",
+  "generated_at": "2026-10-08T12:28:19.010179729Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -100,7 +100,7 @@
       "Subpath": "skills/b2c",
       "Valid": true,
       "PluginName": "b2c",
-      "PluginVersion": "1.11.0",
+      "PluginVersion": "1.12.0",
       "Skills": [
         "b2c-business-manager-extensions",
         "b2c-controllers",
@@ -960,7 +960,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "dodopayments",
-      "PluginVersion": "0.5.1",
+      "PluginVersion": "0.6.0",
       "Skills": [
         "better-auth-integration",
         "billing-sdk",
