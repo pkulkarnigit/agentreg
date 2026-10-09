@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-08T12:28:19.010179729Z",
+  "generated_at": "2026-10-09T12:17:19.93505439Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -687,7 +687,7 @@
       "Subpath": "plugins/agentic-bundle-devops-cloud",
       "Valid": true,
       "PluginName": "agentic-bundle-devops-cloud",
-      "PluginVersion": "19.0.1",
+      "PluginVersion": "19.2.0",
       "Skills": [
         "aws-serverless",
         "bash-linux",
@@ -960,7 +960,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "dodopayments",
-      "PluginVersion": "0.6.0",
+      "PluginVersion": "0.6.5",
       "Skills": [
         "better-auth-integration",
         "billing-sdk",
@@ -969,6 +969,7 @@
         "customer-management",
         "discounts-and-promotions",
         "dodo-best-practices",
+        "dodo-mcp-usage",
         "framework-adapters",
         "license-keys",
         "localized-pricing",
