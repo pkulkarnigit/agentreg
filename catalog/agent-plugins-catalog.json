@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-13T13:10:24.989205857Z",
+  "generated_at": "2026-10-14T10:51:06.899766556Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -279,7 +279,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "dak",
-      "PluginVersion": "1.0.0",
+      "PluginVersion": "1.1.0",
       "Skills": [
         "accidental-data-loss-prevention",
         "bigquery-ai-ml",
@@ -685,20 +685,9 @@
       "Repo": "agentic-awesome-skills",
       "Ref": "main",
       "Subpath": "plugins/agentic-bundle-devops-cloud",
-      "Valid": true,
-      "PluginName": "agentic-bundle-devops-cloud",
-      "PluginVersion": "19.5.0",
-      "Skills": [
-        "aws-serverless",
-        "bash-linux",
-        "ci-cd-and-automation",
-        "deployment-procedures",
-        "docker-expert",
-        "environment-setup-guide",
-        "kubernetes-architect",
-        "terraform-specialist"
-      ],
-      "HasMCP": false
+      "Valid": false,
+      "HasMCP": false,
+      "ValidationError": "read plugin.json: open repo-25/plugins/agentic-bundle-devops-cloud/plugin.json: no such file or directory"
     },
     {
       "Name": "aws-agents",
