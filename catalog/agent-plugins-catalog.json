@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-14T10:51:06.899766556Z",
+  "generated_at": "2026-10-15T10:33:38.984435063Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -371,7 +371,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "neon-postgres",
-      "PluginVersion": "2.1.2",
+      "PluginVersion": "2.2.0",
       "Skills": [
         "neon",
         "neon-ai-gateway",
@@ -380,7 +380,8 @@
         "neon-object-storage",
         "neon-postgres",
         "neon-postgres-branches",
-        "neon-postgres-egress-optimizer"
+        "neon-postgres-egress-optimizer",
+        "neon-realtime"
       ],
       "HasMCP": true
     },
