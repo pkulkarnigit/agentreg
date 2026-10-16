@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-15T10:33:38.984435063Z",
+  "generated_at": "2026-10-16T10:20:37.335527677Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -100,7 +100,7 @@
       "Subpath": "skills/b2c",
       "Valid": true,
       "PluginName": "b2c",
-      "PluginVersion": "1.12.1",
+      "PluginVersion": "1.12.2",
       "Skills": [
         "b2c-business-manager-extensions",
         "b2c-controllers",
@@ -371,7 +371,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "neon-postgres",
-      "PluginVersion": "2.2.0",
+      "PluginVersion": "2.3.0",
       "Skills": [
         "neon",
         "neon-ai-gateway",
