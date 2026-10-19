@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-18T10:05:24.507292761Z",
+  "generated_at": "2026-10-19T11:32:31.625481599Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -12,11 +12,15 @@
       "Tag": "reference",
       "Owner": "agentplugins",
       "Repo": "agent-plugins-example",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
-      "Valid": false,
-      "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/agentplugins/agent-plugins-example: HTTP 403"
+      "Valid": true,
+      "PluginName": "agent-plugins-example",
+      "PluginVersion": "1.0.0",
+      "Skills": [
+        "migrate-agent-plugin"
+      ],
+      "HasMCP": false
     },
     {
       "Name": "agent-plugins-spec",
@@ -28,11 +32,11 @@
       "Tag": "reference",
       "Owner": "agentplugins",
       "Repo": "agent-plugins-spec",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/agentplugins/agent-plugins-spec: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-1/plugin.json: no such file or directory"
     },
     {
       "Name": "awesome-copilot",
@@ -44,11 +48,11 @@
       "Tag": "production",
       "Owner": "github",
       "Repo": "awesome-copilot",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/github/awesome-copilot: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-2/plugin.json: no such file or directory"
     },
     {
       "Name": "MiniMax-Code-Plugins",
@@ -60,11 +64,11 @@
       "Tag": "reference",
       "Owner": "MiniMax-AI",
       "Repo": "MiniMax-Code-Plugins",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/MiniMax-AI/MiniMax-Code-Plugins: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-3/plugin.json: no such file or directory"
     },
     {
       "Name": "AtomLane",
@@ -76,11 +80,11 @@
       "Tag": "beta",
       "Owner": "cloudguo123",
       "Repo": "atomlane",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/cloudguo123/atomlane: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-4/plugin.json: no such file or directory"
     },
     {
       "Name": "b2c",
@@ -147,11 +151,11 @@
       "Tag": "production",
       "Owner": "saadeghi",
       "Repo": "daisyui",
-      "Ref": "",
+      "Ref": "master",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/saadeghi/daisyui: HTTP 403"
+      "ValidationError": "skills/.grok-plugin is missing SKILL.md"
     },
     {
       "Name": "diffusers",
@@ -185,11 +189,11 @@
       "Tag": "production",
       "Owner": "apache",
       "Repo": "magpie",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/apache/magpie: HTTP 403"
+      "ValidationError": "plugin has neither a skills/ directory nor an mcp.json — at least one component is required"
     },
     {
       "Name": "sandbase-harness",
@@ -218,11 +222,15 @@
       "Tag": "production",
       "Owner": "AvdLee",
       "Repo": "SwiftUI-Agent-Skill",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
-      "Valid": false,
-      "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/AvdLee/SwiftUI-Agent-Skill: HTTP 403"
+      "Valid": true,
+      "PluginName": "swiftui-expert",
+      "PluginVersion": "5.2.1",
+      "Skills": [
+        "swiftui-expert-skill"
+      ],
+      "HasMCP": false
     },
     {
       "Name": "testing-automation",
@@ -250,11 +258,12 @@
       "Tag": "production",
       "Owner": "vuetifyjs",
       "Repo": "mcp",
-      "Ref": "",
+      "Ref": "master",
       "Subpath": "",
-      "Valid": false,
-      "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/vuetifyjs/mcp: HTTP 403"
+      "Valid": true,
+      "PluginName": "vuetify-mcp",
+      "PluginVersion": "1.0.0",
+      "HasMCP": true
     },
     {
       "Name": "dak",
@@ -266,11 +275,51 @@
       "Tag": "production",
       "Owner": "GoogleCloudPlatform",
       "Repo": "data-agent-kit-plugin",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
-      "Valid": false,
-      "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/GoogleCloudPlatform/data-agent-kit-plugin: HTTP 403"
+      "Valid": true,
+      "PluginName": "dak",
+      "PluginVersion": "1.1.0",
+      "Skills": [
+        "accidental-data-loss-prevention",
+        "bigquery-ai-ml",
+        "bigquery-bigframes",
+        "bigquery-data-transfer-service",
+        "bigquery-graph-author",
+        "bigquery-graph-query",
+        "bigquery-sql",
+        "bigtable-basics",
+        "building-data-apps",
+        "dak-setup",
+        "data-autocleaning",
+        "dataform-bigquery",
+        "dbt-bigquery",
+        "discovering-gcp-data-assets",
+        "enforcing-resource-attribution",
+        "federate-lakehouse-catalog",
+        "gcp-composer-troubleshooting",
+        "gcp-data-pipelines",
+        "gcp-dataflow",
+        "gcp-managed-airflow-dag-authoring",
+        "gcp-managed-airflow-migrations",
+        "gcp-managed-airflow-recommendations",
+        "gcp-managed-spark-upgrades",
+        "gcp-pipeline-orchestration",
+        "gcp-pipeline-resource-provisioning",
+        "gcp-spark",
+        "gcp-spark-troubleshooting",
+        "gcs-security-assessment",
+        "google-cloud-auth-verification",
+        "google-cloud-storage-basics",
+        "google-cloud-storage-bucket-architect",
+        "google-cloud-storage-fuse",
+        "managing-python-dependencies",
+        "ml-best-practices",
+        "notebook-guidance",
+        "resolving-mcp-region-configs",
+        "schema-mapping"
+      ],
+      "HasMCP": true
     },
     {
       "Name": "database-data-management",
@@ -318,11 +367,23 @@
       "Tag": "production",
       "Owner": "neondatabase",
       "Repo": "agent-skills",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
-      "Valid": false,
-      "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/neondatabase/agent-skills: HTTP 403"
+      "Valid": true,
+      "PluginName": "neon-postgres",
+      "PluginVersion": "2.3.0",
+      "Skills": [
+        "neon",
+        "neon-ai-gateway",
+        "neon-auth",
+        "neon-functions",
+        "neon-object-storage",
+        "neon-postgres",
+        "neon-postgres-branches",
+        "neon-postgres-egress-optimizer",
+        "neon-realtime"
+      ],
+      "HasMCP": true
     },
     {
       "Name": "open-knowledge",
@@ -371,11 +432,28 @@
       "Tag": "production",
       "Owner": "upstash",
       "Repo": "skills",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
-      "Valid": false,
-      "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/upstash/skills: HTTP 403"
+      "Valid": true,
+      "PluginName": "upstash",
+      "PluginVersion": "1.2.6",
+      "Skills": [
+        "upstash",
+        "upstash-blob-js",
+        "upstash-box-cli",
+        "upstash-box-js",
+        "upstash-box-py",
+        "upstash-box-remote-work",
+        "upstash-cli",
+        "upstash-qstash-js",
+        "upstash-ratelimit-js",
+        "upstash-redis-js",
+        "upstash-redis-start",
+        "upstash-search-js",
+        "upstash-vector-js",
+        "upstash-workflow-js"
+      ],
+      "HasMCP": true
     },
     {
       "Name": "zillapi",
@@ -387,11 +465,15 @@
       "Tag": "production",
       "Owner": "ZeroPointRepo",
       "Repo": "zillow-plugin",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
-      "Valid": false,
-      "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/ZeroPointRepo/zillow-plugin: HTTP 403"
+      "Valid": true,
+      "PluginName": "zillapi",
+      "PluginVersion": "1.0.0",
+      "Skills": [
+        "zillow"
+      ],
+      "HasMCP": true
     },
     {
       "Name": "context7",
@@ -423,11 +505,16 @@
       "Tag": "production",
       "Owner": "exa-labs",
       "Repo": "exa-mcp-server",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
-      "Valid": false,
-      "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/exa-labs/exa-mcp-server: HTTP 403"
+      "Valid": true,
+      "PluginName": "exa",
+      "PluginVersion": "3.4.2",
+      "Skills": [
+        "exa-agent",
+        "search"
+      ],
+      "HasMCP": true
     },
     {
       "Name": "scientific-agent-skills",
@@ -439,11 +526,11 @@
       "Tag": "production",
       "Owner": "K-Dense-AI",
       "Repo": "scientific-agent-skills",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/K-Dense-AI/scientific-agent-skills: HTTP 403"
+      "FetchError": "unexpected EOF"
     },
     {
       "Name": "stayingapi",
@@ -455,11 +542,15 @@
       "Tag": "production",
       "Owner": "stayingapi",
       "Repo": "hotel-vacation-rental-mcp",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
-      "Valid": false,
-      "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/stayingapi/hotel-vacation-rental-mcp: HTTP 403"
+      "Valid": true,
+      "PluginName": "stayingapi",
+      "PluginVersion": "1.0.0",
+      "Skills": [
+        "stays"
+      ],
+      "HasMCP": true
     },
     {
       "Name": "chromium-control-canvas",
@@ -509,11 +600,15 @@
       "Tag": "production",
       "Owner": "stoyan-stoyanov",
       "Repo": "agentcouch-plugins",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
-      "Valid": false,
-      "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/stoyan-stoyanov/agentcouch-plugins: HTTP 403"
+      "Valid": true,
+      "PluginName": "agentcouch",
+      "PluginVersion": "1.5.2",
+      "Skills": [
+        "agentcouch-chat"
+      ],
+      "HasMCP": true
     },
     {
       "Name": "backlog-swipe-triage",
@@ -593,7 +688,7 @@
       "Subpath": "plugins/agentic-bundle-devops-cloud",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open repo-9/plugins/agentic-bundle-devops-cloud/plugin.json: no such file or directory"
+      "ValidationError": "read plugin.json: open repo-25/plugins/agentic-bundle-devops-cloud/plugin.json: no such file or directory"
     },
     {
       "Name": "aws-agents",
@@ -757,11 +852,15 @@
       "Tag": "production",
       "Owner": "ZeroPointRepo",
       "Repo": "youtube-mcp",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
-      "Valid": false,
-      "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/ZeroPointRepo/youtube-mcp: HTTP 403"
+      "Valid": true,
+      "PluginName": "transcriptapi",
+      "PluginVersion": "1.0.0",
+      "Skills": [
+        "youtube"
+      ],
+      "HasMCP": true
     },
     {
       "Name": "crowdstrike-falcon-fusion",
@@ -773,11 +872,21 @@
       "Tag": "production",
       "Owner": "CrowdStrike",
       "Repo": "fusion-skills",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
-      "Valid": false,
-      "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/CrowdStrike/fusion-skills: HTTP 403"
+      "Valid": true,
+      "PluginName": "crowdstrike-falcon-fusion",
+      "PluginVersion": "1.3.0",
+      "Skills": [
+        "authoring",
+        "deployment",
+        "execution",
+        "foundry-redirect",
+        "lookup-files",
+        "setup",
+        "workflows"
+      ],
+      "HasMCP": false
     },
     {
       "Name": "gitguardian",
@@ -821,11 +930,11 @@
       "Tag": "production",
       "Owner": "squirrelscan",
       "Repo": "squirrelscan",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/squirrelscan/squirrelscan: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-32/plugin.json: no such file or directory"
     },
     {
       "Name": "dodopayments",
@@ -837,11 +946,32 @@
       "Tag": "production",
       "Owner": "dodopayments",
       "Repo": "dodo-agent-plugin",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
-      "Valid": false,
-      "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/dodopayments/dodo-agent-plugin: HTTP 403"
+      "Valid": true,
+      "PluginName": "dodopayments",
+      "PluginVersion": "0.6.5",
+      "Skills": [
+        "better-auth-integration",
+        "billing-sdk",
+        "checkout-integration",
+        "credit-based-billing",
+        "customer-management",
+        "discounts-and-promotions",
+        "dodo-best-practices",
+        "dodo-mcp-usage",
+        "framework-adapters",
+        "license-keys",
+        "localized-pricing",
+        "mobile-checkout",
+        "product-catalog-management",
+        "refunds-and-disputes",
+        "subscription-integration",
+        "testing-and-go-live",
+        "usage-based-billing",
+        "webhook-integration"
+      ],
+      "HasMCP": true
     },
     {
       "Name": "open-market-data",
@@ -853,11 +983,15 @@
       "Tag": "production",
       "Owner": "anotb",
       "Repo": "open-market-data",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
-      "Valid": false,
-      "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/anotb/open-market-data: HTTP 403"
+      "Valid": true,
+      "PluginName": "open-market-data",
+      "PluginVersion": "0.2.0",
+      "Skills": [
+        "open-market-data"
+      ],
+      "HasMCP": true
     },
     {
       "Name": "ahujasid/mcp-for-blender",
@@ -869,11 +1003,11 @@
       "Tag": "mcp",
       "Owner": "ahujasid",
       "Repo": "mcp-for-blender",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/ahujasid/mcp-for-blender: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-35/plugin.json: no such file or directory"
     },
     {
       "Name": "anthropics/skills",
@@ -885,11 +1019,11 @@
       "Tag": "skills",
       "Owner": "anthropics",
       "Repo": "skills",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/anthropics/skills: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-36/plugin.json: no such file or directory"
     },
     {
       "Name": "browserbase/skills",
@@ -901,11 +1035,11 @@
       "Tag": "mcp",
       "Owner": "browserbase",
       "Repo": "skills",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/browserbase/skills: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-37/plugin.json: no such file or directory"
     },
     {
       "Name": "cloudflare/mcp-server-cloudflare",
@@ -917,11 +1051,11 @@
       "Tag": "mcp",
       "Owner": "cloudflare",
       "Repo": "mcp-server-cloudflare",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/cloudflare/mcp-server-cloudflare: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-38/plugin.json: no such file or directory"
     },
     {
       "Name": "grafana/mcp-grafana",
@@ -933,11 +1067,11 @@
       "Tag": "mcp",
       "Owner": "grafana",
       "Repo": "mcp-grafana",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/grafana/mcp-grafana: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-39/plugin.json: no such file or directory"
     },
     {
       "Name": "microsoft/playwright-mcp",
@@ -949,11 +1083,11 @@
       "Tag": "mcp",
       "Owner": "microsoft",
       "Repo": "playwright-mcp",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/microsoft/playwright-mcp: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-40/plugin.json: no such file or directory"
     },
     {
       "Name": "modelcontextprotocol/servers",
@@ -965,11 +1099,11 @@
       "Tag": "mcp",
       "Owner": "modelcontextprotocol",
       "Repo": "servers",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/modelcontextprotocol/servers: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-41/plugin.json: no such file or directory"
     }
   ]
 }
