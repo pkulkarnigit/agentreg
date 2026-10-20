@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-19T11:32:31.625481599Z",
+  "generated_at": "2026-10-20T10:38:09.266085656Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -489,7 +489,7 @@
       "Subpath": "plugins/agent-plugins/context7",
       "Valid": true,
       "PluginName": "context7",
-      "PluginVersion": "1.0.1",
+      "PluginVersion": "1.0.2",
       "Skills": [
         "context7-mcp"
       ],
@@ -1035,11 +1035,11 @@
       "Tag": "mcp",
       "Owner": "browserbase",
       "Repo": "skills",
-      "Ref": "main",
+      "Ref": "",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open repo-37/plugin.json: no such file or directory"
+      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/browserbase/skills: HTTP 403"
     },
     {
       "Name": "cloudflare/mcp-server-cloudflare",
@@ -1051,11 +1051,11 @@
       "Tag": "mcp",
       "Owner": "cloudflare",
       "Repo": "mcp-server-cloudflare",
-      "Ref": "main",
+      "Ref": "",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open repo-38/plugin.json: no such file or directory"
+      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/cloudflare/mcp-server-cloudflare: HTTP 403"
     },
     {
       "Name": "grafana/mcp-grafana",
@@ -1067,11 +1067,11 @@
       "Tag": "mcp",
       "Owner": "grafana",
       "Repo": "mcp-grafana",
-      "Ref": "main",
+      "Ref": "",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open repo-39/plugin.json: no such file or directory"
+      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/grafana/mcp-grafana: HTTP 403"
     },
     {
       "Name": "microsoft/playwright-mcp",
@@ -1083,11 +1083,11 @@
       "Tag": "mcp",
       "Owner": "microsoft",
       "Repo": "playwright-mcp",
-      "Ref": "main",
+      "Ref": "",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open repo-40/plugin.json: no such file or directory"
+      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/microsoft/playwright-mcp: HTTP 403"
     },
     {
       "Name": "modelcontextprotocol/servers",
@@ -1099,11 +1099,11 @@
       "Tag": "mcp",
       "Owner": "modelcontextprotocol",
       "Repo": "servers",
-      "Ref": "main",
+      "Ref": "",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "ValidationError": "read plugin.json: open repo-41/plugin.json: no such file or directory"
+      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/modelcontextprotocol/servers: HTTP 403"
     }
   ]
 }
