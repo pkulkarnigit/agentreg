@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-20T10:38:09.266085656Z",
+  "generated_at": "2026-10-21T10:49:33.776195758Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -100,7 +100,7 @@
       "Subpath": "skills/b2c",
       "Valid": true,
       "PluginName": "b2c",
-      "PluginVersion": "1.12.2",
+      "PluginVersion": "1.12.3",
       "Skills": [
         "b2c-business-manager-extensions",
         "b2c-controllers",
@@ -747,7 +747,7 @@
       "Subpath": "plugins/aws-core",
       "Valid": true,
       "PluginName": "aws-core",
-      "PluginVersion": "1.1.0",
+      "PluginVersion": "1.2.0",
       "Skills": [
         "amazon-bedrock",
         "aws-ai-ml",
@@ -1035,11 +1035,11 @@
       "Tag": "mcp",
       "Owner": "browserbase",
       "Repo": "skills",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/browserbase/skills: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-37/plugin.json: no such file or directory"
     },
     {
       "Name": "cloudflare/mcp-server-cloudflare",
@@ -1051,11 +1051,11 @@
       "Tag": "mcp",
       "Owner": "cloudflare",
       "Repo": "mcp-server-cloudflare",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/cloudflare/mcp-server-cloudflare: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-38/plugin.json: no such file or directory"
     },
     {
       "Name": "grafana/mcp-grafana",
@@ -1067,11 +1067,11 @@
       "Tag": "mcp",
       "Owner": "grafana",
       "Repo": "mcp-grafana",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/grafana/mcp-grafana: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-39/plugin.json: no such file or directory"
     },
     {
       "Name": "microsoft/playwright-mcp",
@@ -1083,11 +1083,11 @@
       "Tag": "mcp",
       "Owner": "microsoft",
       "Repo": "playwright-mcp",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/microsoft/playwright-mcp: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-40/plugin.json: no such file or directory"
     },
     {
       "Name": "modelcontextprotocol/servers",
@@ -1099,11 +1099,11 @@
       "Tag": "mcp",
       "Owner": "modelcontextprotocol",
       "Repo": "servers",
-      "Ref": "",
+      "Ref": "main",
       "Subpath": "",
       "Valid": false,
       "HasMCP": false,
-      "FetchError": "resolve default branch: GitHub API https://api.github.com/repos/modelcontextprotocol/servers: HTTP 403"
+      "ValidationError": "read plugin.json: open repo-41/plugin.json: no such file or directory"
     }
   ]
 }
