@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-21T10:49:33.776195758Z",
+  "generated_at": "2026-10-22T10:50:35.34082843Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -100,7 +100,7 @@
       "Subpath": "skills/b2c",
       "Valid": true,
       "PluginName": "b2c",
-      "PluginVersion": "1.12.3",
+      "PluginVersion": "1.12.4",
       "Skills": [
         "b2c-business-manager-extensions",
         "b2c-controllers",
@@ -436,7 +436,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "upstash",
-      "PluginVersion": "1.2.6",
+      "PluginVersion": "1.2.7",
       "Skills": [
         "upstash",
         "upstash-blob-js",
