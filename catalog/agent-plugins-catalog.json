@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-28T11:49:57.432443237Z",
+  "generated_at": "2026-10-29T11:58:14.503325617Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -100,7 +100,7 @@
       "Subpath": "skills/b2c",
       "Valid": true,
       "PluginName": "b2c",
-      "PluginVersion": "1.12.7",
+      "PluginVersion": "1.12.8",
       "Skills": [
         "b2c-business-manager-extensions",
         "b2c-controllers",
@@ -287,9 +287,12 @@
         "bigquery-data-transfer-service",
         "bigquery-graph-author",
         "bigquery-graph-query",
-        "bigquery-sql",
+        "bigquery-observability",
+        "bigquery-optimization",
+        "bigquery-troubleshooting",
         "bigtable-basics",
         "building-data-apps",
+        "cloud-databases-onboarding",
         "dak-setup",
         "data-autocleaning",
         "dataform-bigquery",
@@ -307,9 +310,9 @@
         "gcp-pipeline-orchestration",
         "gcp-pipeline-resource-provisioning",
         "gcp-spark",
+        "gcp-spark-observability",
         "gcp-spark-troubleshooting",
         "gcs-security-assessment",
-        "google-cloud-auth-verification",
         "google-cloud-storage-basics",
         "google-cloud-storage-bucket-architect",
         "google-cloud-storage-fuse",
