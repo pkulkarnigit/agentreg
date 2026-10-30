@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-29T11:58:14.503325617Z",
+  "generated_at": "2026-10-30T11:52:20.428725401Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -100,7 +100,7 @@
       "Subpath": "skills/b2c",
       "Valid": true,
       "PluginName": "b2c",
-      "PluginVersion": "1.12.8",
+      "PluginVersion": "1.13.0",
       "Skills": [
         "b2c-business-manager-extensions",
         "b2c-controllers",
@@ -279,7 +279,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "dak",
-      "PluginVersion": "1.1.0",
+      "PluginVersion": "1.2.0",
       "Skills": [
         "accidental-data-loss-prevention",
         "bigquery-ai-ml",
