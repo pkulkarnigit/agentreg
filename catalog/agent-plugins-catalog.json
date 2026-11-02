@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-01T12:18:12.363512842Z",
+  "generated_at": "2026-11-02T14:10:20.990244384Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -953,7 +953,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "dodopayments",
-      "PluginVersion": "0.6.5",
+      "PluginVersion": "0.7.0",
       "Skills": [
         "better-auth-integration",
         "billing-sdk",
