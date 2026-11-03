@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-02T14:10:20.990244384Z",
+  "generated_at": "2026-11-03T13:14:46.729083171Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -100,7 +100,7 @@
       "Subpath": "skills/b2c",
       "Valid": true,
       "PluginName": "b2c",
-      "PluginVersion": "1.13.0",
+      "PluginVersion": "1.14.0",
       "Skills": [
         "b2c-business-manager-extensions",
         "b2c-controllers",
@@ -374,7 +374,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "neon-postgres",
-      "PluginVersion": "2.3.0",
+      "PluginVersion": "3.0.0",
       "Skills": [
         "neon",
         "neon-ai-gateway",
@@ -382,8 +382,6 @@
         "neon-functions",
         "neon-object-storage",
         "neon-postgres",
-        "neon-postgres-branches",
-        "neon-postgres-egress-optimizer",
         "neon-realtime"
       ],
       "HasMCP": true
@@ -512,7 +510,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "exa",
-      "PluginVersion": "3.4.2",
+      "PluginVersion": "3.4.3",
       "Skills": [
         "exa-agent",
         "search"
