@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-03T13:14:46.729083171Z",
+  "generated_at": "2026-11-04T13:29:25.581092815Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -100,7 +100,7 @@
       "Subpath": "skills/b2c",
       "Valid": true,
       "PluginName": "b2c",
-      "PluginVersion": "1.14.0",
+      "PluginVersion": "1.15.0",
       "Skills": [
         "b2c-business-manager-extensions",
         "b2c-controllers",
@@ -352,13 +352,9 @@
       "Repo": "hindsight",
       "Ref": "main",
       "Subpath": "hindsight-integrations/agent-plugin",
-      "Valid": true,
-      "PluginName": "hindsight",
-      "PluginVersion": "1.0.0",
-      "Skills": [
-        "hindsight-memory"
-      ],
-      "HasMCP": true
+      "Valid": false,
+      "HasMCP": false,
+      "FetchError": "unexpected EOF"
     },
     {
       "Name": "neon-postgres",
