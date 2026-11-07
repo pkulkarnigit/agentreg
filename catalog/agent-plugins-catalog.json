@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-06T13:27:04.500775299Z",
+  "generated_at": "2026-11-07T12:05:36.444362274Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -370,7 +370,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "neon-postgres",
-      "PluginVersion": "3.0.1",
+      "PluginVersion": "3.0.5",
       "Skills": [
         "neon",
         "neon-ai-gateway",
