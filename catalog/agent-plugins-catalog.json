@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-08T12:26:09.166409909Z",
+  "generated_at": "2026-11-09T14:41:30.297778791Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -435,6 +435,7 @@
       "PluginName": "upstash",
       "PluginVersion": "1.2.7",
       "Skills": [
+        "redis-best-practices",
         "upstash",
         "upstash-blob-js",
         "upstash-box-cli",
