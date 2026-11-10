@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-09T14:41:30.297778791Z",
+  "generated_at": "2026-11-10T13:58:46.500471912Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -949,26 +949,9 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "dodopayments",
-      "PluginVersion": "0.7.0",
+      "PluginVersion": "0.8.0",
       "Skills": [
-        "better-auth-integration",
-        "billing-sdk",
-        "checkout-integration",
-        "credit-based-billing",
-        "customer-management",
-        "discounts-and-promotions",
-        "dodo-best-practices",
-        "dodo-mcp-usage",
-        "framework-adapters",
-        "license-keys",
-        "localized-pricing",
-        "mobile-checkout",
-        "product-catalog-management",
-        "refunds-and-disputes",
-        "subscription-integration",
-        "testing-and-go-live",
-        "usage-based-billing",
-        "webhook-integration"
+        "dodo-payments"
       ],
       "HasMCP": true
     },
