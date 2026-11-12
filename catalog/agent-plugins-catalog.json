@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-11T13:11:50.103071101Z",
+  "generated_at": "2026-11-12T14:14:51.162267378Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -279,7 +279,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "dak",
-      "PluginVersion": "1.2.0",
+      "PluginVersion": "1.3.0",
       "Skills": [
         "accidental-data-loss-prevention",
         "bigquery-ai-ml",
@@ -293,11 +293,12 @@
         "bigtable-basics",
         "building-data-apps",
         "cloud-databases-onboarding",
+        "curate-context",
         "dak-setup",
         "data-autocleaning",
         "dataform-bigquery",
         "dbt-bigquery",
-        "discovering-gcp-data-assets",
+        "discover-assets",
         "enforcing-resource-attribution",
         "federate-lakehouse-catalog",
         "gcp-composer-troubleshooting",
@@ -370,7 +371,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "neon-postgres",
-      "PluginVersion": "3.0.6",
+      "PluginVersion": "3.0.7",
       "Skills": [
         "neon",
         "neon-ai-gateway",
@@ -758,6 +759,7 @@
         "aws-containers",
         "aws-database",
         "aws-deployment",
+        "aws-emulator",
         "aws-iam",
         "aws-investigation",
         "aws-messaging-and-streaming",
