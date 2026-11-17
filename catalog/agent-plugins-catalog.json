@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-16T14:17:29.069457518Z",
+  "generated_at": "2026-11-17T15:09:27.233816823Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -100,7 +100,7 @@
       "Subpath": "skills/b2c",
       "Valid": true,
       "PluginName": "b2c",
-      "PluginVersion": "1.15.2",
+      "PluginVersion": "1.16.0",
       "Skills": [
         "b2c-business-manager-extensions",
         "b2c-controllers",
