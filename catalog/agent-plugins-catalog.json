@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-21T13:54:06.730917508Z",
+  "generated_at": "2026-11-22T13:46:45.374158559Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -751,8 +751,8 @@
         "aws-ai-ml",
         "aws-auth",
         "aws-billing-and-cost-management",
-        "aws-blocks",
         "aws-cdk",
+        "aws-cdk-blocks",
         "aws-cloudformation",
         "aws-compute",
         "aws-containers",
