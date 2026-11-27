@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-26T16:01:19.229874146Z",
+  "generated_at": "2026-11-27T15:49:38.785711163Z",
   "source": "https://raw.githubusercontent.com/ZeroPointRepo/awesome-agent-plugins/main/README.md",
   "results": [
     {
@@ -434,7 +434,7 @@
       "Subpath": "",
       "Valid": true,
       "PluginName": "upstash",
-      "PluginVersion": "1.2.8",
+      "PluginVersion": "1.2.9",
       "Skills": [
         "redis-best-practices",
         "upstash",
